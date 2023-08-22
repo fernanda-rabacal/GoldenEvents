@@ -1,0 +1,27 @@
+.button {
+  width: 100%;
+  color: var(--white);
+  background: var(--yellow-300);
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-transform: uppercase;
+
+  padding: 1rem;
+  border-radius: 6px;
+  
+  transition: 0.4s;
+  line-height: 1.3rem;
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+
+  &:not(:disabled):hover {
+    background: var(--yellow-500);
+  }
+
+  @media(max-width: 500px){
+    font-size: 1.6rem;
+  }
+}

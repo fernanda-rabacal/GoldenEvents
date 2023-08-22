@@ -1,0 +1,35 @@
+.headerContainer {
+  width: 100%;
+  padding: 1rem 0;
+  margin-inline: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.headerContainer img {
+  width: 6.5rem;
+}
+  
+.linksWrapper {
+  display: none;
+  padding: 0 2rem;
+
+  a {
+    color: var(--yellow-500);
+    font-weight: 700;
+    font-size: 0.9rem;
+  }
+
+  @media(min-width: 700px) {
+    display: flex;
+    align-items: center;
+    gap: 2.5rem;
+  }
+}
+
+.loginLink {
+  padding: 0.6rem 1.5rem;
+    border-radius: 30px;
+    border: 1px solid var(--yellow-500);
+}

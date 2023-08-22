@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        fetch("http://localhost:80/api/events", {
+            method: "POST",
+            body: JSON.stringify({
+                name: "Teste de evento",
+                description: "Teste teste teste",
+                photo: "https://www.moblee.com.br/blog/wp-content/uploads/sites/2/2021/11/evento-corporativo-interno.jpg",
+                start_date: new Date().toDateString()
+            }),
+            headers: {
+                "Content-type": "application/json"
+            }
+        })
+        .then(res => res.json())
+        .then(data => console.log(data))
+    </script>
+</body>
+</html>

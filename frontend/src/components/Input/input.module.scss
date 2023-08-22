@@ -1,0 +1,21 @@
+.input {
+  font-size: 1rem;
+  padding: 0.5rem;
+  background: none;
+  width: 100%;
+  
+  border-bottom: 1px solid var(--gray-300);
+  
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: 0.4s;
+
+  &::placeholder {
+    color: var(--gray-700);
+  }
+
+  &:focus {
+    border-color: var(--yellow-500);
+  }
+}

@@ -1,0 +1,85 @@
+.registerContainer {
+  h1 {
+    font-size: 2rem;
+    margin: 2rem 0 3rem;
+    text-align: center;
+  }
+}
+
+.registerContent {
+  display: flex;
+  gap: 5rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.formContainer {
+  width: 50%;
+  max-width: 30rem;
+  font-size: 1rem;
+  padding: 3rem;
+  
+  background-color: var(--white);
+  border-radius: 5px;
+  box-shadow: 0 0 5px gray;
+  border: 1px solid  var(--gray-300);
+
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  button {
+    margin: 1rem 0;
+  }
+
+  p {
+    text-align: center;
+  }
+
+  a {
+    color: var(--yellow-500);
+  }
+}
+
+.isPromoter {
+  margin-top: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+
+  p {
+    font-weight: 700;
+  }
+
+  div {
+    display: flex;
+    gap: 1rem;
+  }
+}
+
+.infosContainer {
+  display: none;
+  
+  @media(min-width: 1120px) {
+    width: 40%;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3rem;
+    
+    h2 {
+      font-size: 1.6rem;
+      text-align: center;
+    }
+  
+    img {
+      width: 30%;
+    }
+  }
+}
+
+.formError {
+  color: #f75a68
+}

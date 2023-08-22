@@ -1,0 +1,48 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Event {
+  id          String @id @default(uuid())
+  name        String
+  photo       String
+  description String
+  start_date  String
+  user_id     String
+  category_id     String
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  type EventCategory @relation(fields: [category_id], references: [id])
+
+  @@index([user_id, category_id])
+  @@map("events")
+}
+
+model EventCategory {
+  id    String @id @default(uuid())
+  name  String 
+  photo String
+  
+  events Event[]
+
+  @@map("event_categories")
+}
+
+model User {
+  id       String @id @default(uuid())
+  name     String
+  email    String
+  password String
+
+  events Event[]
+
+  @@map("users")
+}
