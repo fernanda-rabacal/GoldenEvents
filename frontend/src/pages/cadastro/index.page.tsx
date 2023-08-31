@@ -1,21 +1,21 @@
+import styles from "./styles.module.scss"
 import Head from "next/head";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { useEffect } from 'react'
-import {  useForm } from "react-hook-form"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod";
+import z  from 'zod'
 import { Button } from "@/components/Button";
 import { mask } from "@/utils/mask";
 import { Input } from "@/components/Input";
 import { PasswordInput } from "@/components/PasswordInput";
-import { api } from "@/lib/axios";
-import z  from 'zod'
-import { zodResolver } from "@hookform/resolvers/zod";
-import styles from "./styles.module.scss"
-import { useRouter } from "next/router";
 import { toastNotify } from "@/lib/toastify";
+import { api } from "@/lib/axios";
 
 interface IRegister {
-  name: string;/* 
-  cpf: string; */
+  name: string;
+  cpf: string;
   email: string;
   password: string;
   confirm_password: string;/* 
@@ -30,6 +30,9 @@ const registerFormSchema = z.object({
     .string()
     .min(1, { message: "Este campo é obrigatório" })
     .email("Informe um email válido."),
+  cpf: z
+    .string()
+    .min(1, { message: "Este campo é obrigatório" }),
   password: z
     .string()
     .min(1, { message: "Este campo é obrigatório" }),
@@ -55,34 +58,30 @@ export default function RegisterPage() {
     resolver: zodResolver(registerFormSchema)
   })
 
-  /* const cpfValue = watch("cpf")
+  const cpfValue = watch("cpf")
 
   useEffect(() => {
     setValue("cpf", mask(cpfValue))
 
   },[cpfValue])
- */
 
   const router = useRouter()
 
   const handleRegister = async (data: IRegister) => {
     let response = await api.post("/register", data)
 
-    console.log(data)
-
     if(response.status !== 200) {
-      return toastNotify('error', "Erro")
+      return toastNotify('error', response.data.message)
     }
     
     toastNotify('success', "Cadastro feito com Sucesso!")
-
-    console.log(response)
+    router.push('/login')
   }
 
   return(
     <>
       <Head>
-        <title>Cadastro - Eventos</title>
+        <title>Cadastro - Golden Eventos</title>
       </Head>
 
       <main className={styles.registerContainer}>
@@ -95,11 +94,11 @@ export default function RegisterPage() {
                 <Input id="name" type="text" placeholder="Nome e sobrenome" {...register("name")} />
                 {errors.name && <p className={styles.formError}>{errors.name.message}</p>}
               </div>
-              {/* <div>
+              <div>
                 <label htmlFor="cpf">CPF</label>
                 <Input type="text" maxLength={14}
                 {...register("cpf")} />
-              </div> */}
+              </div>
               <div>
                 <label htmlFor="email">E-mail</label>
                 <Input id="email" type="email" {...register("email")} />

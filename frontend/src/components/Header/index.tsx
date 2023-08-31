@@ -17,7 +17,7 @@ export function Header() {
           <Link href="./login">Contato</Link>
           {
             user ?
-            <Link href="./login"  className={styles.loginLink}>{user.name}</Link>
+            <Link href={`/${user.name}`}  className={styles.loginLink}>{user.name}</Link>
             :
             <Link href="./login"  className={styles.loginLink}>Login</Link>
           }

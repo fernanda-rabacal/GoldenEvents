@@ -61,13 +61,14 @@ export const getUserByToken = async (request: Request, response: Response) => {
 }
 
 export const createUser = async (request: Request, response: Response) => {
-    const { name, email, password } = request.body;
+    const { name, email, password, cpf } = request.body;
   
     try {
       const user = await prisma.user.create({
         data: {
             name,
             email,
+            cpf,
             password: await encryptPassword(password), 
         }
       });
