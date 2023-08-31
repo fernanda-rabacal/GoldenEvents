@@ -1,0 +1,22 @@
+.categoryDisplay {
+    background-color: var(--gray-100);
+    width: 15rem;
+    padding: 2rem;
+    border-radius: 10px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+
+    img {
+        width: 7rem;
+        height: 7rem;
+        border-radius: 50%;
+    }
+
+    span {
+        font-size: 1.2rem;
+    }
+}

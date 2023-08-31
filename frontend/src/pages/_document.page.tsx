@@ -1,6 +1,7 @@
 import { Html, Head, Main, NextScript } from 'next/document'
+import { Metadata } from 'next'
 
-export const metadata = {
+export const metadata: Metadata = {
   title: {
     default: "Golden eventos",
     template: "%s | Golden eventos"

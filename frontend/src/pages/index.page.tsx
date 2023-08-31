@@ -1,14 +1,15 @@
-import { MagnifyingGlass } from "phosphor-react"
+import styles from "./styles.module.scss"
+import Head from "next/head"
+import { Calendar, CheckCircle, ClipboardText, MagnifyingGlass } from "phosphor-react"
 import { Input } from "@/components/Input"
 import { EventCard } from "@/components/EventCard"
 import { Header } from "@/components/Header"
-import styles from "./styles.module.scss"
-import Head from "next/head"
 import { Footer } from "@/components/Footer/Footer"
 import { GetStaticProps } from "next"
 import { api } from "@/lib/axios"
 import { Event } from "@/@types/interfaces"
 import { useState } from "react"
+import { EventCategoryDisplay } from "@/components/EventCategoryDisplay"
 
 interface PageProps {
     events: Event[],
@@ -21,19 +22,19 @@ interface PageProps {
 
 export default function Home( { events, categories } : PageProps) {
     const [offset, setOffset] = useState(6)
-    const [events1, setEvents1] = useState(events)
+    const [filteredEvents, setFilteredEvents] = useState(events)
 
     function handleLoadMoreEvents() {
         const filteredEvents = events.filter((_, index )=> index < offset)
 
-        setEvents1(filteredEvents)
+        setFilteredEvents(filteredEvents)
         setOffset(prevState => prevState + 6)
     }
 
   return (
     <>  
         <Head>
-            <title>Make Me an Event</title>
+            <title>Golden Eventos</title>
         </Head>
         
         <main className={styles.pageContainer}>
@@ -55,7 +56,7 @@ export default function Home( { events, categories } : PageProps) {
                 <h2>Próximos eventos</h2>
 
                 <div>
-                    {events1.map(event => {
+                    {filteredEvents.map(event => {
                         return (
                             <EventCard 
                                 key={event.id}
@@ -84,21 +85,40 @@ export default function Home( { events, categories } : PageProps) {
                 </div>
             </section>
 
-            <section>
+            <section className={styles.categoriesSection}>
                 
                 <h2>Explore as categorias</h2>
 
-                <div>
+                <div className="categories">
                     {categories.map(category => {
                         return (
-                            <div key={category.id}>
-                                <img src={category.photo} alt={`${category.name} poster`} />
-                                <span>{category.name}</span>
-                            </div>
+                            <EventCategoryDisplay
+                                key={category.id} 
+                                name={category.name}
+                                photo={category.photo}
+                                />
                         )
                     })}
                 </div>
+            </section>
 
+            <section className={styles.advantagesSection}>
+                <h2>Faça memórias com a Golden Eventos</h2>
+
+                <div>
+                    <div>
+                        <Calendar />
+                        <p>Encontre uma grande variedade de eventos</p>
+                    </div>
+                    <div>
+                        <ClipboardText />
+                        <p>Organize seus eventos com  mais confiança</p>
+                    </div>
+                    <div>
+                        <CheckCircle />
+                        <p>Aproveite todas as vantagens do nosso site</p>
+                    </div>
+                </div>
             </section>
         </main>
         
@@ -113,8 +133,8 @@ export const getStaticProps: GetStaticProps = async () => {
 
     return {
       props: {
-        events: eventData.data.events,
-        categories: categoryData.data.categories, 
+        events: eventData.data.events ? eventData.data.events : [],
+        categories: categoryData.data.categories ? categoryData.data.categories : [], 
       },
       revalidate: 60 * 60 
     }

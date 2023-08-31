@@ -5,6 +5,7 @@ import { validateToken } from '../helpers/handleToken';
 export const getAllEvents = async (req: Request, res: Response) => {
     try {
         const events = await prisma.event.findMany()
+
         
         return res.json({ events })
     } catch (e) {
@@ -63,7 +64,7 @@ export const getEventCategoryById = async (req: Request, res: Response) => {
 }
 
 export const createEvent = async (req: Request, res: Response) => {
-    const { name, start_date, photo, description, category_id } = req.body
+    const { name, start_date, photo, description, category_id, capacity, location } = req.body
     const { authorization } = req.headers;
 
     const token = authorization!.replace("Bearer", "").trim();
@@ -88,6 +89,8 @@ export const createEvent = async (req: Request, res: Response) => {
                 description,
                 category_id,
                 user_id: user!.id,
+                capacity,
+                location
             }
         })
 
