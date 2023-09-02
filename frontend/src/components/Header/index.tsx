@@ -1,11 +1,13 @@
-import { useContext } from "react"
-import { AuthContext } from "@/contexts/AuthContext"
 import styles from "./styles.module.scss"
 import Link from "next/link"
+import { useContext } from "react"
+import { AuthContext } from "@/contexts/AuthContext"
 import { ShoppingCart } from "phosphor-react"
 
 export function Header() {
   const { user } = useContext(AuthContext)
+
+  const userFirstName = user?.name.slice(0, user?.name.indexOf(" "))
 
   return(
     <header className={styles.headerContainer}>
@@ -17,7 +19,7 @@ export function Header() {
           <Link href="./login">Contato</Link>
           {
             user ?
-            <Link href={`/${user.name}`}  className={styles.loginLink}>{user.name}</Link>
+            <Link href={`/profile/${user.name}`}  className={styles.loginLink}>{userFirstName}</Link>
             :
             <Link href="./login"  className={styles.loginLink}>Login</Link>
           }

@@ -1,3 +1,4 @@
+import styles from './styles.module.scss'
 import { api } from "@/lib/axios"
 import { GetServerSideProps, GetStaticPaths } from "next"
 
@@ -24,6 +25,8 @@ export const getServerSideProps : GetServerSideProps = async ({ params }) => {
       }
 
     return {
-        props: {}
+        props: {
+          user
+        }
     }
 }

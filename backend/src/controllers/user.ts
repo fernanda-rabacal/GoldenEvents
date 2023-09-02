@@ -36,6 +36,7 @@ export const getUserById = async (request: Request, response: Response) => {
 export const getUserByToken = async (request: Request, response: Response) => {
   const { authorization } = request.headers;
 
+
   const token = authorization!.replace("Bearer", "").trim();
   const tokenInfo = validateToken(token);
 

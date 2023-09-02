@@ -1,0 +1,39 @@
+.container {
+    text-align: center;
+    padding: 2rem 5rem;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 5rem;
+
+    img {
+        width: 50%;
+        display: none;
+    }
+
+    h1 {
+        font-size: 10rem;
+        color: var(--yellow-500);
+    }
+
+    p {
+        font-size: 2rem;
+        margin-bottom: 3rem;
+    }
+
+    a {
+        color: var(--white);
+        background-color: var(--red-800);
+        padding: 0.675rem 2rem;
+        border-radius: 5px;
+    }
+}
+
+@media(min-width: 700px) {
+    .container {
+        img {
+            display: initial;
+        }
+    }
+}

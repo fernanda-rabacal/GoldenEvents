@@ -19,13 +19,6 @@ type SignInData = {
   password: string;
 }
 
-type SignInResponseData = {
-  data: {
-    token: string;
-    user: User 
-  }
-}
-
 type AuthContextType = {
   isAuthenticated: boolean;
   user: User | null;
@@ -42,34 +35,22 @@ export function AuthContextProvider({ children } : AuthProps) {
 
   const router = useRouter()
 
- /*  useEffect(() => {
-    async function getUser() {
-      const { 'nextauth.token': token } = parseCookies()
-  
-      if (token && !user) {
-        const user : User = await api.get("/users/recover", {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        })
-        
-        setUser(user)
-      }
-    }
-
-    getUser()
-  }, [])
- */
   function signOut() {
     destroyCookie(undefined, 'nextauth.token')
   }
 
   async function signIn({ email, password }: SignInData) {
     try {
-      const { data: { token, user }} : SignInResponseData = await api.post('/login', {
+      const response = await api.post('/login', {
         email,
         password
       })
+      
+      if(response.status !== 200) {
+        throw new Error(response.data.message) 
+      }
+
+      const { user, token } = response.data
       
       setCookie(undefined, 'nextauth.token', token, {
         maxAge: 60 * 60 * 24 * 7, // 7 days
@@ -82,7 +63,39 @@ export function AuthContextProvider({ children } : AuthProps) {
       toastNotify('error', err.response.data.message)
     }
   }
+  
+  async function getUserByToken() {
+    const token = parseCookies(null, "nextauth.token")
 
+    if(!token) {
+      return setUser(null) 
+    }
+
+    try {
+      const response = await api.get("/token", {
+        headers: {
+          'Authorization': `Bearer ${token["nextauth.token"]}`
+        }
+      })
+
+      console.log(response)
+      
+      if(response.status !== 200) {
+        throw new Error(response.data.message) 
+      }
+
+      const { user } = response.data
+
+      setUser(user)
+    } catch(err: any) {
+      toastNotify('error', err.response.data.message)
+    }
+  }
+
+  useEffect(() => {
+    getUserByToken()
+  }, [])
+  
 
   return (
     <AuthContext.Provider value={{ user, isAuthenticated, signIn, signOut }}>

@@ -29,6 +29,6 @@ export const login = async (request: Request, response: Response) => {
 
     return response.status(200).json({ user, token });
   } catch (error) {
-    return response.status(200).json({ message: "Falha ao fazer login" });
+    return response.status(500).json({ message: "Falha ao fazer login" });
   }
 };

@@ -23,7 +23,7 @@ route.delete('/api/events/delete/:id', authentication, eventController.deleteEve
 
 route.get('/api/users', userController.getAllUsers)
 route.get('/api/users/:id', userController.getUserById)
-route.get('/api/users/recover', authentication, userController.getUserByToken)
+route.get('/api/token', authentication, userController.getUserByToken)
 route.post('/api/login', loginController.login)
 route.post('/api/register', validateUserData, userController.createUser)
 route.put('/api/users/update/:id', authentication, validateUserData, userController.updateUser)
