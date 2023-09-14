@@ -1,0 +1,42 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    padding: 0.5rem;
+
+    label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-size: 1.2rem;
+        font-weight: 700;
+    }
+
+    input {
+        padding: 1rem 0.675rem;
+        border: 1px solid var(--gray-300);
+        border-radius: 5px;
+        width: 100%;
+    }
+    
+    select {
+        background-color: var(--white);
+        border: 1px solid var(--gray-300);
+        padding: 1rem 1.2rem;
+        border-radius: 5px;
+    }
+}
+
+.creditCardInfos {
+    display: flex;
+    justify-content: space-between;
+
+    > div {
+        width: 50%;
+    }
+}
+
+.selectsContainer {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}

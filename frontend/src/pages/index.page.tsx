@@ -8,7 +8,7 @@ import { Footer } from "@/components/Footer/Footer"
 import { GetStaticProps } from "next"
 import { api } from "@/lib/axios"
 import { Event } from "@/@types/interfaces"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { EventCategoryDisplay } from "@/components/EventCategoryDisplay"
 
 interface PageProps {
@@ -23,13 +23,47 @@ interface PageProps {
 export default function Home( { events, categories } : PageProps) {
     const [offset, setOffset] = useState(6)
     const [filteredEvents, setFilteredEvents] = useState(events)
+    const [search, setSearch] = useState("")
 
-    function handleLoadMoreEvents() {
-        const filteredEvents = events.filter((_, index )=> index < offset)
-
-        setFilteredEvents(filteredEvents)
+    const handleLoadMoreEvents = () => {
+        
+      //  setFilteredEvents(filteredEvents)
         setOffset(prevState => prevState + 6)
     }
+
+    const filterEvents = () => {
+        let updatedEvents : Event[] = []
+
+        updatedEvents = events.filter((event : Event) => {
+            if(search) {
+                const name = event.name.toLowerCase()
+    
+                return name.includes(search.toLowerCase())
+            }
+
+            return event
+        })
+        
+        updatedEvents = updatedEvents.filter((_ : any, index: number) => index < offset)
+
+        setFilteredEvents(updatedEvents)
+    }
+
+    /* const filterPerQuantity = (_ : any, index: number) => {
+        return index < offset
+    }
+
+    const filterPerSearch = (event : Event) => {
+        const name = event.name.toLowerCase()
+
+        return name.includes(search.toLowerCase())
+    } */
+
+    useEffect(() => {
+        filterEvents()
+
+        console.log(new Date().toISOString())
+    }, [search, offset])
 
   return (
     <>  
@@ -47,7 +81,11 @@ export default function Home( { events, categories } : PageProps) {
                     <p>E agende instantaneamente conosco</p>
                 </div>
                 <div className={styles.searchWrapper}>
-                    <Input type="search" placeholder="Encontre o evento que deseja.." />
+                    <Input  
+                        type="search" 
+                        placeholder="Encontre o evento que deseja.." 
+                        onChange={(e) => setSearch(e.target.value)}
+                        />
                     <MagnifyingGlass size={32} weight="bold" color="#fff" />
                 </div>
             </section>

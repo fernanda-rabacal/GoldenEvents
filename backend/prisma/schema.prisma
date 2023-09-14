@@ -8,22 +8,22 @@ datasource db {
 }
 
 model Event {
-  id          String    @id @default(uuid())
+  id          String        @id @default(uuid())
   name        String
   photo       String
-  description String 
+  description String
   start_date  String
   user_id     String
   category_id String
   capacity    Int
+  price       Int @default(35)
   location    String
-  created_at  DateTime @default(now())
-  updated_at  DateTime @default(now()) @updatedAt
+  created_at  DateTime      @default(now())
+  updated_at  DateTime      @default(now()) @updatedAt
   deleted_at  DateTime?
-
-  user   User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  type   EventCategory @relation(fields: [category_id], references: [id])
-  Ticket Ticket[]
+  type        EventCategory @relation(fields: [category_id], references: [id])
+  user        User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  Ticket      Ticket[]
 
   @@index([user_id, category_id])
   @@map("events")
@@ -34,40 +34,38 @@ model Ticket {
   event_id   String
   user_id    String
   price      Int
-  buy_date   DateTime
-  created_at DateTime @default(now())
-  updated_at DateTime @default(now()) @updatedAt
+  created_at DateTime  @default(now())
+  updated_at DateTime  @default(now()) @updatedAt
   deleted_at DateTime?
-
-  user  User  @relation(fields: [user_id], references: [id])
-  event Event @relation(fields: [event_id], references: [id])
+  event      Event     @relation(fields: [event_id], references: [id])
+  users      User      @relation(fields: [user_id], references: [id])
 
   @@index([user_id, event_id])
   @@map("tickets")
 }
 
 model EventCategory {
-  id    String @id @default(uuid())
-  name  String
-  photo String
+  id         String       @id @default(uuid())
+  name       String
+  photo      String
 
-  events Event[]
+  events     Event[]
 
   @@map("event_categories")
 }
 
 model User {
-  id         String    @id @default(uuid())
+  id         String       @id @default(uuid())
   name       String
   email      String
   password   String
   cpf        String
-  created_at DateTime @default(now())
-  updated_at DateTime @default(now()) @updatedAt
+  created_at DateTime     @default(now())
+  updated_at DateTime     @default(now()) @updatedAt
   deleted_at DateTime?
 
-  events Event[]
-  Ticket Ticket[]
+  events     Event[]
+  tickets    Ticket[]
 
   @@map("users")
 }

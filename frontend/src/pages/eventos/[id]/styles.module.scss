@@ -72,19 +72,16 @@
     font-size: 1.5rem;
   }
 
-  input {
-    border: 1px solid rgb(194, 194, 194);
-    border-radius: 10px;
-    padding: 0.675rem;
-    margin-right: 1rem;
-    width: 30%;
+  div {
+    display: flex;
+    justify-content: space-between;
   }
+}
 
-  button {
-    color: var(--white);
-    background-color: var(--red-800);
-    padding: 0.675rem;
-    width: 65%;
-    border-radius: 10px;
-  }
+.buyButton {
+  color: var(--white);
+  background-color: var(--red-800);
+  padding: 0.675rem;
+  width: 65%;
+  border-radius: 10px;
 }

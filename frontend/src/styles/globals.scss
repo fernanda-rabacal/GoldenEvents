@@ -1,10 +1,11 @@
 :root {
   --white: #fff;
-  --gray-100: #e1e1e6;
+  --gray-100: #f0f0f0;
+  --gray-200: #d3d3d3;
   --gray-300: #a8a8b3;
   --gray-400: #8D8686;
-  --gray-500: #484f56; 
-  --gray-600: #585656;
+  --gray-500: #585656;
+  --gray-600: #383e44; 
   --gray-700: #29292e;
   --gray-800: #1f2729;
   --gray-850: #272221;
@@ -16,6 +17,7 @@
 
   --red-200: #BF7960;
   --red-300: #f84747;
+  --red-500: #b90000;
   --red-800: #590202;
   --beige-100: #fffaf0;
 }
@@ -52,6 +54,16 @@ input {
 a {
   color: inherit;
   text-decoration: none;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  appearance: textfield;
 }
 
 main {  

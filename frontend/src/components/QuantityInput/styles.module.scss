@@ -1,0 +1,43 @@
+.container {
+  flex: 1;
+  background: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  border-radius: 6px;
+  max-width: 6rem;
+  max-height: 100%;
+
+  input {
+    text-align: center;
+    width: 100%;
+    font-weight: 700;
+    background: none;
+    border: none;
+    color: var(--gray-900);
+    
+    &:focus {
+      outline: none;
+    }
+  }
+}
+
+.iconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3rem;
+  width: 1.85rem;
+  height: 100%;
+  color: var(--gray-900);
+  transition: 0.4s;
+
+  &:disabled {
+    opacity: 0.4;
+  }
+
+  &:not(:disabled):hover {
+    color: var(--gray-500);
+  }
+}

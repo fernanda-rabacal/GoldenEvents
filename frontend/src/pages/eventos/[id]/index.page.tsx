@@ -1,21 +1,50 @@
-import styles from './styles.module.scss'
+import Link from 'next/link'
+import Head from 'next/head'
 import { GetStaticPaths, GetStaticProps } from 'next'
 import { Event } from '@/@types/interfaces'
 import { api } from '@/lib/axios'
-import Head from 'next/head'
 import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer/Footer'
-import { Button } from '@/components/Button'
 import { CaretLeft, Clock } from 'phosphor-react'
 import { formatDate } from '@/utils/format_date'
-import Link from 'next/link'
+import { useRouter } from 'next/router'
+import { formatMoney } from '@/utils/format_money'
+import { useCart } from '@/hooks/useCart'
+import { useState } from 'react'
+import styles from './styles.module.scss'
+import { QuantityInput } from '@/components/QuantityInput'
 
 interface PageProps {
   event: Event
 }
 
 export default function EventDetails({ event }: PageProps) {
+  const [quantity, setQuantity] = useState(0)
+  const router = useRouter()
+
+  const { addEventToCart } = useCart()
+
   const date = formatDate(event.start_date)
+  const price = formatMoney(event.price)
+
+  const handleNavigateToCheckout = () => {
+    const eventToBuy = {
+      ...event,
+      quantity
+    }
+
+    addEventToCart(eventToBuy)
+
+    router.push(`/checkout?id=${event.id}`)
+  }
+
+  function handleIncrease() {
+    setQuantity((state) => state + 1);
+  }
+
+  function handleDecrease() {
+    setQuantity((state) => state - 1);
+  }
 
   return (
     <>
@@ -24,7 +53,6 @@ export default function EventDetails({ event }: PageProps) {
       </Head>
       <main>
         <Header />
-
 
         <section className={styles.container}>
           <Link href="/" className={styles.goBackButton}>
@@ -45,11 +73,15 @@ export default function EventDetails({ event }: PageProps) {
             </div>
 
             <aside className={styles.buyTicket}>
-                <span>Ingressos por <strong>R$ 35,00</strong> /pessoa</span>
+                <span>Ingressos por R$ <strong>{price}</strong> /pessoa</span>
 
                 <div>
-                  <input type='number' />
-                  <button>Reservar</button>
+                  <QuantityInput 
+                    onIncrease={handleIncrease}
+                    onDecrease={handleDecrease}
+                    quantity={quantity}
+                  />
+                  <button className={styles.buyButton} onClick={handleNavigateToCheckout}>Reservar</button>
                 </div>
               </aside>
           </div>

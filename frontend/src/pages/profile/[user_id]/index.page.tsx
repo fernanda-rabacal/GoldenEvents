@@ -2,7 +2,19 @@ import styles from './styles.module.scss'
 import { api } from "@/lib/axios"
 import { GetServerSideProps, GetStaticPaths } from "next"
 
-export default function UserProfile() {
+interface User {
+  id: string
+  name: string
+  email: string
+  password: string
+  cpf: string
+}
+
+interface PageProps {
+  user: User
+}
+
+export default function UserProfile({ user } : PageProps) {
     return <></>
 }
 
