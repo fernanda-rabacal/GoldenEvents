@@ -1,6 +1,6 @@
 # Golden Events
 
-This is a full stack project of a website where you can see the latest events near to you, see the details of it, register or login in your account to buy a ticket and/or create an event. Besides, you can see and edit your profile, see the order historic, edit or delete your created events and many more. This project is made with Next.js e Express, also using Sass and Prisma, using JWT authentication, data validation and SQL database.
+This is a full stack project of a website where you can see the latest events near to you, see the details of it, register or login in your account to buy a ticket and/or create an event. Besides, you can see and edit your profile, see the order historic, edit or delete your created events and many more. This project is made with Next.js e Express, also using Sass and Prisma, using JWT authentication, data validation and SQL database
 
 ### Status: In progress 🚧
 
@@ -10,6 +10,7 @@ This is a full stack project of a website where you can see the latest events ne
 #### Needs to do:
 
 - User CRUD funcionality
+- Containering the application
 
 ### Technologies 🧰
 
