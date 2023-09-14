@@ -2,17 +2,27 @@ import styles from './styles.module.scss'
 import Head from 'next/head'
 import { useCart } from '@/hooks/useCart'
 import { formatDate } from '@/utils/format_date'
-import { useEffect } from 'react'
+import { ChangeEvent, useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { formatMoney } from '@/utils/format_money'
 import { QuantityInput } from '@/components/QuantityInput'
 import { Header } from '@/components/Header'
 import { CreditCardForm } from './components/CreditCardForm'
+import { BilletForm } from './components/BilletForm'
+import { PixForm } from './components/PixForm'
+
 
 export default function Checkout() {
+    const [paymentMethod, setPaymentMethod] = useState("credit")
     const router = useRouter()
     const { event, changeEventQuantity } = useCart()
-
+    
+    useEffect(() => {
+        if(!event) {
+            router.push('/')
+        }
+    }, [])
+    
     if(!event) {
         return <></>
     }
@@ -24,17 +34,16 @@ export default function Checkout() {
 
     const handleIncrease = () => {
         changeEventQuantity("increase")
-      }
+    }
     
     const handleDecrease = () => {
         changeEventQuantity("decrease")
     }
 
-    useEffect(() => {
-        if(!event) {
-            router.push('/')
-        }
-    }, [])
+    const handleOptionChange = (e: ChangeEvent<HTMLInputElement>) => {
+        setPaymentMethod(e.target.value)
+    }
+
 
     return (
         <>
@@ -44,6 +53,56 @@ export default function Checkout() {
             <Header />
             
             <main className={styles.container}>
+                <section className={styles.paymentMethods}>
+                    <h2>Escolha sua forma de pagamento</h2>
+
+                    <form>
+                        <div className={styles.paymentTypes}>
+                            <div>
+                                <input 
+                                    type='radio' 
+                                    id='credit'
+                                    value="credit"
+                                    name='payment_option'
+                                    checked={paymentMethod === "credit"}
+                                    onChange={handleOptionChange}
+                                    />
+                                <label htmlFor='credit'>Crédito</label>
+                            </div>
+                            <div>
+                                <input 
+                                    type='radio' 
+                                    id="pix"
+                                    value="pix"
+                                    name='payment_option'
+                                    checked={paymentMethod === "pix"}
+                                    onChange={handleOptionChange}
+                                    />
+                                <label htmlFor='pix'>Pix</label>
+                            </div>
+                            <div>
+                                <input 
+                                    type='radio' 
+                                    id="billet"
+                                    value="billet"
+                                    name='payment_option'
+                                    checked={paymentMethod === "billet"}
+                                    onChange={handleOptionChange}
+                                    />
+                                <label>Boleto</label>
+                            </div>
+                        </div>
+                        {
+                            paymentMethod === "credit" ?
+                                <CreditCardForm />
+                                :
+                            paymentMethod === "billet" ?
+                                <BilletForm /> 
+                                :
+                                <PixForm />
+                        }
+                    </form>
+                </section>
 
                 <section className={styles.selectedTicket}>
                     <h1>Resumo da compra</h1>
@@ -75,7 +134,7 @@ export default function Checkout() {
                     </div>
 
                     <div className={styles.finishBuyingTicket}>
-                        <h2>Total</h2>
+                        <strong>Total</strong>
                         <div>
                             <strong>R$ {totalCost}</strong>
                             <span style={{color: "#00b60d"}}>
@@ -88,29 +147,6 @@ export default function Checkout() {
                         <button className={styles.cancelBuyingButton}>Cancelar</button>
                         <button className={styles.buyTicketButton}>Comprar</button>
                     </div>
-                </section>
-
-                <section className={styles.paymentMethods}>
-                    <h2>Escolha sua forma de pagamento</h2>
-
-                    <form>
-                        <div className={styles.paymentTypes}>
-                            <div>
-                                <input type='radio' name=''/>
-                                <label>Pix</label>
-                            </div>
-                            <div>
-                                <input type='radio' name=''/>
-                                <label>Crédito</label>
-                            </div>
-                            <div>
-                                <input type='radio' name=''/>
-                                <label>Boleto</label>
-                            </div>
-                        </div>
-
-                        <CreditCardForm />
-                    </form>
                 </section>
             </main>
         </>

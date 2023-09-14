@@ -19,7 +19,7 @@ interface PageProps {
 }
 
 export default function EventDetails({ event }: PageProps) {
-  const [quantity, setQuantity] = useState(0)
+  const [quantity, setQuantity] = useState(1)
   const router = useRouter()
 
   const { addEventToCart } = useCart()

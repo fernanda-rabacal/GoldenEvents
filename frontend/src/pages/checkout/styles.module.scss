@@ -5,6 +5,10 @@
     padding: 0 4rem;
     gap: 4rem;
     margin-top: 5rem;
+
+    strong {
+        font-size: 1.6rem;
+    }
 }
 
 .selectedTicket, .paymentMethods  {
