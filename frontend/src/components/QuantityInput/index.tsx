@@ -19,7 +19,7 @@ return (
       <button className={styles.iconWrapper} onClick={onDecrease} disabled={quantity <= 1}>
         <Minus size={14} weight="fill" />
       </button>
-      <input type="number" readOnly value={quantity}/>
+      <input type="number" readOnly value={quantity} min={1} />
       <button  className={styles.iconWrapper} onClick={onIncrease}>
         <Plus size={14} weight="fill" />
       </button>

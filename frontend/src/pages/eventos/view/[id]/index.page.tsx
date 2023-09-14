@@ -51,16 +51,18 @@ export default function EventDetails({ event }: PageProps) {
       <Head>
         <title>{event.name} | Eventos</title>
       </Head>
-      <main>
-        <Header />
+      
+      <Header />
 
+      <main>
         <section className={styles.container}>
           <Link href="/" className={styles.goBackButton}>
             <CaretLeft />
             Voltar
             </Link>
 
-          <img src={event.photo} />
+           
+          <img src={event.photo} alt={`${event.name} poster`}/>
 
           <div className={styles.eventDetails}>
             <div className={styles.titleAndDay}>

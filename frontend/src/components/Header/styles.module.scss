@@ -1,10 +1,18 @@
 .headerContainer {
   width: 100%;
-  padding: 1rem 0;
+  padding: 1rem;
   margin-inline: auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  max-width: 60rem;
+
+  @media(min-width: 720px){
+    & {
+      max-width: 130rem;
+      padding: 1rem 5rem;
+    }
+  }
 }
 
 .headerContainer img {

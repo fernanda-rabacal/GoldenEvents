@@ -7,6 +7,7 @@ import validateEventData from './middlewares/event';
 import validateUserData from './middlewares/user';
 import authentication from './middlewares/authentication';
 import cors from 'cors'
+import validateTicketData from './middlewares/ticket';
 
 const app = express();
 const route = Router()
@@ -21,6 +22,8 @@ route.post('/api/events/create', authentication, validateEventData, eventControl
 route.put('/api/events/update/:id', authentication, validateEventData, eventController.updateEvent)
 route.delete('/api/events/delete/:id', authentication, eventController.deleteEvent)
 
+route.post('/api/events/buy-ticket/:id', authentication, validateTicketData, eventController.buyEventTicket)
+
 route.get('/api/users', userController.getAllUsers)
 route.get('/api/users/:id', userController.getUserById)
 route.get('/api/token', authentication, userController.getUserByToken)
@@ -28,6 +31,10 @@ route.post('/api/login', loginController.login)
 route.post('/api/register', validateUserData, userController.createUser)
 route.put('/api/users/update/:id', authentication, validateUserData, userController.updateUser)
 route.delete('/api/users/delete/:id', authentication, validateUserData, userController.deleteUser)
+
+
+
+
 
 app.use(route)
 

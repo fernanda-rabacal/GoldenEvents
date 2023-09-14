@@ -7,7 +7,7 @@ interface CartContextProviderProps {
 
 interface CartEvent extends Event {
     quantity: number;
-    price: number
+    price: number;
 }
 
 interface CartContextType {

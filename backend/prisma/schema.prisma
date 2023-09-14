@@ -16,7 +16,7 @@ model Event {
   user_id     String
   category_id String
   capacity    Int
-  price       Int @default(35)
+  price       Int           @default(0)
   location    String
   created_at  DateTime      @default(now())
   updated_at  DateTime      @default(now()) @updatedAt
@@ -30,42 +30,43 @@ model Event {
 }
 
 model Ticket {
-  id         String    @id @default(uuid())
-  event_id   String
-  user_id    String
-  price      Int
-  created_at DateTime  @default(now())
-  updated_at DateTime  @default(now()) @updatedAt
-  deleted_at DateTime?
-  event      Event     @relation(fields: [event_id], references: [id])
-  users      User      @relation(fields: [user_id], references: [id])
+  id             String    @id @default(uuid())
+  event_id       String
+  user_id        String
+  price          Int
+  payment_method String
+  created_at     DateTime  @default(now())
+  updated_at     DateTime  @default(now()) @updatedAt
+  deleted_at     DateTime?
+  event          Event     @relation(fields: [event_id], references: [id])
+  user           User      @relation(fields: [user_id], references: [id])
 
   @@index([user_id, event_id])
   @@map("tickets")
 }
 
 model EventCategory {
-  id         String       @id @default(uuid())
-  name       String
-  photo      String
+  id    String @id @default(uuid())
+  name  String
+  photo String
 
-  events     Event[]
+  events Event[]
 
   @@map("event_categories")
 }
 
 model User {
-  id         String       @id @default(uuid())
+  id         String    @id @default(uuid())
   name       String
   email      String
   password   String
   cpf        String
-  created_at DateTime     @default(now())
-  updated_at DateTime     @default(now()) @updatedAt
+  created_at DateTime  @default(now())
+  updated_at DateTime  @default(now()) @updatedAt
   deleted_at DateTime?
 
-  events     Event[]
-  tickets    Ticket[]
+  events  Event[]
+  tickets Ticket[]
 
   @@map("users")
 }

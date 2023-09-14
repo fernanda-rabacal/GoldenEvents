@@ -17,7 +17,7 @@ export function EventCard({ name, description, photo, start_date, id } : EventCa
   const date = new Date(start_date).getDate()
 
   function navigateToDetails() {
-    router.push(`/eventos/${id}`)
+    router.push(`/eventos/view/${id}`)
   }
 
   return(

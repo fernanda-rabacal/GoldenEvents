@@ -10,6 +10,12 @@ import { Header } from '@/components/Header'
 import { CreditCardForm } from './components/CreditCardForm'
 import { BilletForm } from './components/BilletForm'
 import { PixForm } from './components/PixForm'
+import { api } from '@/lib/axios'
+import { toastNotify } from '@/lib/toastify'
+import { useAuth } from '@/hooks/useAuth'
+import { parseCookies } from 'nookies'
+import { ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css';
 
 
 export default function Checkout() {
@@ -17,11 +23,11 @@ export default function Checkout() {
     const router = useRouter()
     const { event, changeEventQuantity } = useCart()
     
-    useEffect(() => {
+   /*  useEffect(() => {
         if(!event) {
-            router.push('/')
+           return router.push('/')
         }
-    }, [])
+    }, []) */
     
     if(!event) {
         return <></>
@@ -44,6 +50,39 @@ export default function Checkout() {
         setPaymentMethod(e.target.value)
     }
 
+    const handleBuyTicket = async () => {
+        const token = parseCookies(null, "nextauth.token")
+
+        const ticketInfos = {
+            quantity: event.quantity,
+            payment_method: paymentMethod
+        }
+
+        try {
+            const response = await api.post(`/events/buy-ticket/${event.id}`, ticketInfos,
+            {
+                headers: {
+                    'Authorization': `Bearer ${token["nextauth.token"]}`
+                }
+            })
+
+            if(response.status !== 201) {
+                throw new Error(response.data.message)
+            }
+
+            console.log("oie")
+    
+            toastNotify("success", "Compra realizada com sucesso!")
+            router.push("/")
+        } catch(err: any) {
+            toastNotify("error", err.message)
+        }
+    }
+
+    const handleCancelOperation = () => {
+        router.push("/")
+    }
+
 
     return (
         <>
@@ -51,7 +90,7 @@ export default function Checkout() {
                 <title>Checkout - Golden Eventos</title>
             </Head>
             <Header />
-            
+            <ToastContainer />
             <main className={styles.container}>
                 <section className={styles.paymentMethods}>
                     <h2>Escolha sua forma de pagamento</h2>
@@ -94,7 +133,8 @@ export default function Checkout() {
                         </div>
                         {
                             paymentMethod === "credit" ?
-                                <CreditCardForm />
+                                <CreditCardForm 
+                                />
                                 :
                             paymentMethod === "billet" ?
                                 <BilletForm /> 
@@ -144,11 +184,13 @@ export default function Checkout() {
                     </div>
 
                     <div className={styles.actionButtons}> 
-                        <button className={styles.cancelBuyingButton}>Cancelar</button>
-                        <button className={styles.buyTicketButton}>Comprar</button>
+                        <button 
+                            onClick={handleCancelOperation} className={styles.cancelBuyingButton}>Cancelar</button>
+                        <button onClick={handleBuyTicket} className={styles.buyTicketButton}>Comprar</button>
                     </div>
                 </section>
             </main>
         </>
     )
 }
+

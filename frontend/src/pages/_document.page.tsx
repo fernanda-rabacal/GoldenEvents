@@ -1,5 +1,7 @@
 import { Html, Head, Main, NextScript } from 'next/document'
 import { Metadata } from 'next'
+import { Suspense } from 'react'
+import { Loading } from '@/layouts/loading'
 
 export const metadata: Metadata = {
   title: {
@@ -19,7 +21,9 @@ export default function Document() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
       <body>
-        <Main />
+        <Suspense fallback={<Loading />}>
+          <Main />
+        </Suspense>
         <NextScript />
       </body>
     </Html>

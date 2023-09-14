@@ -141,3 +141,54 @@ export const deleteEvent = async (req: Request, res: Response) => {
         return res.status(500).json({ message: "Houve um erro e a solicitação não pôde ser concluida." })
     }
 }
+
+export const buyEventTicket = async (req: Request, res: Response) => {
+    const { id } = req.params
+    const { payment_method, quantity } = req.body
+    const { authorization } = req.headers;
+
+    const token = authorization!.replace("Bearer", "").trim();
+    const tokenInfo = validateToken(token);
+
+    if(!tokenInfo) {
+        return res.status(403).json({ message: "Não autorizado." })
+    }
+    
+    try {
+        const event = await prisma.event.findUnique({
+            where: {
+                id
+            }
+        })
+        
+        if(!event) {
+            throw new Error("Evento não encontrado")
+        }
+        
+        const user = await prisma.user.findFirst({
+            where: {
+                id: typeof tokenInfo !== "string" &&  tokenInfo.id
+            }
+        })
+
+        if(!user) {
+            throw new Error("Usuário não encontrado")
+        }        
+
+        for(let i = 0; i < quantity; i++) {
+            await prisma.ticket.create({
+                data: {
+                    event_id: event.id,
+                    user_id: user.id,
+                    price: event.price,
+                    payment_method
+                }
+            })
+        }
+
+        return res.status(201).end()
+    } catch (e: any) {
+        return res.status(500).json({ message: e.message})
+    }
+
+}

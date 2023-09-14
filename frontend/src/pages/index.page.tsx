@@ -10,6 +10,8 @@ import { api } from "@/lib/axios"
 import { Event } from "@/@types/interfaces"
 import { useEffect, useState } from "react"
 import { EventCategoryDisplay } from "@/components/EventCategoryDisplay"
+import { ToastContainer } from "react-toastify"
+import 'react-toastify/dist/ReactToastify.css';
 
 interface PageProps {
     events: Event[],
@@ -61,8 +63,6 @@ export default function Home( { events, categories } : PageProps) {
 
     useEffect(() => {
         filterEvents()
-
-        console.log(new Date().toISOString())
     }, [search, offset])
 
   return (
@@ -71,9 +71,9 @@ export default function Home( { events, categories } : PageProps) {
             <title>Golden Eventos</title>
         </Head>
         
+        <Header />
         <main className={styles.pageContainer}>
-            <Header />
-
+        <ToastContainer />
             <section>
                 <div className={styles.homeContent}>
                     <img src="/images/home_image.png" alt="" />
