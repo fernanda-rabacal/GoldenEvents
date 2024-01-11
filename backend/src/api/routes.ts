@@ -22,7 +22,7 @@ export const eventRouter = (): Router => {
   router.put('/:id', authentication, validateEventData, eventController.updateEvent)
   router.delete('/:id', authentication, eventController.deleteEvent)
 
-  router.post('/api/events/buy-ticket/:id', authentication, validateTicketData, eventController.buyEventTicket)
+  router.post('/buy-ticket/:id', authentication, validateTicketData, eventController.buyEventTicket)
 
   return router
 }
@@ -31,15 +31,15 @@ export const userRouter = () => {
   const router: Router = Router()
 
   // Querying Data
-  router.get('/api/users', userController.getAllUsers)
-  router.get('/api/users/:id', userController.getUserById)
-  router.get('/api/token', authentication, userController.getUserByToken)
+  router.get('/', userController.getAllUsers)
+  router.get('/:id', userController.getUserById)
+  router.get('/token', authentication, userController.getUserByToken)
 
   // Persistence
-  router.post('/api/login', loginController.login)
-  router.post('/api/register', validateUserData, userController.createUser)
-  router.put('/api/users/update/:id', authentication, validateUserData, userController.updateUser)
-  router.delete('/api/users/delete/:id', authentication, validateUserData, userController.deleteUser)
+  router.post('/login', loginController.login)
+  router.post('/register', validateUserData, userController.createUser)
+  router.put('/:id', authentication, validateUserData, userController.updateUser)
+  router.delete('/:id', authentication, validateUserData, userController.deleteUser)
   
   return router
 }
