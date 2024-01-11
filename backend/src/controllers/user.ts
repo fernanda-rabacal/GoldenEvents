@@ -3,6 +3,7 @@ import { prisma } from "../services/prisma";
 import { encryptPassword } from "../helpers/handlePassword";
 import { validateToken } from "../helpers/handleToken";
 
+
 export const getAllUsers = async (request: Request, response: Response) => {
   try {
     const users = await prisma.user.findMany()
