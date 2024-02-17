@@ -12,6 +12,7 @@ import { Input } from "@/components/Input";
 import { PasswordInput } from "@/components/PasswordInput";
 import { toastNotify } from "@/lib/toastify";
 import { api } from "@/lib/axios";
+import { AxiosError } from "axios";
 
 interface IRegister {
   name: string;
@@ -68,14 +69,18 @@ export default function RegisterPage() {
   const router = useRouter()
 
   const handleRegister = async (data: IRegister) => {
-    let response = await api.post("/register", data)
-
-    if(response.status !== 200) {
-      return toastNotify('error', response.data.message)
+    try {
+      let response = await api.post("/users/register", data)
+  
+      if(response.status !== 200) {
+        return toastNotify('error', response.data.message)
+      }
+      
+      toastNotify('success', "Cadastro feito com Sucesso!")
+      router.push('/login')
+    } catch (e: any) {
+      toastNotify('error', e.response?.data?.message)
     }
-    
-    toastNotify('success', "Cadastro feito com Sucesso!")
-    router.push('/login')
   }
 
   return(

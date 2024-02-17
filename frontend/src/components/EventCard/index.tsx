@@ -3,13 +3,14 @@ import styles from "./event.module.scss"
 
 interface EventCardProps {
   id: string;
+  slug: string;
   name: string;
   photo: string;
   start_date: Date;
   description: string
 }
 
-export function EventCard({ name, description, photo, start_date, id } : EventCardProps) {
+export function EventCard({ name, description, photo, start_date, id, slug } : EventCardProps) {
 
   const router = useRouter()
 
@@ -17,7 +18,7 @@ export function EventCard({ name, description, photo, start_date, id } : EventCa
   const date = new Date(start_date).getDate()
 
   function navigateToDetails() {
-    router.push(`/eventos/view/${id}`)
+    router.push(`/eventos/${slug}`)
   }
 
   return(

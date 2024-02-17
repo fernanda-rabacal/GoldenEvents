@@ -123,17 +123,19 @@
 
   img {
     width: 100%;
-    max-width: 30rem;
+    max-width: 28rem;
   }
 
   div {
+    max-width: 35rem;
+
     h4 {
       font-size: 2rem;
-      line-height: 3rem;
+      line-height: 2rem;
     }
 
     p {
-      font-size: 1rem;
+      font-size: 1.1rem;
       margin: 2rem 0;
     }
     
@@ -142,7 +144,7 @@
       background: var(--red-800);
       font-size: 1.2rem;
       width: 20rem;
-      padding: 1.5rem 2rem;
+      padding: 1rem;
       border-radius: 35px;
       box-shadow: 0 1px 5px rgba(0, 0, 0, 0.534);
     }
@@ -216,14 +218,16 @@
     }
   }
 
-  .contactSection {
-    flex-direction: row;
-    gap: 5rem;
-  }
-
   .advantagesSection {
     > div {
       flex-direction: row;
     }
+  }
+}
+
+@media(min-width: 996px) {
+  .contactSection {
+    flex-direction: row;
+    gap: 5rem;
   }
 }

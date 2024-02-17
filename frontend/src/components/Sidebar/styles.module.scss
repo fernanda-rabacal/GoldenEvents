@@ -1,0 +1,82 @@
+.sidebarWrapper {
+  position: relative;
+  width: 17rem;
+}
+
+.sidebar {
+  width: 17rem;
+  min-height: 100vh;
+  background-color: #fff;
+  padding: 1rem;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+  overflow: hidden;
+}
+
+.sidebarTop {
+  width: max-content;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.sidebarLogo {
+  width: 3.5rem;
+  height: 3.5rem;
+  object-fit: contain;
+  border-radius: 1rem;
+}
+
+.sidebarLink {
+  display: inline-block;
+  font-size: 1rem;
+  text-decoration: none;
+  color: #000;
+  padding: 0.8rem 1rem;
+  display: flex;
+  margin-bottom: 1rem;
+  border-radius: 0.8rem;
+  background-color: var(--gray-100);
+}
+
+.sidebarLinkActive {
+  color: #fff;
+  background-color: var(--yellow-500);
+}
+
+.sidebarIcon {
+  display: inline-block;
+  font-size: 1.2rem;
+}
+
+.sidebarName {
+  margin-left: 0.5rem;
+}
+
+.sidebarWrapper[data-collapse="true"],
+.sidebarWrapper[data-collapse="true"] .sidebar {
+  width: 5.3rem;
+}
+
+.sidebarWrapper[data-collapse="true"] .sidebarName {
+  display: none;
+}
+
+.openSidebarBtn {
+  position: absolute;
+  right: 0;
+  top: 4.7rem;
+  background-color: #fff;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--gray-500);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transform: translateX(50%);
+  font-size: 1.1rem;
+}

@@ -99,6 +99,7 @@ export default function Home( { events, categories } : PageProps) {
                             <EventCard 
                                 key={event.id}
                                 id={event.id}
+                                slug={event.slug}
                                 name={event.name}
                                 description={event.description}
                                 photo={event.photo}
@@ -113,7 +114,7 @@ export default function Home( { events, categories } : PageProps) {
             <section className={styles.contactSection}>
                 <img src="/images/make_events.png" alt=""/>
 
-                <div className="make-your-events">
+                <div>  
                     <h4>Faça seu próprio evento</h4>
                     <p>
                         Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit, amet consectetur adipisicing elit. Quidem ratione hic, tenetur rem sed atque. Alias, delectus atque minus culpa dolor nihil corporis, et eius iure deleniti unde tenetur odit.

@@ -29,7 +29,7 @@
   }
 }
 
-.linksWrapperOpen {
+.headerContainer[data-opened-menu="true"] .linksWrapper {
   position: relative; 
   z-index: -1;
   margin-top: 0;
@@ -38,7 +38,7 @@
 }
 
 .loginLink {
-  padding: 0.6rem 1.5rem;
+  padding: 0.6rem 2.2rem;
   border-radius: 30px;
   border: 1px solid var(--yellow-500);
 }
@@ -54,10 +54,21 @@
     align-items: center;
   }
 
+  .headerContainer img {
+    width: 9rem;
+  }
+
   .linksWrapper {
     display: flex;
     align-items: center;
     gap: 2.5rem;
+    margin-top: 0;
+    visibility: visible;
+    opacity: 1;
+
+    a {
+      font-size: 1.2rem;
+    }
   }
 
   .openMenuBtn {

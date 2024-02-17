@@ -1,7 +1,7 @@
 import { Html, Head, Main, NextScript } from 'next/document'
 import { Metadata } from 'next'
 import { Suspense } from 'react'
-import { Loading } from '@/layouts/loading'
+import { Loading } from '@/layouts/Loading/loading'
 
 export const metadata: Metadata = {
   title: {

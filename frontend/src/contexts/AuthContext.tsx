@@ -39,7 +39,7 @@ export function AuthContextProvider({ children } : AuthProps) {
 
   async function signIn({ email, password, keep_connected }: SignInData) {
     try {
-      const response = await api.post('/login', {
+      const response = await api.post('/users/login', {
         email,
         password
       })
@@ -68,9 +68,10 @@ export function AuthContextProvider({ children } : AuthProps) {
     }
 
     try {
-      const response = await api.get("/token", {
+      const response = await api.get("/users/token", {
         headers: {
-          'Authorization': `Bearer ${token["nextauth.token"]}`
+          'Authorization': `Bearer ${token["nextauth.token"]}`,
+          'Access-Control-Allow-Origin': '*',
         }
       })
 
@@ -82,7 +83,7 @@ export function AuthContextProvider({ children } : AuthProps) {
 
       setUser(user)
     } catch(err: any) {
-      toastNotify('error', err.response.data.message)
+      toastNotify('error', err.response?.data?.message)
     }
   }
 

@@ -15,7 +15,7 @@ export function Header() {
   }
 
   return(
-    <header className={styles.headerContainer}>
+    <header className={styles.headerContainer} data-opened-menu={menuOpen}>
         <Link href="/">
           <img src="/images/logo.svg" />
         </Link>
@@ -24,7 +24,7 @@ export function Header() {
           <List size={32} color="#eba417" />
         </button>
 
-        <div className={`${styles.linksWrapper} ${menuOpen && styles.linksWrapperOpen}`}>
+        <div className={`${styles.linksWrapper}`}>
           <Link href="/#upcoming_events">Próximos eventos</Link>
           <Link href="/login">Contato</Link>
           {user ?
