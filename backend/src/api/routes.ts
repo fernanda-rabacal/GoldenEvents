@@ -14,6 +14,7 @@ export const eventRouter = (): Router => {
   // Querying Data
   router.get('/', eventController.getAllEvents)
   router.get('/:id', eventController.getEventById)
+  router.get('/:slug', eventController.getEventBySlug)
   router.get('/categories', eventController.getAllEventCategories)
   router.get('/categories/:id', eventController.getEventCategoryById)
 
@@ -33,7 +34,7 @@ export const userRouter = () => {
   // Querying Data
   router.get('/', userController.getAllUsers)
   router.get('/:id', userController.getUserById)
-  router.get('/token', authentication, userController.getUserByToken)
+  router.get('/token', /* authentication, */ userController.getUserByToken)
 
   // Persistence
   router.post('/login', loginController.login)

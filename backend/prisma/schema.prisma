@@ -10,6 +10,7 @@ datasource db {
 model Event {
   id          String        @id @default(uuid())
   name        String
+  slug        String
   photo       String
   description String
   start_date  String

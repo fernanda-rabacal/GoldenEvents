@@ -33,6 +33,26 @@ export const getEventById = async (req: Request, res: Response) => {
     }   
 }
 
+export const getEventBySlug = async (req: Request, res: Response) => {
+    const { slug } = req.params
+
+    try {
+        const event = await prisma.event.findFirst({
+            where: {
+                slug
+            }
+        })
+    
+        if(!event) {
+            return res.status(404).json({ message: "Evento não encontrado" })
+        }
+        
+        return res.json({ event })
+    } catch (e) {
+        return res.status(500).json({ message: "Houve um erro e a solicitação não pôde ser concluida."})
+    }   
+}
+
 export const getAllEventCategories = async (req: Request, res: Response) => {
     try {
         const categories = await prisma.eventCategory.findMany()

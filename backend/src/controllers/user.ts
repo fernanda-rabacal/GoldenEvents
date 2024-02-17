@@ -37,12 +37,10 @@ export const getUserById = async (request: Request, response: Response) => {
 export const getUserByToken = async (request: Request, response: Response) => {
   const { authorization } = request.headers;
 
-
   const token = authorization!.replace("Bearer", "").trim();
   const tokenInfo = validateToken(token);
 
   try {
-
     if(typeof tokenInfo !== "string") {
       const user = await prisma.user.findUnique({
         where: {
@@ -55,7 +53,6 @@ export const getUserByToken = async (request: Request, response: Response) => {
       }
   
       return response.status(200).json({ user })
-
     }
   } catch(e) {
     return response.status(500).json({ message: "Houve um erro e a solicitação não pôde ser concluida"})
@@ -66,6 +63,16 @@ export const createUser = async (request: Request, response: Response) => {
     const { name, email, password, cpf } = request.body;
   
     try {
+      const userAlreadyExists = await prisma.user.findFirst({
+        where: {
+          email
+        }
+      })
+
+      if(userAlreadyExists) {
+        return response.status(400).json({ message: "Usuário já existente"});
+      }
+
       const user = await prisma.user.create({
         data: {
             name,
@@ -77,7 +84,7 @@ export const createUser = async (request: Request, response: Response) => {
   
       return response.status(200).json({ message: "Cliente cadastrado com sucesso!", user: user });
     } catch (e) {
-      return response.status(500).json({ message: "Erro ao criar novo usuário..." });
+      return response.status(500).json({ message: "Erro ao criar novo usuário, por favor tente novamente." });
     }
   };
 

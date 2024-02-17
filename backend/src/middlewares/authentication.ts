@@ -7,8 +7,6 @@ const authentication = async (req: Request, res: Response, next: NextFunction) =
   try {
     const { authorization } = req.headers;
 
-   // const { id } = req.params
-
     if (!authorization) {
       return res.status(401).json("Auth Error");
     }
