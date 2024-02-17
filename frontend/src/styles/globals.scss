@@ -41,6 +41,10 @@ body, input, textarea, select, button {
   font: 400 1rem "DM Sans", sans-serif;
 }
 
+ul {
+  list-style: none;
+}
+
 button {
   cursor: pointer;
   border: none;
@@ -72,9 +76,13 @@ main {
   max-width: 60rem;
 }
 
+section {
+  width: 100%;
+}
+
 @media(min-width: 720px){
   main {
-    max-width: 130rem;
+    max-width: 110rem;
     padding: 0 5rem;
   }
 

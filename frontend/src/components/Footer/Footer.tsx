@@ -27,15 +27,7 @@ export function Footer() {
           </div>
 
           <div className={styles.navigations}>
-            <nav>
-              <h4>Planeje eventos</h4>
-              <ul>
-                <li>Crie e organize</li>
-                <li>Venda tickets</li>
-                <li>Eventos online</li>
-              </ul>
-            </nav>
-            <nav>
+          <nav>
               <h4>Golden Eventos</h4>
               <ul>
                 <li>Sobre nós</li>
@@ -45,6 +37,14 @@ export function Footer() {
                 <li>Como funciona</li>
                 <li>Privacidade</li>
                 <li>Termos e condições</li>
+              </ul>
+            </nav>
+            <nav>
+              <h4>Planeje eventos</h4>
+              <ul>
+                <li>Crie e organize</li>
+                <li>Venda tickets</li>
+                <li>Eventos online</li>
               </ul>
             </nav>
           </div>

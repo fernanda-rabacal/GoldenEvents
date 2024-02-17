@@ -71,9 +71,9 @@ export default function Home( { events, categories } : PageProps) {
             <title>Golden Eventos</title>
         </Head>
         
-        <Header />
         <main className={styles.pageContainer}>
-        <ToastContainer />
+            <Header />
+            <ToastContainer />
             <section>
                 <div className={styles.homeContent}>
                     <img src="/images/home_image.png" alt="" />
@@ -94,7 +94,7 @@ export default function Home( { events, categories } : PageProps) {
                 <h2>Próximos eventos</h2>
 
                 <div>
-                    {filteredEvents.map(event => {
+                    {filteredEvents?.map(event => {
                         return (
                             <EventCard 
                                 key={event.id}
@@ -124,11 +124,10 @@ export default function Home( { events, categories } : PageProps) {
             </section>
 
             <section className={styles.categoriesSection}>
-                
                 <h2>Explore as categorias</h2>
 
                 <div className="categories">
-                    {categories.map(category => {
+                    {categories?.map(category => {
                         return (
                             <EventCategoryDisplay
                                 key={category.id} 
@@ -166,15 +165,25 @@ export default function Home( { events, categories } : PageProps) {
 }
 
 export const getStaticProps: GetStaticProps = async () => {
-    const eventData = await api.get("/events")
-    const categoryData = await api.get("/categories")
-
-    return {
-      props: {
-        events: eventData.data.events ? eventData.data.events : [],
-        categories: categoryData.data.categories ? categoryData.data.categories : [], 
-      },
-      revalidate: 60 * 60 
+    try {
+        const eventData = await api.get("/events")
+        const categoryData = await api.get("/categories")
+    
+        return {
+          props: {
+            events: eventData.data.events ? eventData.data.events : [],
+            categories: categoryData.data.categories ? categoryData.data.categories : [], 
+          },
+          revalidate: 60 * 60 
+        }
+    } catch (e) {
+        return {
+            props: {
+              events: [],
+              categories: [], 
+            },
+            revalidate: 60 * 60 
+          }
     }
   }
   

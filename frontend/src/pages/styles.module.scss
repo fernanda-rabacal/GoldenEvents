@@ -12,8 +12,9 @@
 
 .homeContent {
   color: var(--white);
-  padding: 10rem 7rem;
+  padding: 3rem;
   position: relative;
+  min-height: 25rem;
   
   &::before {
     content: "";
@@ -40,20 +41,18 @@
 
   h1 {
     width: 70%;
-    max-width: 80rem;
-    font-size: 4.6rem;
+    font-size: 2.6rem;
     text-transform: uppercase;
   }
   
   p {
-    margin-top: 1rem;
-    font-size: 1.2rem;
+    margin-block: 1rem;
     line-height: 10px;
   }
 }
 
 .searchWrapper {
-  width: 70%;
+  width: 80%;
   max-width: 80rem;
   margin: -2.5rem auto 0;
   padding: 1rem;
@@ -69,6 +68,10 @@
     width: 100%;
     color: var(--white);
     border: none;
+   }
+
+   input::placeholder {
+    color: #676363
    }
 
    svg {
@@ -104,6 +107,7 @@
 .contactSection {
   color: black;
   background-color: var(--yellow-500);
+  width: 100%;
   
   margin: 0 auto;
   
@@ -111,14 +115,15 @@
   padding: 2rem 3rem;
   position: relative;
 
-
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 5rem;
+  gap: 2rem;
 
   img {
-    width: 30rem;
+    width: 100%;
+    max-width: 30rem;
   }
 
   div {
@@ -163,8 +168,9 @@
   > div {
     margin-top: 4rem;
     display: flex;
-    align-items: center;
-    gap: 4rem;
+    flex-direction: column;
+    gap: 3rem;
+    justify-content: space-between;
 
     div:nth-child(1) {
       svg {
@@ -193,7 +199,31 @@
   }
 
   p {
-    margin-top: 2rem;
     font-size: 1.4rem;
+  }
+}
+
+@media(min-width: 768px) {
+  .homeContent {
+    padding: 10rem 7rem;
+
+    h1 {
+      font-size: 4.6rem;
+    }
+
+    p {
+      font-size: 1.2rem;
+    }
+  }
+
+  .contactSection {
+    flex-direction: row;
+    gap: 5rem;
+  }
+
+  .advantagesSection {
+    > div {
+      flex-direction: row;
+    }
   }
 }

@@ -1,18 +1,9 @@
 .headerContainer {
   width: 100%;
-  padding: 1rem;
+  padding-block: 1rem;
   margin-inline: auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  max-width: 60rem;
-
-  @media(min-width: 720px){
-    & {
-      max-width: 130rem;
-      padding: 1rem 5rem;
-    }
-  }
+  display: grid;
+  grid-template-columns: 1fr 2rem;
 }
 
 .headerContainer img {
@@ -20,24 +11,56 @@
 }
   
 .linksWrapper {
-  display: none;
-  padding: 0 2rem;
+  grid-column: span 2;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--beige-100);
+  padding: 1rem 0;
+  margin-top: -5rem;
+  visibility: hidden;
+  opacity: 0;
+  transition: margin-top 0.4s;
 
   a {
     color: var(--yellow-500);
     font-weight: 700;
     font-size: 0.9rem;
   }
+}
 
-  @media(min-width: 700px) {
-    display: flex;
-    align-items: center;
-    gap: 2.5rem;
-  }
+.linksWrapperOpen {
+  position: relative; 
+  z-index: -1;
+  margin-top: 0;
+  visibility: visible;
+  opacity: 1;
 }
 
 .loginLink {
   padding: 0.6rem 1.5rem;
-    border-radius: 30px;
-    border: 1px solid var(--yellow-500);
+  border-radius: 30px;
+  border: 1px solid var(--yellow-500);
+}
+
+.openMenuBtn {
+  background: transparent;
+}
+
+@media(min-width: 768px) {
+  .headerContainer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .linksWrapper {
+    display: flex;
+    align-items: center;
+    gap: 2.5rem;
+  }
+
+  .openMenuBtn {
+    display: none;
+  }
 }

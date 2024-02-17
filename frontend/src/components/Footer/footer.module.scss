@@ -14,7 +14,7 @@
   line-height: 1.5rem;
   
   margin: 0 auto;
-  padding: 2rem 5rem 1rem;
+  padding: 2rem 3rem;
 
   display: flex;
   flex-direction: column;
@@ -22,9 +22,9 @@
   gap: 2rem;
 
   > div {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    column-gap: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
   }
 
   > p {
@@ -55,15 +55,11 @@
 
 .navigations {
   display: flex;
-  justify-content: center;
-  gap: 3rem;
-
-  ul {
-    list-style: none;
-
-    li {
-      margin-bottom: 10px;
-    }
+  justify-content: space-between;
+  
+  li {
+    margin-bottom: 10px;
+    cursor: pointer;
   }
 }
 
@@ -88,5 +84,20 @@
       border-radius: 30px;
       right: 5px;
     }
+  }
+}
+
+@media(min-width: 768px) {
+  .footerContent {
+    > div {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      column-gap: 2rem;
+    }
+  }
+
+  .navigations {
+    justify-content: center;
+    gap: 5rem;
   }
 }
