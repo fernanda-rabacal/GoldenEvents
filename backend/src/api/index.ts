@@ -1,9 +1,17 @@
+import express from 'express';
+import cors from 'cors';
 import { Express, Request, Response, Router } from "express";
-import { eventRouter, userRouter } from "./routes";
+import { eventsRouter, usersRouter } from "./routes";
 
 
 export const createApp = (app: Express): Express => {
   const baseRouter = Router();
+  
+  baseRouter.use(express.json());
+  baseRouter.use(cors({
+    origin: 'http://localhost:3000',
+    methods: ['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS']
+  }));
   
   // Config
   baseRouter.get('/info', (req: Request, res: Response) => {
@@ -14,8 +22,8 @@ export const createApp = (app: Express): Express => {
   })
   
   // Routers
-  baseRouter.use('/events', eventRouter())
-  baseRouter.use('/users', userRouter())
+  baseRouter.use('/events', eventsRouter())
+  baseRouter.use('/users', usersRouter())
 
   app.use('/api', baseRouter);
   return app;

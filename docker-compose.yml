@@ -1,0 +1,32 @@
+version: '3.9'
+
+services:
+  web:
+    container_name: golden-events-web
+    build:
+      context: ./frontend
+    ports:
+      - "3000:3000"
+  
+  api:
+    container_name: golden-events-api
+    build: 
+      context: ./backend
+    ports:
+      - "8080:8080"
+
+  db:
+    image: mysql:5.7
+    container_name: golden-events-db
+    environment:
+      MYSQL_DATABASE: 'golden-events'
+      MYSQL_USER: 'admin'
+      MYSQL_PASSWORD: 'admin'
+      MYSQL_ROOT_PASSWORD: 'password'
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-db:/var/lib/mysql
+
+volumes:
+  mysql-db:

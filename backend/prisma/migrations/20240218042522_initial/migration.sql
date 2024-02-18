@@ -2,6 +2,7 @@
 CREATE TABLE `events` (
     `id` VARCHAR(191) NOT NULL,
     `name` VARCHAR(191) NOT NULL,
+    `slug` VARCHAR(191) NOT NULL,
     `photo` VARCHAR(191) NOT NULL,
     `description` VARCHAR(191) NOT NULL,
     `start_date` VARCHAR(191) NOT NULL,

@@ -1,14 +1,14 @@
-import { Router } from 'express';
+import { NextFunction, Request, Response, Router } from 'express';
 import * as eventController from '../controllers/event'
 import * as userController from '../controllers/user'
 import * as loginController from '../controllers/login'
 import validateEventData from '../middlewares/event';
-import validateUserData from '../middlewares/user';
+import { validateCreateUserData, validateUpdateUserData } from '../middlewares/user';
 import authentication from '../middlewares/authentication';
 import validateTicketData from '../middlewares/ticket';
 
 
-export const eventRouter = (): Router => {
+export const eventsRouter = (): Router => {
   const router: Router = Router()
 
   // Querying Data
@@ -28,19 +28,23 @@ export const eventRouter = (): Router => {
   return router
 }
 
-export const userRouter = () => {
+export const usersRouter = () => {
   const router: Router = Router()
 
   // Querying Data
   router.get('/', userController.getAllUsers)
+  router.get('/token', authentication, userController.getUserByToken)
   router.get('/:id', userController.getUserById)
-  router.get('/token', /* authentication, */ userController.getUserByToken)
 
   // Persistence
   router.post('/login', loginController.login)
-  router.post('/register', validateUserData, userController.createUser)
-  router.put('/:id', authentication, validateUserData, userController.updateUser)
-  router.delete('/:id', authentication, validateUserData, userController.deleteUser)
+  router.post('/register', validateCreateUserData, userController.createUser) 
+  router.put('/:id', 
+    authentication, 
+    validateUpdateUserData, 
+    userController.updateUser
+  )
+  router.delete('/:id', authentication, userController.deleteUser)
   
   return router
 }

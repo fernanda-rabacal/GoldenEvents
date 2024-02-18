@@ -1,13 +1,15 @@
 FROM node:latest
 
-WORKDIR /golden-eventos
+WORKDIR /golden-eventos-web
 
-COPY package.json package-lock.json /golden-eventos/
+COPY package.json package-lock.json /golden-eventos-web/
 
 RUN npm i 
 
-COPY . /golden-eventos/
+COPY . /golden-eventos-web/
+
+RUN npm run build
 
 EXPOSE 3000
 
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "start"]

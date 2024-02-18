@@ -60,91 +60,90 @@ export const getUserByToken = async (request: Request, response: Response) => {
 }
 
 export const createUser = async (request: Request, response: Response) => {
-    const { name, email, password, cpf } = request.body;
-  
-    try {
-      const userAlreadyExists = await prisma.user.findFirst({
-        where: {
-          email
-        }
-      })
+  const { name, email, password, cpf } = request.body;
 
-      if(userAlreadyExists) {
-        return response.status(400).json({ message: "Usuário já existente"});
+  try {
+    const userAlreadyExists = await prisma.user.findFirst({
+      where: {
+        email
       }
+    })
 
-      const user = await prisma.user.create({
-        data: {
-            name,
-            email,
-            cpf,
-            password: await encryptPassword(password), 
-        }
-      });
-  
-      return response.status(200).json({ message: "Cliente cadastrado com sucesso!", user: user });
-    } catch (e) {
-      return response.status(500).json({ message: "Erro ao criar novo usuário, por favor tente novamente." });
+    if(userAlreadyExists) {
+      return response.status(400).json({ message: "Usuário já existente"});
     }
-  };
 
-  export const updateUser = async (request: Request, response: Response) => {
-    try {
-      const { id } = request.params;
-      const { name, email, password } = request.body;
+    const user = await prisma.user.create({
+      data: {
+          name,
+          email,
+          cpf,
+          password: await encryptPassword(password), 
+      }
+    });
 
+    return response.status(200).json({ message: "Usuário cadastrado com sucesso.", user: user });
+  } catch (e) {
+    return response.status(500).json({ message: "Erro ao criar novo usuário, por favor tente novamente." });
+  }
+};
 
+export const updateUser = async (request: Request, response: Response) => {
+  try {
+    const { id } = request.params;
+    const { name, email, cpf } = request.body;
+
+    const user = await prisma.user.findUnique({
+      where: {
+          id
+      }
+    })
+
+    if(!user) {
+      return response.status(404).json({ message: "Usuario não encontrado." })
+    }
+
+    await prisma.user.update({
+      where: {
+          id
+      }, 
+      data: {
+          name: name,
+          email: email,
+          cpf: cpf
+      }
+    });
+
+    return response.status(200).json({ message: "Usuario atualizado com sucesso." });
+  } catch (e) {
+    return response.status(500).json({ message: "Erro ao atualizar usuário." });
+  }
+};
+
+export const deleteUser = async (request: Request, response: Response) => {
+  const { id } = request.params
+
+  try {
       const user = await prisma.user.findUnique({
-        where: {
-            id
-        }
+          where: {
+              id
+          }
       })
-
-      if(!user) {
-        return response.status(404).json({ message: "Usuario não encontrado" })
+    
+      if (!user) {
+        return response.status(404).json({ message: "Usuario não encontrado." });
       }
-  
-      await prisma.user.update({
-        where: {
-            id
-        }, 
-        data: {
-            name: name ? name : user.name,
-            email: email ? email : user.email,
-            password: password ? await encryptPassword(password) : user.password
-        }
-      });
-  
-      return response.status(200).json({ message: "Usuario atualizado com sucesso." });
-    } catch (e) {
-      return response.status(500).json({ message: "Erro ao atualizar usuário." });
-    }
-  };
 
-  export const deleteUser = async (request: Request, response: Response) => {
-    const { id } = request.params
-
-    try {
-        const user = await prisma.user.findUnique({
-            where: {
-                id
-            }
-        })
+      await prisma.user.delete({
+          where: {
+              id
+          }
+      })
       
-        if (!user) {
-          return response.status(404).json({ message: "Usuario não encontrado" });
-        }
-
-        await prisma.user.delete({
-            where: {
-                id
-            }
-        })
-        
-        return response.status(200).json({ message: "Usuário deletar com sucesso" });
-    } catch (e) {
-        return response.status(500).json({ message: "Erro ao deletar usuário." });
-    }
-  };
+      return response.status(200).json({ message: "Usuário removido com sucesso." });
+  } catch (e) {
+      return response.status(500).json({ message: "Erro ao deletar usuário." });
+  }
+};
   
   

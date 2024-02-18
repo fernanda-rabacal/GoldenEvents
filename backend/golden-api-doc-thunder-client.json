@@ -1,0 +1,156 @@
+{
+    "client": "Thunder Client",
+    "collectionName": "GoldenEventos",
+    "dateExported": "2024-02-18T05:57:13.436Z",
+    "version": "1.1",
+    "folders": [
+        {
+            "_id": "7ee8da02-9317-435b-b416-8a40a1b04d54",
+            "name": "/users",
+            "containerId": "",
+            "created": "2024-02-18T04:27:00.559Z",
+            "sortNum": 10000
+        }
+    ],
+    "requests": [
+        {
+            "_id": "dbb61ec1-e6d9-4a61-a02d-e5e9f0c31bc6",
+            "colId": "b72113cd-47a8-4844-a7b9-77d46d2fec05",
+            "containerId": "",
+            "name": "/info",
+            "url": "{{localhost}}/api/info",
+            "method": "GET",
+            "sortNum": 10000,
+            "created": "2024-02-18T01:59:45.827Z",
+            "modified": "2024-02-18T02:00:42.001Z",
+            "headers": [],
+            "params": [],
+            "tests": []
+        },
+        {
+            "_id": "141e098f-0cbd-4e06-a47c-8bbb0981bff6",
+            "colId": "b72113cd-47a8-4844-a7b9-77d46d2fec05",
+            "containerId": "7ee8da02-9317-435b-b416-8a40a1b04d54",
+            "name": "/",
+            "url": "{{localhost}}/users",
+            "method": "GET",
+            "sortNum": 20000,
+            "created": "2024-02-18T04:28:46.090Z",
+            "modified": "2024-02-18T05:15:30.225Z",
+            "headers": [],
+            "params": [],
+            "tests": []
+        },
+        {
+            "_id": "1e210bef-e1f6-4f25-be85-a389ad02e3c4",
+            "colId": "b72113cd-47a8-4844-a7b9-77d46d2fec05",
+            "containerId": "7ee8da02-9317-435b-b416-8a40a1b04d54",
+            "name": "/:id",
+            "url": "{{localhost}}/users/:id",
+            "method": "GET",
+            "sortNum": 30000,
+            "created": "2024-02-18T04:29:38.552Z",
+            "modified": "2024-02-18T05:16:11.327Z",
+            "headers": [],
+            "params": [],
+            "tests": []
+        },
+        {
+            "_id": "5f783ebe-3590-4a8e-97a6-1634f72ba016",
+            "colId": "b72113cd-47a8-4844-a7b9-77d46d2fec05",
+            "containerId": "7ee8da02-9317-435b-b416-8a40a1b04d54",
+            "name": "/token",
+            "url": "{{localhost}}/users/token",
+            "method": "GET",
+            "sortNum": 35000,
+            "created": "2024-02-18T05:45:53.166Z",
+            "modified": "2024-02-18T05:46:39.496Z",
+            "headers": [],
+            "params": [],
+            "auth": {
+                "type": "bearer",
+                "bearer": "{{token}}"
+            },
+            "tests": []
+        },
+        {
+            "_id": "7ecf09c4-9dac-4ae8-81a7-550677ca9301",
+            "colId": "b72113cd-47a8-4844-a7b9-77d46d2fec05",
+            "containerId": "7ee8da02-9317-435b-b416-8a40a1b04d54",
+            "name": "/register",
+            "url": "{{localhost}}/users/register",
+            "method": "POST",
+            "sortNum": 40000,
+            "created": "2024-02-18T04:46:07.626Z",
+            "modified": "2024-02-18T05:45:44.885Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"name\": \"string\",\n  \"email\": \"string\",\n  \"password\": \"string\",\n  \"cpf\": \"string\"\n}",
+                "form": []
+            },
+            "tests": []
+        },
+        {
+            "_id": "f8228399-28af-4761-9122-7c03efa0e7db",
+            "colId": "b72113cd-47a8-4844-a7b9-77d46d2fec05",
+            "containerId": "7ee8da02-9317-435b-b416-8a40a1b04d54",
+            "name": "/login",
+            "url": "{{localhost}}/users/login",
+            "method": "POST",
+            "sortNum": 50000,
+            "created": "2024-02-18T05:12:05.683Z",
+            "modified": "2024-02-18T05:46:26.816Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"email\": \"fernanda.rabacal@email.com\",\n  \"password\": \"123\"\n}",
+                "form": []
+            },
+            "tests": []
+        },
+        {
+            "_id": "521d0994-c070-47a4-bbba-006fa123487c",
+            "colId": "b72113cd-47a8-4844-a7b9-77d46d2fec05",
+            "containerId": "7ee8da02-9317-435b-b416-8a40a1b04d54",
+            "name": "/:id",
+            "url": "{{localhost}}/users/:id",
+            "method": "PUT",
+            "sortNum": 60000,
+            "created": "2024-02-18T05:17:48.606Z",
+            "modified": "2024-02-18T05:47:20.036Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"name\": \"string\",\n  \"email\": \"string\",\n  \"password\": \"string\",\n  \"cpf\": \"string\"\n}",
+                "form": []
+            },
+            "auth": {
+                "type": "bearer",
+                "bearer": "{{token}}"
+            },
+            "tests": []
+        },
+        {
+            "_id": "82a654ba-d71c-460e-ae05-32fe8bdb0801",
+            "colId": "b72113cd-47a8-4844-a7b9-77d46d2fec05",
+            "containerId": "7ee8da02-9317-435b-b416-8a40a1b04d54",
+            "name": "/:id",
+            "url": "{{localhost}}/users/:id",
+            "method": "DELETE",
+            "sortNum": 70000,
+            "created": "2024-02-18T05:21:55.994Z",
+            "modified": "2024-02-18T05:47:27.422Z",
+            "headers": [],
+            "params": [],
+            "auth": {
+                "type": "bearer",
+                "bearer": "{{token}}"
+            },
+            "tests": []
+        }
+    ]
+}
