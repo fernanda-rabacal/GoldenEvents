@@ -17,6 +17,7 @@ export const eventsRouter = (): Router => {
   router.get('/:slug', eventController.getEventBySlug)
   router.get('/categories', eventController.getAllEventCategories)
   router.get('/categories/:id', eventController.getEventCategoryById)
+  router.get('?user_id=:id', eventController.getEventsByUserId)
 
   // Persistence
   router.post('/', authentication, validateEventData, eventController.createEvent)

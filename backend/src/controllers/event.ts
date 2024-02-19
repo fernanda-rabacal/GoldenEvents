@@ -210,5 +210,20 @@ export const buyEventTicket = async (req: Request, res: Response) => {
     } catch (e: any) {
         return res.status(500).json({ message: e.message})
     }
+}
 
+export const getEventsByUserId = async (req: Request, res: Response) => {
+    const { user_id } = req.params
+
+    try {
+        const events = await prisma.event.findMany({
+            where: {
+                user_id
+            }
+        })
+
+        return res.status(200).json({ events })
+    } catch (e: any) {
+        return res.status(500).json({ message: e.message})
+    }
 }
