@@ -8,7 +8,7 @@ RUN npm i
 
 COPY . /golden-eventos-web/
 
-#RUN npm run build
+RUN npm run build
 
 EXPOSE 3000
 
