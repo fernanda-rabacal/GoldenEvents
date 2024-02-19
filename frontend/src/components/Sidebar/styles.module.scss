@@ -1,7 +1,3 @@
-.mobileSidebarButton {
-  display: none;
-}
-
 .sidebarWrapper {
   position: relative;
   width: 18rem;
@@ -25,6 +21,14 @@
   padding-bottom: 1rem;
   margin-bottom: 1rem;
   border-bottom: 1px solid var(--color-border);
+
+  span {
+    color: #fff;
+    font-weight: 700;
+    font-size: 2rem;
+    width: 12rem;
+    transition: 0.4s;
+  }
 }
 
 .sidebarLogo {
@@ -36,7 +40,8 @@
 
 .sidebarLink {
   display: inline-block;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
+  font-weight: 700;
   text-decoration: none;
   color: #fff;
   padding: 0.8rem 1rem;
@@ -68,10 +73,15 @@
   display: none;
 }
 
+.sidebarWrapper[data-collapse="true"] .sidebarTop span {
+  font-size: 0.8rem;
+  width: 5.3rem;
+}
+
 .openSidebarBtn {
   position: absolute;
   right: -1rem;
-  top: 4.7rem;
+  top: 5.5rem;
   background-color: #fff;
   width: 2rem;
   height: 2rem;
@@ -83,4 +93,11 @@
   cursor: pointer;
   font-size: 1.2rem;
   transition: 0.4s;
+}
+
+
+@media(max-width: 667px) {
+  .sidebarWrapper {
+    display: none;
+  }
 }
