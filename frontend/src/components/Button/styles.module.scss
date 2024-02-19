@@ -1,7 +1,7 @@
 .button {
   width: 100%;
   color: var(--white);
-  background: var(--yellow-300);
+  background: var(--orange-300);
   font-size: 1.2rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -18,7 +18,7 @@
   }
 
   &:not(:disabled):hover {
-    background: var(--yellow-500);
+    background: var(--orange-500);
   }
 
   @media(max-width: 500px){
