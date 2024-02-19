@@ -6,6 +6,9 @@ export interface Event {
   start_date: Date;
   photo: string;
   price: number;
+  category: number;
+  capacity: number;
+  created_at: number;
 }
 
-export type CreateEventProps = Exclude<Event, 'id'>
+export type CreateEventProps = Omit<Event, 'id' | 'created_at'>
