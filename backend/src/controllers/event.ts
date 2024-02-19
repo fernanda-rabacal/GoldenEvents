@@ -1,15 +1,15 @@
 import { Request, Response } from 'express';
 import { prisma } from '../services/prisma';
 import { validateToken } from '../helpers/handleToken';
+import { generateSlug } from '../helpers/handleSlug';
+import { CreateResponse, DefaultResponse, DomainValidationResponse, InternalErrorResponse, NotFoundResponse } from '../api/responses';
 
 export const getAllEvents = async (req: Request, res: Response) => {
     try {
         const events = await prisma.event.findMany()
-
-        
         return res.json({ events })
     } catch (e) {
-        return res.status(500).json({ message: "Houve um erro e a solicitação não pôde ser concluida."})
+        return InternalErrorResponse("Houve um erro e a solicitação não pôde ser concluida.", res)
     }
 }
 
@@ -24,12 +24,12 @@ export const getEventById = async (req: Request, res: Response) => {
         })
     
         if(!event) {
-            return res.status(404).json({ message: "Evento não encontrado" })
+            return NotFoundResponse("Evento não encontrado", res)
         }
         
         return res.json({ event })
     } catch (e) {
-        return res.status(500).json({ message: "Houve um erro e a solicitação não pôde ser concluida."})
+        return InternalErrorResponse("Houve um erro e a solicitação não pôde ser concluida.", res)
     }   
 }
 
@@ -44,22 +44,21 @@ export const getEventBySlug = async (req: Request, res: Response) => {
         })
     
         if(!event) {
-            return res.status(404).json({ message: "Evento não encontrado" })
+            return NotFoundResponse("Evento não encontrado", res)
         }
         
         return res.json({ event })
     } catch (e) {
-        return res.status(500).json({ message: "Houve um erro e a solicitação não pôde ser concluida."})
+        return InternalErrorResponse("Houve um erro e a solicitação não pôde ser concluida.", res)
     }   
 }
 
 export const getAllEventCategories = async (req: Request, res: Response) => {
     try {
         const categories = await prisma.eventCategory.findMany()
-
         return res.json({ categories })
     } catch (e) {
-        return res.status(500).json({ message: "Houve um erro e a solicitação não pôde ser concluida." })
+        return InternalErrorResponse("Houve um erro e a solicitação não pôde ser concluida.", res)
     }
 }
 
@@ -74,56 +73,92 @@ export const getEventCategoryById = async (req: Request, res: Response) => {
         })
 
         if(!category) {
-            return res.status(404).json({ message: "Categoria não encontrada." })
+            return NotFoundResponse("Categoria não encontrada.", res)
         }
 
         return res.json({ category })  
     } catch (e) {
-        return res.status(500).json({ message: "Houve um erro e a solicitação não pôde ser concluida."})
+        return InternalErrorResponse("Houve um erro e a solicitação não pôde ser concluida.", res)
     }
 }
 
 export const createEvent = async (req: Request, res: Response) => {
-    const { name, start_date, photo, description, category_id, capacity, location } = req.body
-    const { authorization } = req.headers;
+    const { authorization } = req.headers
+    const { 
+        name, 
+        startDatetime, 
+        photo = '', 
+        description, 
+        categoryId, 
+        capacity, 
+        price,
+        location 
+    } = req.body
 
     const token = authorization!.replace("Bearer", "").trim();
     const tokenInfo = validateToken(token);
 
-    if(!tokenInfo) {
-        return res.status(403).json({ message: "Não autorizado." })
-    }
-
     try {
         const user = await prisma.user.findFirst({
             where: {
-                id: typeof tokenInfo !== "string" &&  tokenInfo.id
+                id: typeof tokenInfo !== "string" && tokenInfo.id
             }
         })
 
-        await prisma.event.create({
+        const category = prisma.eventCategory.findFirst({
+            where: {
+                id: categoryId
+            }
+        }) 
+
+        if (!category) {
+            return NotFoundResponse("Categoria não encontrada.", res) 
+        }
+
+        const { id, slug } = await prisma.event.create({
             data: {
                 name,
-                start_date,
+                start_date: startDatetime,
                 photo,
                 description,
-                category_id,
+                category_id: categoryId,
                 user_id: user!.id,
                 capacity,
-                location
+                price,
+                location,
+                slug: generateSlug(name),
             }
         })
 
-        return res.status(201).json({ message: "Evento criado com sucesso!" })
+        return CreateResponse("Evento cadastrado com sucesso.", { 
+            event: {
+                id,
+                name,
+                slug,
+                description,
+                capacity,
+                price,
+                location,
+            } 
+        }, res)
     } catch (e) {
-        return res.status(500).json({ message: "Houve um erro e a solicitação não pôde ser concluida." })
+        return InternalErrorResponse("Houve um erro e a solicitação não pôde ser concluida.", res)
     }
 
 }
 
 export const updateEvent = async (req: Request, res: Response) => {
     const { id } = req.params
-    const { name, start_date, photo, description } = req.body
+    const { 
+        name, 
+        startDatetime, 
+        photo = '', 
+        description, 
+        categoryId, 
+        capacity, 
+        price,
+        location 
+    } = req.body
 
     try {
         await prisma.event.update({
@@ -132,16 +167,20 @@ export const updateEvent = async (req: Request, res: Response) => {
             }, 
             data: {
                 name,
-                start_date,
+                start_date: startDatetime,
                 photo,
-                description
+                description,
+                category_id: categoryId,
+                capacity,
+                price,
+                location
             }
         })
 
-        return res.status(200).json({ message: "Evento atualizado com sucesso" })
+        return DefaultResponse("Evento atualizado com sucesso", res)
 
     } catch (e) {
-        return res.status(500).json({ message: "Houve um erro e a solicitação não pôde ser concluida." })
+        return InternalErrorResponse("Houve um erro e a solicitação não pôde ser concluida.", res)
     }
 
 }
@@ -156,23 +195,19 @@ export const deleteEvent = async (req: Request, res: Response) => {
             }
         })
 
-        return res.status(200).json({ message: "Evento deletado com sucesso" })
+        return DefaultResponse("Evento deletado com sucesso", res)
     } catch (e) {
-        return res.status(500).json({ message: "Houve um erro e a solicitação não pôde ser concluida." })
+        return InternalErrorResponse("Houve um erro e a solicitação não pôde ser concluida.", res)       
     }
 }
 
 export const buyEventTicket = async (req: Request, res: Response) => {
     const { id } = req.params
-    const { payment_method, quantity } = req.body
+    const { paymentMethod, quantity } = req.body
     const { authorization } = req.headers;
 
     const token = authorization!.replace("Bearer", "").trim();
     const tokenInfo = validateToken(token);
-
-    if(!tokenInfo) {
-        return res.status(403).json({ message: "Não autorizado." })
-    }
     
     try {
         const event = await prisma.event.findUnique({
@@ -182,37 +217,43 @@ export const buyEventTicket = async (req: Request, res: Response) => {
         })
         
         if(!event) {
-            throw new Error("Evento não encontrado")
+            return DomainValidationResponse("Evento não encontrado", res)
         }
         
         const user = await prisma.user.findFirst({
             where: {
                 id: typeof tokenInfo !== "string" &&  tokenInfo.id
             }
-        })
+        })      
 
-        if(!user) {
-            throw new Error("Usuário não encontrado")
-        }        
+        // TODO: VERIFICAR SE EXISTEM INGRESSOS DISPONIVEIS PELA QUANTIDADE.
+        // 1. Puxar a quantidade de tickets comprados para aquele evento
+        // 2. Se a quantidade comprada + a quantidade de requisição > capacidade
+        //    então retornar response dizendo que não há essa quantidade disponivel
 
+        const ticketsPromises = []
         for(let i = 0; i < quantity; i++) {
-            await prisma.ticket.create({
+            ticketsPromises.push(prisma.ticket.create({
                 data: {
                     event_id: event.id,
-                    user_id: user.id,
+                    user_id: user!.id,
                     price: event.price,
-                    payment_method
+                    payment_method: paymentMethod
                 }
-            })
+            }))
         }
 
-        return res.status(201).end()
+        await Promise.all(ticketsPromises);
+
+        return DefaultResponse("Compra de ingressos realizada com sucesso.", res)
     } catch (e: any) {
-        return res.status(500).json({ message: e.message})
+        return InternalErrorResponse("Houve um erro e a solicitação não pôde ser concluida.", res)
     }
 }
 
-export const getEventsByUserId = async (req: Request, res: Response) => {
+
+// TODO: Fazer função para buscar os eventos do usuario buscando o ID do Token.
+export const getEventsByToken = async (req: Request, res: Response) => {
     const { user_id } = req.params
 
     try {
@@ -222,8 +263,8 @@ export const getEventsByUserId = async (req: Request, res: Response) => {
             }
         })
 
-        return res.status(200).json({ events })
+        return res.json({ events })
     } catch (e: any) {
-        return res.status(500).json({ message: e.message})
+        return InternalErrorResponse("Houve um erro e a solicitação não pôde ser concluida.", res)
     }
 }

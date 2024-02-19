@@ -2,20 +2,21 @@ import { Request, Response } from "express"
 import { prisma } from "../services/prisma";
 import { encryptPassword } from "../helpers/handlePassword";
 import { validateToken } from "../helpers/handleToken";
+import { CreateResponse, DefaultResponse, DomainValidationResponse, InternalErrorResponse, NotFoundResponse } from "../api/responses";
 
 
-export const getAllUsers = async (request: Request, response: Response) => {
+export const getAllUsers = async (req: Request, res: Response) => {
   try {
     const users = await prisma.user.findMany()
 
-    return response.status(200).json({ users })
+    return res.json({ users })
   } catch(e) {
-    return response.status(500).json({ message: "Houve um erro e a solicitação não pôde ser concluida"})
+    return InternalErrorResponse("Houve um erro e a solicitação não pôde ser concluida.", res)
   }
 }
 
-export const getUserById = async (request: Request, response: Response) => {
-  const { id } = request.params;
+export const getUserById = async (req: Request, res: Response) => {
+  const { id } = req.params;
 
   try {
     const user = await prisma.user.findUnique({
@@ -25,17 +26,17 @@ export const getUserById = async (request: Request, response: Response) => {
     })
 
     if(!user) {
-      return response.status(404).json({ message: "Usuário não encontrado" })
+      return NotFoundResponse("Usuário não encontrado.", res)
     }
 
-    return response.status(200).json({ user })
+    return res.json({ user })
   } catch(e) {
-    return response.status(500).json({ message: "Houve um erro e a solicitação não pôde ser concluida"})
+    return InternalErrorResponse("Houve um erro e a solicitação não pôde ser concluida.", res)
   }
 }
 
-export const getUserByToken = async (request: Request, response: Response) => {
-  const { authorization } = request.headers;
+export const getUserByToken = async (req: Request, res: Response) => {
+  const { authorization } = req.headers;
 
   const token = authorization!.replace("Bearer", "").trim();
   const tokenInfo = validateToken(token);
@@ -49,18 +50,18 @@ export const getUserByToken = async (request: Request, response: Response) => {
       })
   
       if(!user) {
-        return response.status(404).json({ message: "Usuário não encontrado" })
+        return NotFoundResponse("Usuário não encontrado.", res)
       }
   
-      return response.status(200).json({ user })
+      return res.json({ user })
     }
   } catch(e) {
-    return response.status(500).json({ message: "Houve um erro e a solicitação não pôde ser concluida"})
+    return InternalErrorResponse("Houve um erro e a solicitação não pôde ser concluida.", res)
   }
 }
 
-export const createUser = async (request: Request, response: Response) => {
-  const { name, email, password, cpf } = request.body;
+export const createUser = async (req: Request, res: Response) => {
+  const { name, email, password, cpf } = req.body;
 
   try {
     const userAlreadyExists = await prisma.user.findFirst({
@@ -70,7 +71,7 @@ export const createUser = async (request: Request, response: Response) => {
     })
 
     if(userAlreadyExists) {
-      return response.status(400).json({ message: "Usuário já existente"});
+      return DomainValidationResponse("Usuário já existente.", res)
     }
 
     const user = await prisma.user.create({
@@ -82,16 +83,16 @@ export const createUser = async (request: Request, response: Response) => {
       }
     });
 
-    return response.status(200).json({ message: "Usuário cadastrado com sucesso.", user: user });
+    return CreateResponse("Usuário cadastrado com sucesso.", { user: user }, res)
   } catch (e) {
-    return response.status(500).json({ message: "Erro ao criar novo usuário, por favor tente novamente." });
+    return InternalErrorResponse("Erro ao criar novo usuário, por favor tente novamente.", res)
   }
 };
 
-export const updateUser = async (request: Request, response: Response) => {
+export const updateUser = async (req: Request, res: Response) => {
   try {
-    const { id } = request.params;
-    const { name, email, cpf } = request.body;
+    const { id } = req.params;
+    const { name, email, cpf } = req.body;
 
     const user = await prisma.user.findUnique({
       where: {
@@ -100,7 +101,7 @@ export const updateUser = async (request: Request, response: Response) => {
     })
 
     if(!user) {
-      return response.status(404).json({ message: "Usuario não encontrado." })
+      return NotFoundResponse("Usuário não encontrado.", res)
     }
 
     await prisma.user.update({
@@ -114,14 +115,14 @@ export const updateUser = async (request: Request, response: Response) => {
       }
     });
 
-    return response.status(200).json({ message: "Usuario atualizado com sucesso." });
+    return DefaultResponse("Usuario atualizado com sucesso.", res)
   } catch (e) {
-    return response.status(500).json({ message: "Erro ao atualizar usuário." });
+    return InternalErrorResponse("Erro ao atualizar usuário.", res)
   }
 };
 
-export const deleteUser = async (request: Request, response: Response) => {
-  const { id } = request.params
+export const deleteUser = async (req: Request, res: Response) => {
+  const { id } = req.params
 
   try {
       const user = await prisma.user.findUnique({
@@ -131,7 +132,7 @@ export const deleteUser = async (request: Request, response: Response) => {
       })
     
       if (!user) {
-        return response.status(404).json({ message: "Usuario não encontrado." });
+        return NotFoundResponse("Usuário não encontrado.", res)
       }
 
       await prisma.user.delete({
@@ -140,9 +141,9 @@ export const deleteUser = async (request: Request, response: Response) => {
           }
       })
       
-      return response.status(200).json({ message: "Usuário removido com sucesso." });
+    return DefaultResponse("Usuário removido com sucesso.", res)
   } catch (e) {
-      return response.status(500).json({ message: "Erro ao deletar usuário." });
+    return InternalErrorResponse("Erro ao excluir usuário.", res)
   }
 };
   

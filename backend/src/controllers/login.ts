@@ -1,26 +1,12 @@
 import { Request, Response } from "express";
+import { prisma } from "../services/prisma";
 import { generateUserToken } from "../helpers/handleToken"; 
 import { comparePassword } from "../helpers/handlePassword"; 
-import { prisma } from "../services/prisma";
-import emailValidator from "email-validator";
+import { DomainValidationResponse, InternalErrorResponse } from "../api/responses";
 
-export const login = async (request: Request, response: Response) => {
+export const login = async (req: Request, res: Response) => {
   try {
-    const body = request.body ? request.body : {};
-
-    if (!body.email) {
-      return response.status(422).json({ message: "O campo 'email' é obrigatório."})
-    }
-  
-    if (!emailValidator.validate(body.email)) {
-      return response.status(422).json({ message: "Email inválido."})
-    }
-  
-    if (!body.password) {
-      return response.status(422).json({ message: "O campo 'password' é obrigatório."})
-    }
-
-    const { email, password } = body
+    const { email, password } = req.body
 
     const user = await prisma.user.findFirst({
         where: {
@@ -29,21 +15,21 @@ export const login = async (request: Request, response: Response) => {
     });
 
     if (!user) {
-      return response.status(400).json({ message: "Usuario ou senha estão inválidos." });
+      return DomainValidationResponse("Usuario ou senha estão inválidos.", res)
     }
 
     const verifiedPassword = await comparePassword(password, user.password);
 
-    if (!verifiedPassword) {
-      return response.status(400).json({ message: "Usuario ou senha estão inválidos." });
+    if (!verifiedPassword) {      
+      return DomainValidationResponse("Usuario ou senha estão inválidos.", res)
     }
 
     const { id, name } = user;
 
     const token = generateUserToken({ id, email });
 
-    return response.status(200).json({ user: { id, name, email } ,token });
+    return res.json({ user: { id, name, email } ,token });
   } catch (error) {
-    return response.status(500).json({ message: "Falha ao fazer login" });
+    return InternalErrorResponse("Falha ao fazer login", res)
   }
 };
