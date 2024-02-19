@@ -6,6 +6,8 @@ import { Sidebar } from "@/components/Sidebar";
 import { Event } from "@/@types/interfaces";
 import Link from 'next/link';
 import { Pencil } from 'phosphor-react';
+import { Select } from '@/components/Select';
+import { formatDate } from '@/utils/format_date';
 
 export default function EventsList({ events }: { events: Event[] }) {
 
@@ -22,7 +24,18 @@ export default function EventsList({ events }: { events: Event[] }) {
           <div className={styles.filters}>
             <input placeholder='ID' />
             <input placeholder='Nome' />
-            <input placeholder='Categoria' />
+            <Select 
+              placeholder="Categoria" 
+              options={[
+                'Teatro',
+                'Escola',
+                'Esportes',
+                'Negócios',
+                'Cursos'
+              ]}
+
+              onChangeSelect={(option: string) => { console.log(option) }}
+              />
             <input placeholder='Data de Início' />
           </div>
 
@@ -46,8 +59,8 @@ export default function EventsList({ events }: { events: Event[] }) {
                     <td>{event.name}</td>
                     <td>{event.category}</td>
                     <td>{event.capacity}</td>
-                    <td>{event.start_date}</td>
-                    <td>{event.created_at}</td>
+                    <td>{formatDate(event.start_date)}</td>
+                    <td>{formatDate(event.created_at)}</td>
                     <td>
                       <Link href={`/editar/${event.id}`}>
                         <Pencil size={22} />

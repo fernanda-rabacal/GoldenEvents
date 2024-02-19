@@ -8,7 +8,7 @@ export interface Event {
   price: number;
   category: number;
   capacity: number;
-  created_at: number;
+  created_at: Date;
 }
 
 export type CreateEventProps = Omit<Event, 'id' | 'created_at'>

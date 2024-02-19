@@ -60,7 +60,7 @@ export function Sidebar() {
                     href={href}
                   >
                     <span className={styles.sidebarIcon}>
-                      <Icon />
+                      <Icon size={22} />
                     </span>
                     <span className={styles.sidebarName}>{name}</span>
                   </Link>

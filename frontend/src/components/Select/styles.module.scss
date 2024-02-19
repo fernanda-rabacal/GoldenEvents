@@ -1,0 +1,39 @@
+.container {
+  position: relative;
+}
+
+.label {
+  box-shadow: 0 1px 3px var(--gray-200);
+  padding: 1.1rem;  
+  font-size: 1.1rem;
+  border-radius: 5px;
+  border: 1px solid var(--gray-200);
+  width: 100%;
+  background-color: #fff;
+  display: flex;
+  justify-content: space-between;
+  color: var(--gray-300);
+}
+
+.list {
+  position: absolute;
+  width: 100%;
+  background-color: #fff;
+  margin-top: 0.5rem;
+  max-height: 15rem;
+  overflow: auto;
+  box-shadow: 0 1px 10px var(--gray-300);
+  border-radius: 5px;
+  font-size: 1.1rem; 
+
+  li {
+    margin-inline: 0.5rem;
+    padding: 0.8rem;
+    cursor: pointer;
+  }
+}
+
+.selectedOption {
+  background-color: var(--gray-100);
+  border-radius: 5px;
+}

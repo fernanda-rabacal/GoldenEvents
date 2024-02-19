@@ -1,7 +1,7 @@
 import styles from './styles.module.scss'
 import Head from 'next/head'
 import { useCart } from '@/hooks/useCart'
-import { formatDate } from '@/utils/format_date'
+import { formatDateExtensive } from '@/utils/format_date'
 import { ChangeEvent, useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { formatMoney } from '@/utils/format_money'
@@ -33,7 +33,7 @@ export default function Checkout() {
         return <></>
     }
 
-    const eventDate = formatDate(event.start_date)
+    const eventDate = formatDateExtensive(event.start_date)
     const eventPrice = formatMoney(event.price * event.quantity)
     const tax = formatMoney(event.price * 0.1 * event.quantity)
     const totalCost = formatMoney(event.price * 1.1 * event.quantity)

@@ -3,15 +3,17 @@
 }
 
 .filters {
-  display: flex;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 1rem;
   margin-bottom: 2rem;
 
   input {
-    flex: 1;
     box-shadow: 0 1px 3px var(--gray-200);
     padding: 1.1rem;  
     font-size: 1.1rem;
+    width: 100%;
     border-radius: 5px;
     border: 1px solid var(--gray-200);
 
@@ -28,7 +30,7 @@
 
   h2 {
     margin-bottom: 3rem;
-    font-size: 2.2rem;
+    font-size: 2rem;
   }
 
   table {
