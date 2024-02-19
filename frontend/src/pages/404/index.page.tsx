@@ -10,8 +10,8 @@ export default function NotFound() {
                 <title>404 - Golden Eventos</title>
             </Head>
 
-            <Header />
 
+            <Header />
             <main className={styles.container}>
                 <div>
                     <h1>404</h1>
