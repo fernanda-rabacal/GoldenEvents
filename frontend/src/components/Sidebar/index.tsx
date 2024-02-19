@@ -2,7 +2,6 @@ import { useState } from "react";
 import styles from "./styles.module.scss"
 import { useRouter } from "next/router";
 import { ArrowLeft, ArrowRight, CalendarPlus, ClipboardText, House, User } from "phosphor-react";
-import Image from "next/image";
 import Link from "next/link";
 
 const sidebarItems = [
@@ -45,14 +44,6 @@ export function Sidebar() {
       
       <aside className={styles.sidebar}>
         <div className={styles.sidebarTop}>
-           {/*  <Image
-              width={80}
-              height={80}
-              className={styles.sidebarLogo}
-              src="/images/logo.svg"
-              alt="logo"
-            />
- */}
             <span>GOLDEN EVENTS</span>
           </div>
 

@@ -3,11 +3,59 @@ import { prisma } from '../services/prisma';
 import { validateToken } from '../helpers/handleToken';
 import { generateSlug } from '../helpers/handleSlug';
 import { CreateResponse, DefaultResponse, DomainValidationResponse, InternalErrorResponse, NotFoundResponse } from '../api/responses';
+import { EventQuery } from '../@types/event';
+import { OffsetPagination } from '../helpers/handlePagination';
 
-export const getAllEvents = async (req: Request, res: Response) => {
+export const getEvents = async (req: Request, res: Response) => {
+    let where = {};
+    const { name, category_id, take, skip, start_date } = req.query as unknown as EventQuery;
+
     try {
-        const events = await prisma.event.findMany()
-        return res.json({ events })
+        if (!take || !skip) {
+            return DomainValidationResponse('Parametros inválidos', res);
+        }
+
+        if (name) {
+            where = {
+              ...where,
+              name: {
+                contains: name,
+              },
+            };
+          }
+
+        if (category_id) {
+            where = {
+              ...where,
+              category_id,
+            };
+          }
+
+        if (start_date) {
+            //tratamento do intervalo
+            where = {
+              ...where,
+              start_date: {
+                gte: new Date(start_date).toISOString(),
+                lte:  new Date(start_date).toISOString(),
+              },
+            };
+          }
+
+        const events = await prisma.event.findMany({
+            where
+        })
+
+        const totalRecords = await prisma.event.count();
+
+        const paginator = new OffsetPagination(
+            totalRecords,
+            events.length,
+            skip,
+            take,
+        );
+
+        return res.json({ events: paginator.buildPage(events.splice(skip * take, take)) });
     } catch (e) {
         return InternalErrorResponse("Houve um erro e a solicitação não pôde ser concluida.", res)
     }

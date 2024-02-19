@@ -16,7 +16,7 @@ export const eventsRouter = (): Router => {
   const router: Router = Router()
 
   // Querying Data
-  router.get('/', eventController.getAllEvents)
+  router.get('/', eventController.getEvents)
   router.get('/categories', eventController.getAllEventCategories)
   router.get('/categories/:id', eventController.getEventCategoryById)
   router.get('/:id', eventController.getEventById)
