@@ -1,6 +1,6 @@
 import styles from "./styles.module.scss"
 import { useRouter } from "next/router";
-import { ArrowLeft, ArrowRight, CalendarPlus, ClipboardText, House, User } from "phosphor-react";
+import { ArrowLeft, ArrowRight, CalendarPlus, ClipboardText, House, ShoppingBag, User } from "phosphor-react";
 import { useEffect, useState } from "react";
 
 const sidebarItems = [
@@ -23,6 +23,11 @@ const sidebarItems = [
     name: "Meus Eventos",
     href: "/organizador/meus-eventos",
     icon: ClipboardText,
+  },
+  {
+    name: "Minhas Compras",
+    href: "/organizador/minhas-compras",
+    icon: ShoppingBag,
   },
 ];
 
@@ -48,8 +53,8 @@ export function Sidebar({ isCollapsed, onCollapse } : SidebarProps) {
   }
 
   useEffect(() => {
-    setWidth(window.innerWidth)
-  }, [window.innerWidth])
+    setWidth(window?.innerWidth)
+  }, [])
 
   return (
     <div className={styles.sidebarWrapper} data-collapse={isCollapsed} onClick={handleDismiss}>
