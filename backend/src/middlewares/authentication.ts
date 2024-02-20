@@ -31,7 +31,7 @@ const authentication = async (req: Request, res: Response, next: NextFunction) =
     console.log(token)
     next();
   } catch (error) {
-    return UnauthorizedResponse("Error de Autênticação.", res);
+    return UnauthorizedResponse("Erro de Autenticação.", res);
   }
 };
 

@@ -19,7 +19,7 @@ export const eventsRouter = (): Router => {
   router.get('/', eventController.getEvents)
   router.get('/categories', eventController.getAllEventCategories)
   router.get('/categories/:id', eventController.getEventCategoryById)
-  router.get('/:id', eventController.getEventById)
+  //router.get('/:id', eventController.getEventById)
   router.get('/:slug', eventController.getEventBySlug)
 
   // Persistence

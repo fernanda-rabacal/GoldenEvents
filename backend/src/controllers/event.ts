@@ -11,10 +11,6 @@ export const getEvents = async (req: Request, res: Response) => {
     const { name, category_id, take, skip, start_date } = req.query as unknown as EventQuery;
 
     try {
-        if (!take || !skip) {
-            return DomainValidationResponse('Parametros inválidos', res);
-        }
-
         if (name) {
             where = {
               ...where,
@@ -46,16 +42,22 @@ export const getEvents = async (req: Request, res: Response) => {
             where
         })
 
-        const totalRecords = await prisma.event.count();
+        
+        if (take && skip) {
+            const totalRecords = await prisma.event.count();
+    
+            const paginator = new OffsetPagination(
+                totalRecords,
+                events.length,
+                skip,
+                take,
+            );
+    
+            return res.json({ events: paginator.buildPage(events.splice(skip * take, take)) });
+        }
 
-        const paginator = new OffsetPagination(
-            totalRecords,
-            events.length,
-            skip,
-            take,
-        );
+        return res.json({ events })
 
-        return res.json({ events: paginator.buildPage(events.splice(skip * take, take)) });
     } catch (e) {
         return InternalErrorResponse("Houve um erro e a solicitação não pôde ser concluida.", res)
     }
