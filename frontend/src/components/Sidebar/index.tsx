@@ -1,8 +1,7 @@
-import { useState } from "react";
 import styles from "./styles.module.scss"
 import { useRouter } from "next/router";
 import { ArrowLeft, ArrowRight, CalendarPlus, ClipboardText, House, User } from "phosphor-react";
-import Link from "next/link";
+import { useEffect, useState } from "react";
 
 const sidebarItems = [
   {
@@ -27,22 +26,38 @@ const sidebarItems = [
   },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  isCollapsed: boolean;
+  onCollapse: () => void;
+}
+
+export function Sidebar({ isCollapsed, onCollapse } : SidebarProps) {
+  const [width, setWidth] = useState(0)
   const router = useRouter();
 
-  const [isCollapsed, setIsCollapsed] = useState(false);
-
-  function toggleSidebarcollapse() {
-    setIsCollapsed(prevState => !prevState)
+  function handleDismiss() {
+    if (width < 667) {
+      onCollapse()
+    }
   }
 
+  function handleNavigate(href: string) {
+    handleDismiss()
+
+    router.push(href)
+  }
+
+  useEffect(() => {
+    setWidth(window.innerWidth)
+  }, [window.innerWidth])
+
   return (
-    <div className={styles.sidebarWrapper} data-collapse={isCollapsed}>
-      <button className={styles.openSidebarBtn} onClick={toggleSidebarcollapse}>
+    <div className={styles.sidebarWrapper} data-collapse={isCollapsed} onClick={handleDismiss}>
+      <button className={styles.openSidebarBtn} onClick={onCollapse}>
         {isCollapsed ? <ArrowRight /> : <ArrowLeft />}
       </button>
       
-      <aside className={styles.sidebar}>
+      <aside className={styles.sidebar} id="sidebar">
         <div className={styles.sidebarTop}>
             <span>GOLDEN EVENTS</span>
           </div>
@@ -51,17 +66,17 @@ export function Sidebar() {
             {sidebarItems.map(({ name, href, icon: Icon }) => {
               return (
                 <li key={name}>
-                  <Link
+                  <button
                     className={`${styles.sidebarLink} ${
                       router.pathname === href ? styles.sidebarLinkActive : ""
                     }`}
-                    href={href}
+                    onClick={() => handleNavigate(href)}
                   >
                     <span className={styles.sidebarIcon}>
                       <Icon size={22} />
                     </span>
                     <span className={styles.sidebarName}>{name}</span>
-                  </Link>
+                  </button>
                 </li>
               );
             })}

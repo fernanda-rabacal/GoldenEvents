@@ -2,7 +2,11 @@ import { CaretDown, CaretUp, List, SignOut } from "phosphor-react";
 import styles from './styles.module.scss'
 import { useState } from "react";
 
-export function AdminHeader() {
+interface AdminHeaderProps {
+  onSidebarCollapse: () => void;
+}
+
+export function AdminHeader({ onSidebarCollapse }: AdminHeaderProps) {
   const [openMenu, setOpenMenu] = useState(false)
 
   function toggleMenu() {
@@ -15,7 +19,7 @@ export function AdminHeader() {
 
   return (
     <header className={styles.header}>
-      <button className={styles.openSidebar}>
+      <button className={styles.openSidebar} onClick={onSidebarCollapse}>
         <List size={22}  weight="bold" />
       </button>
 

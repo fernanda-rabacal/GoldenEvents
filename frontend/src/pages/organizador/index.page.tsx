@@ -1,6 +1,7 @@
 import styles from './styles.module.scss'
 import Head from 'next/head'
 import { Sidebar } from '@/components/Sidebar'
+import { AdminLayout } from '@/layouts/AdminLayout'
 
 export default function OrganizerDashboard() {
 
@@ -10,11 +11,9 @@ export default function OrganizerDashboard() {
         Organizador - Golden Eventos
       </Head>
 
-      <div>
-        <Sidebar />
-
-
-      </div>
+      <AdminLayout>
+        <div></div>
+      </AdminLayout>
     </>
   )
 }
