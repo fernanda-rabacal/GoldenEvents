@@ -1,7 +1,6 @@
 import Link from "next/link";
 import styles from "./styles.module.scss"
 import Head from "next/head";
-import { Header } from "@/components/Header";
 
 export default function NotFound() {
     return (
@@ -10,8 +9,6 @@ export default function NotFound() {
                 <title>404 - Golden Eventos</title>
             </Head>
 
-
-            <Header />
             <main className={styles.container}>
                 <div>
                     <h1>404</h1>
@@ -20,7 +17,6 @@ export default function NotFound() {
                 </div>
                 
                 <img src="/images/20.svg" alt="" />
-
             </main>
         </>
     )
