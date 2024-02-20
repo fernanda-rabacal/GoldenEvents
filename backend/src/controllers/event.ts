@@ -67,7 +67,7 @@ export const getEventById = async (req: Request, res: Response) => {
     try {
         const event = await prisma.event.findUnique({
             where: {
-                id
+                id: Number(id)
             }
         })
     
@@ -116,7 +116,7 @@ export const getEventCategoryById = async (req: Request, res: Response) => {
     try {
         const category = await prisma.eventCategory.findUnique({
             where: {
-                id
+                id: Number(id)
             }
         })
 
@@ -211,7 +211,7 @@ export const updateEvent = async (req: Request, res: Response) => {
     try {
         await prisma.event.update({
             where: {
-                id
+                id: Number(id)
             }, 
             data: {
                 name,
@@ -239,7 +239,7 @@ export const deleteEvent = async (req: Request, res: Response) => {
     try {
         await prisma.event.delete({
             where: {
-                id
+                id: Number(id)
             }
         })
 
@@ -260,7 +260,7 @@ export const buyEventTicket = async (req: Request, res: Response) => {
     try {
         const event = await prisma.event.findUnique({
             where: {
-                id
+                id: Number(id)
             }
         })
         
@@ -307,7 +307,7 @@ export const getEventsByToken = async (req: Request, res: Response) => {
     try {
         const events = await prisma.event.findMany({
             where: {
-                user_id
+                user_id: Number(user_id)
             }
         })
 

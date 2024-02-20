@@ -21,7 +21,7 @@ export const getUserById = async (req: Request, res: Response) => {
   try {
     const user = await prisma.user.findUnique({
       where: {
-        id
+        id: Number(id)
       }
     })
 
@@ -61,7 +61,7 @@ export const getUserByToken = async (req: Request, res: Response) => {
 }
 
 export const createUser = async (req: Request, res: Response) => {
-  const { name, email, password, cpf } = req.body;
+  const { name, email, password, document, user_type_id } = req.body;
 
   try {
     const userAlreadyExists = await prisma.user.findFirst({
@@ -78,7 +78,8 @@ export const createUser = async (req: Request, res: Response) => {
       data: {
           name,
           email,
-          cpf,
+          document,
+          user_type_id,
           password: await encryptPassword(password), 
       }
     });
@@ -92,11 +93,11 @@ export const createUser = async (req: Request, res: Response) => {
 export const updateUser = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, email, cpf } = req.body;
+    const { name, email, document } = req.body;
 
     const user = await prisma.user.findUnique({
       where: {
-          id
+        id: Number(id)
       }
     })
 
@@ -106,12 +107,12 @@ export const updateUser = async (req: Request, res: Response) => {
 
     await prisma.user.update({
       where: {
-          id
+        id: Number(id)
       }, 
       data: {
           name: name,
           email: email,
-          cpf: cpf
+          document: document
       }
     });
 
@@ -127,7 +128,7 @@ export const deleteUser = async (req: Request, res: Response) => {
   try {
       const user = await prisma.user.findUnique({
           where: {
-              id
+            id: Number(id)
           }
       })
     
@@ -137,7 +138,7 @@ export const deleteUser = async (req: Request, res: Response) => {
 
       await prisma.user.delete({
           where: {
-              id
+            id: Number(id)
           }
       })
       

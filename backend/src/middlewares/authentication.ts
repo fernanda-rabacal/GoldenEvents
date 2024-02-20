@@ -8,7 +8,7 @@ const authentication = async (req: Request, res: Response, next: NextFunction) =
     const { authorization } = req.headers;
 
     if (!authorization) {
-      return UnauthorizedResponse("Não Autênticado.", res);
+      return UnauthorizedResponse("Não Autenticado.", res);
     }
 
     const token = authorization.replace("Bearer", "").trim();
