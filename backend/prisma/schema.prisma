@@ -8,26 +8,27 @@ datasource db {
 }
 
 model Event {
-  id          String        @id @default(uuid())
-  name        String
-  slug        String
-  photo       String
-  description String
-  start_date  DateTime
-  user_id     String
-  category_id String
-  capacity    Int
-  price       Int           @default(0)
-  location    String
-  created_at  DateTime      @default(now())
-  updated_at  DateTime      @default(now()) @updatedAt
-  deleted_at  DateTime?
-  type        EventCategory @relation(fields: [category_id], references: [id])
-  user        User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  Ticket      Ticket[]
+  id            String        @id @default(uuid())
+  name          String
+  slug          String
+  photo         String
+  description   String
+  start_date    DateTime
+  user_id       String
+  category_id   String
+  capacity      Int
+  quantity_left Int
+  price         Int           @default(0)
+  location      String
+  created_at    DateTime      @default(now())
+  updated_at    DateTime      @default(now()) @updatedAt
+  deleted_at    DateTime?
+  type          EventCategory @relation(fields: [category_id], references: [id])
+  user          User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  Ticket        Ticket[]
 
   @@index([user_id, category_id])
-  @@map("events")
+  @@map("event")
 }
 
 model Ticket {
@@ -43,7 +44,7 @@ model Ticket {
   user           User      @relation(fields: [user_id], references: [id])
 
   @@index([user_id, event_id])
-  @@map("tickets")
+  @@map("ticket")
 }
 
 model EventCategory {
@@ -53,21 +54,32 @@ model EventCategory {
 
   events Event[]
 
-  @@map("event_categories")
+  @@map("event_category")
 }
 
 model User {
-  id         String    @id @default(uuid())
-  name       String
-  email      String
-  password   String
-  cpf        String
-  created_at DateTime  @default(now())
-  updated_at DateTime  @default(now()) @updatedAt
-  deleted_at DateTime?
+  id           String    @id @default(uuid())
+  name         String
+  user_type_id String
+  email        String
+  password     String
+  cpf          String
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @default(now()) @updatedAt
+  deleted_at   DateTime?
+
+  user_type UserType @relation(fields: [user_type_id], references: [id])
 
   events  Event[]
   tickets Ticket[]
 
-  @@map("users")
+  @@map("user")
+}
+
+model UserType {
+  id   String @id @default(uuid())
+  name String
+  User User[]
+
+  @@map("user_type")
 }
