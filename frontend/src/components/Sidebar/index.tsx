@@ -34,14 +34,14 @@ const sidebarItems = [
 interface SidebarProps {
   isCollapsed: boolean;
   onCollapse: () => void;
+  screenWidth: number;
 }
 
-export function Sidebar({ isCollapsed, onCollapse } : SidebarProps) {
-  const [width, setWidth] = useState(0)
+export function Sidebar({ isCollapsed, onCollapse, screenWidth } : SidebarProps) {
   const router = useRouter();
 
   function handleDismiss() {
-    if (width < 667) {
+    if (screenWidth < 667) {
       onCollapse()
     }
   }
@@ -51,10 +51,6 @@ export function Sidebar({ isCollapsed, onCollapse } : SidebarProps) {
 
     router.push(href)
   }
-
-  useEffect(() => {
-    setWidth(window?.innerWidth)
-  }, [])
 
   return (
     <div className={styles.sidebarWrapper} data-collapse={isCollapsed} onClick={handleDismiss}>

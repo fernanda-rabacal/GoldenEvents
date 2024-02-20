@@ -8,6 +8,7 @@
 
 .headerContainer img {
   width: 6.5rem;
+  overflow: hidden;
 }
   
 .linksWrapper {
@@ -15,13 +16,14 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: var(--beige-100);
   padding: 1rem 0;
-  margin-top: -5rem;
+  opacity: 0; 
+  margin-top: -2rem;
   visibility: hidden;
+  height: 0;
   opacity: 0;
-  transition: margin-top 0.4s;
-
+  transition: margin-top 0.4s, opacity 0.4s, height 0.4s;
+  
   a {
     color: var(--orange-500);
     font-weight: 700;
@@ -30,10 +32,12 @@
 }
 
 .headerContainer[data-opened-menu="true"] .linksWrapper {
-  position: relative; 
+  /* position: relative; 
   z-index: -1;
-  margin-top: 0;
+  */
   visibility: visible;
+  height: 5rem;
+  margin-top: 0;
   opacity: 1;
 }
 
