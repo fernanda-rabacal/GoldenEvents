@@ -166,25 +166,15 @@ export default function Home( { events, categories } : PageProps) {
 }
 
 export const getStaticProps: GetStaticProps = async () => {
-    try {
-        const eventData = await api.get("/events")
-        const categoryData = await api.get("/categories")
-    
-        return {
-          props: {
-            events: eventData.data.events ? eventData.data.events : [],
-            categories: categoryData.data.categories ? categoryData.data.categories : [], 
-          },
-          revalidate: 60 * 60 
-        }
-    } catch (e) {
-        return {
-            props: {
-              events: [],
-              categories: [], 
-            },
-            revalidate: 60 * 60 
-          }
+    const eventData = await api.get("/events")
+    const categoryData = await api.get("/events/categories")
+
+    return {
+      props: {
+        events: eventData.data.events ? eventData.data.events : [],
+        categories: categoryData.data.categories ? categoryData.data.categories : [], 
+      },
+      revalidate: 60 * 60 
     }
   }
   

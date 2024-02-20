@@ -1,16 +1,18 @@
 .cardContainer {
   width: 21.5rem;
-  font-family: "DM Sans", sans-serif;
+  max-width: 21.5rem;
   display: flex;
   flex-direction: column;
-  border-radius: 20px;
+  border-radius: 10px;
   box-shadow: 0 1px 5px rgba(0, 0, 0, 0.096);
   cursor: pointer;
+  background-color: white;
   
   img {
     width: 100%;
-    border-top-right-radius: 20px;
-    border-top-left-radius: 20px;
+    height: 60%;
+    border-top-right-radius: 10px;
+    border-top-left-radius: 10px;
   }
 }
 

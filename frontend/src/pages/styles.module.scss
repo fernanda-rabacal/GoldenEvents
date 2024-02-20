@@ -88,11 +88,11 @@
   align-items: center;
 
   > div {
-    margin-top: 3rem;
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    column-gap: 1.5rem;
-    row-gap: 3rem;
+    margin-block: 3rem;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 2rem;
   }
 
   > button {
@@ -111,7 +111,7 @@
   
   margin: 0 auto;
   
-  border-radius: 25px;
+  border-radius: 15px;
   padding: 2rem 3rem;
   position: relative;
 
@@ -140,6 +140,8 @@
     }
     
     button {
+      display: block;
+      margin-inline: auto;
       color: var(--white);
       background: var(--red-800);
       font-size: 1.2rem;
@@ -229,5 +231,11 @@
   .contactSection {
     flex-direction: row;
     gap: 5rem;
+
+    div {
+      button {
+        margin: 0;
+      }
+    }
   }
 }
