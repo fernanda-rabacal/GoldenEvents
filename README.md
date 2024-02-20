@@ -14,7 +14,7 @@ This is a collaborative full stack project of a website where you can see the la
 - Admin Dashboard
 - Order history
 
-#### How to run:
+### How to run:
 
 This repository has the frontend and the backend of the application. Clone the repository on your machine and enter the respective folders to run the comands below if you wanna run locally or use Docker. 
 To use this code you need to have Node.js and npm installed. Also, you need to have MySQL server. 
@@ -24,15 +24,15 @@ To use this code you need to have Node.js and npm installed. Also, you need to h
   Make sure to make a connection to MySQL using the credentials on the .env file. 
   Enter the backend folder and run:
 
-  -- `npm install` to install the dependencies.
-  -- `npx prisma migrate dev` to make the database.
-  -- `npm start` to start the server on http://localhost:8080
+  ##### `npm install` to install the dependencies.
+  ##### `npx prisma migrate dev` to make the database.
+  ##### `npm start` to start the server on http://localhost:8080
 
   - Frontend
 
   Enter the frontend folder e just run `npm run dev`.
 
-  -- Docker
+  - Docker
 
   On the root folder, run `docker compose build` to build the containers. After, just run `docker compose up` to start the containers. If you like, use the flag `-d` on this command to detach the docker log off the terminal.
 
@@ -41,12 +41,11 @@ To use this code you need to have Node.js and npm installed. Also, you need to h
 
 <div>
   <img src="https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white"> 
-  <img src="https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white">  
-  <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white">  
-  <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB"/> 
+  <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white"> 
   <img src="https://img.shields.io/badge/next%20js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" /> 
   <img src="https://img.shields.io/badge/Node%20js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" /> 
   <img src="https://img.shields.io/badge/Sass-CC6699?style=for-the-badge&logo=sass&logoColor=white" /> 
   <img src="https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=Prisma&logoColor=white" /> 
   <img src="https://img.shields.io/badge/Express%20js-000000?style=for-the-badge&logo=express&logoColor=white" /> 
+  <img src="https://img.shields.io/badge/Docker-0db7ed?style=for-the-badge&logo=docker&logoColor=white" /> 
 </div>
