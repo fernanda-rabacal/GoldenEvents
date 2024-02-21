@@ -1,13 +1,11 @@
 .sidebarWrapper {
   position: relative;
-  width: 18rem;
-  height: 100%;
+  width: 20rem;
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
 }
 
 .sidebar {
   width: 100%;
-  min-height: 100vh;
   height: 100%;
   background-color: var(--orange-500);
   padding: 1rem;
@@ -87,6 +85,7 @@
 @media(max-width: 667px) {
   .sidebarWrapper {
     position: absolute;
+    height: 100vh;
     opacity: 0;
     z-index: -999;
     width: 100%;
