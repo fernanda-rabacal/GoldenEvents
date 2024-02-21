@@ -1,27 +1,28 @@
 .button {
   width: 100%;
   color: var(--white);
-  background: var(--orange-300);
-  font-size: 1.2rem;
+  background: var(--orange-500);
+  font-size: 1rem;
   font-weight: 700;
   text-transform: uppercase;
 
-  padding: 1rem;
+  padding: 0.7rem;
   border-radius: 6px;
   
   transition: 0.4s;
-  line-height: 1.3rem;
 
   &:disabled {
     opacity: 0.7;
     cursor: not-allowed;
   }
 
-  &:not(:disabled):hover {
-    background: var(--orange-500);
+  &[data-type="primary"]:not(:disabled):hover {
+    background: var(--orange-700);
   }
 
-  @media(max-width: 500px){
-    font-size: 1.6rem;
+  &[data-type="white"] {
+    color: var(--orange-500);
+    background-color: transparent;
+    border: 1px solid var(--orange-500);
   }
 }

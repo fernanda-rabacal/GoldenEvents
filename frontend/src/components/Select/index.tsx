@@ -1,4 +1,4 @@
-import { use, useState } from "react"
+import { useState } from "react"
 import styles from './styles.module.scss'
 import { CaretDown, CaretUp } from "phosphor-react";
 
@@ -29,7 +29,7 @@ export function Select({ placeholder, options, onChangeSelect }: SelectProps) {
 
   return (
     <div className={styles.container}>
-      <button className={styles.label} onClick={toggleOpenList} style={{ color: optionChanged ? "#202020" : ''}}>
+      <button type="button" className={styles.label} onClick={toggleOpenList} style={{ color: optionChanged ? "#202020" : ''}}>
         {label}
 
         {openList ? <CaretUp color="#4e4e4e" /> : <CaretDown color="#4e4e4e" /> }
