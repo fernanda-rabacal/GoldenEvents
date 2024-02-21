@@ -1,5 +1,5 @@
-import { AdminLayout } from "@/layouts/AdminLayout";
 import styles from './styles.module.scss';
+import { AdminLayout } from "@/layouts/AdminLayout";
 import { Input } from "@/components/Input";
 import { Select } from "@/components/Select";
 import { Button } from "@/components/Button";
@@ -7,12 +7,10 @@ import { ChangeEvent, useState } from "react";
 import { GetStaticProps } from "next";
 import { api } from "@/lib/axios";
 import { RichTextEditor } from "@/components/RichTextEditor";
+import { EventCategory } from '@/@types/interfaces';
 
 interface CreateEventPageProps {
-  categories: {
-    id: number,
-    name: string
-  }[]
+  categories: EventCategory[]
 }
 
 export default function CreateEvent({ categories }: CreateEventPageProps) {

@@ -3,7 +3,7 @@ import Head from "next/head";
 import { GetStaticProps } from "next"
 import { api } from "@/lib/axios"
 import { Sidebar } from "@/components/Sidebar";
-import { Event } from "@/@types/interfaces";
+import { Event, EventCategory } from "@/@types/interfaces";
 import Link from 'next/link';
 import { Pencil } from 'phosphor-react';
 import { Select } from '@/components/Select';
@@ -13,10 +13,7 @@ import { AdminLayout } from '@/layouts/AdminLayout';
 
 interface EventsListPageProps {
   events: Event[],
-  categories: {
-    id: number,
-    name: string
-  }[]
+  categories: EventCategory[]
 }
 
 export default function EventsList({ events, categories }: EventsListPageProps) {
