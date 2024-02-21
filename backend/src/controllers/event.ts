@@ -176,6 +176,7 @@ export const createEvent = async (req: Request, res: Response) => {
                 capacity,
                 price,
                 location,
+                quantity_left: capacity,
                 slug: generateSlug(name),
             }
         })

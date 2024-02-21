@@ -2,10 +2,15 @@ import { useState } from "react"
 import styles from './styles.module.scss'
 import { CaretDown, CaretUp } from "phosphor-react";
 
+interface Option {
+  key: string | number;
+  value: string;
+}
+
 interface SelectProps {
   placeholder: string;
-  options: string[];
-  onChangeSelect: (option: string) => void
+  options: Option[];
+  onChangeSelect: (optionKey: number | string) => void
 }
 
 
@@ -18,12 +23,12 @@ export function Select({ placeholder, options, onChangeSelect }: SelectProps) {
     setOpenList(prev => !prev)
   }
 
-  function handleSelect(option: string) {
-    setLabel(option)
+  function handleSelect(option: Option) {
+    setLabel(option.value)
 
     toggleOpenList()
 
-    onChangeSelect(option)
+    onChangeSelect(option.key)
     setOptionChanged(true)
   }
 
@@ -40,10 +45,10 @@ export function Select({ placeholder, options, onChangeSelect }: SelectProps) {
           <ul className={styles.list}>
             {options.map(option => (
               <li 
-                key={option} 
+                key={option.key} 
                 onClick={() => handleSelect(option)} 
-                className={`${label === option && styles.selectedOption}`}>
-                {option}
+                className={`${label === option.value && styles.selectedOption}`}>
+                {option.value}
               </li>
             ))}
           </ul>

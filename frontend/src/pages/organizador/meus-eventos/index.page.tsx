@@ -11,7 +11,20 @@ import { formatDate } from '@/utils/format_date';
 import { AdminHeader } from '@/components/AdminHeader';
 import { AdminLayout } from '@/layouts/AdminLayout';
 
-export default function EventsList({ events }: { events: Event[] }) {
+interface EventsListPageProps {
+  events: Event[],
+  categories: {
+    id: number,
+    name: string
+  }[]
+}
+
+export default function EventsList({ events, categories }: EventsListPageProps) {
+
+  const formattedCategories = categories?.map(category => ({
+    key: category.id,
+    value: category.name
+  }))
 
   return (
     <>
@@ -26,15 +39,8 @@ export default function EventsList({ events }: { events: Event[] }) {
             <input placeholder='Nome' />
             <Select 
               placeholder="Categoria" 
-              options={[
-                'Teatro',
-                'Escola',
-                'Esportes',
-                'Negócios',
-                'Cursos'
-              ]}
-
-              onChangeSelect={(option: string) => { console.log(option) }}
+              options={formattedCategories}
+              onChangeSelect={(option) => { console.log(option) }}
               />
             <input placeholder='Data de Início' />
           </div>
@@ -79,9 +85,13 @@ export default function EventsList({ events }: { events: Event[] }) {
 }
 
 export const getStaticProps: GetStaticProps = async () => {
+  const eventData = await api.get('/events')
+  const categoryData = await api.get('/events/categories')
+
   return {
     props: {
-      events: [
+        events: eventData.data.events ? eventData.data.events : [],
+        categories: categoryData.data.categories ? categoryData.data.categories : [],  /* [
         {
           id: 1, 
           name: "Evento Teste 1",
@@ -124,7 +134,7 @@ export const getStaticProps: GetStaticProps = async () => {
           id: 2,
           name: 'Esportes'
         }
-      ]
+      ] */
     }
   }
 }
