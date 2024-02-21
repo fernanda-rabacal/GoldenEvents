@@ -1,7 +1,6 @@
 import styles from "./styles.module.scss"
 import { useRouter } from "next/router";
 import { ArrowLeft, ArrowRight, CalendarPlus, ClipboardText, House, ShoppingBag, User } from "phosphor-react";
-import { useEffect, useState } from "react";
 
 const sidebarItems = [
   {
