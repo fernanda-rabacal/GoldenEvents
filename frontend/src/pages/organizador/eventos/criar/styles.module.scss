@@ -1,0 +1,78 @@
+.pageTitle {
+  margin-block: 2rem;
+  margin: 2.5rem;
+  font-size: 2rem;
+}
+
+.container {
+  margin: 2.5rem;
+  padding: 2rem;
+  background-color: white;
+  box-shadow: 0 0 10px var(--gray-100);
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+
+  span {
+    display: inline-block;
+    margin-bottom: 0.5rem;
+  }
+}
+
+.photoPreview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  input {
+    display: none;
+  }
+
+  img {
+    border-radius: 5px;
+    width: 100%;
+    max-width: 25rem;
+  }
+}
+
+.formContainer, .fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem
+}
+
+.numberFields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.datesFields {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.optionsBtn {
+  margin-top: 2rem;
+  display: flex;
+  gap: 1rem
+}
+
+@media(min-width: 667px) {
+.formContainer {
+    display: grid;
+    grid-template-columns: 70% 1f;
+    align-items: center;
+  }
+
+  .description {
+    grid-column: span 2;
+  }
+
+  .optionsBtn {
+    width: 25rem;
+    margin-left: auto;
+  }
+}
