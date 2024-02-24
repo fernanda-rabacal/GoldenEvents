@@ -16,19 +16,18 @@ import { ToastContainer } from "react-toastify";
 
 const loginFormSchema = z.object({
   email: z.string().email({ message: "Email é obrigatório" }),
-  password: z.string().min(1, { message: "Senha é obrigatória" }),
-  keep_connected: z.string().transform(val => val === "yes" ? true : false)
+  password: z.string().min(6, { message: "Senha é obrigatória" }),
+  keep_connected: z.coerce.boolean()
 })
 
 type LoginFormData = z.infer<typeof loginFormSchema>
 
 export default function Login() {
-  const { register, handleSubmit } = useForm<LoginFormData>({
+  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
     resolver: zodResolver(loginFormSchema)
   })
 
   const router = useRouter()
-
   const { signIn } = useContext(AuthContext)
 
   const handleSignIn = async (data: LoginFormData) => {
@@ -39,11 +38,13 @@ export default function Login() {
     }
   }
 
+
   return(
     <>
       <Head>
         <title>Login - Eventos</title>
       </Head>
+
       <main className={styles.loginContainer}>
         <ToastContainer />
 
@@ -52,25 +53,25 @@ export default function Login() {
           <form className={styles.formContainer} onSubmit={handleSubmit(handleSignIn)}>
             <div>
               <label htmlFor="email">E-mail</label>
-              <Input type="email" id="email" required {...register('email')} />
+              <Input type="email" id="email" required {...register('email')} error={errors.email?.message} />
             </div>
 
             <div>
               <label htmlFor="password">Senha</label>
-              <PasswordInput id="password" {...register('password')} required />
+              <PasswordInput id="password" required {...register('password')} error={errors.password?.message} />
             </div>
 
             <div className={styles.keepConnectedContainer}>
               <input 
                 id="keep-connect" 
                 type="checkbox" 
-                value="yes"
+                value="true"
                 {...register("keep_connected")}
                 />
               <label htmlFor="keep-connect">Mantenha-me conectado</label>
             </div>
 
-            <Button>Login</Button>
+            <Button type="submit">Login</Button>
             <p>Esqueceu sua senha? <Link href="#">Clique aqui</Link></p>
 
             <hr />

@@ -6,7 +6,7 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   error?: string;
 }
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(({error, label, className, id, ...props } : InputProps, ref) => {
+export const Input = forwardRef<HTMLInputElement, InputProps>(({error, label, className, id, ...props }, ref) => {
   
   return(
     <div className={styles.inputContainer}>

@@ -1,13 +1,13 @@
 .headerContainer {
   width: 100%;
-  padding-block: 1rem;
+  padding-block: 1.2rem;
   margin-inline: auto;
   display: grid;
   grid-template-columns: 1fr 2rem;
 }
 
 .headerContainer img {
-  width: 6.5rem;
+  width: 6rem;
   overflow: hidden;
 }
   
@@ -24,7 +24,7 @@
   opacity: 0;
   transition: margin-top 0.4s, opacity 0.4s, height 0.4s;
   
-  a {
+  > a {
     color: var(--orange-500);
     font-weight: 700;
     font-size: 0.9rem;
@@ -32,9 +32,6 @@
 }
 
 .headerContainer[data-opened-menu="true"] .linksWrapper {
-  /* position: relative; 
-  z-index: -1;
-  */
   visibility: visible;
   height: 5rem;
   margin-top: 0;
@@ -49,6 +46,38 @@
 
 .openMenuBtn {
   background: transparent;
+}
+
+.userMenu {
+  position: relative;
+  
+  ul {
+    width: 110%;
+    position: absolute;
+    right: 0;
+    z-index: 999;
+    background-color: white;
+    margin-top: 0.5rem;
+    border-radius: 5px;
+    box-shadow: 0 3px 5px var(--gray-700);
+    height: 0;
+    overflow: hidden;
+    transition: 0.4s;
+  }
+  
+  li {
+    padding: 0.6rem 0.8rem;
+  }
+  
+  button {
+    color: var(--orange-500);
+    background-color: transparent;
+    font-weight: 700;
+  }
+}
+
+.userMenu[data-open=true] ul {
+  height: fit-content;
 }
 
 @media(min-width: 768px) {
@@ -70,8 +99,8 @@
     visibility: visible;
     opacity: 1;
 
-    a {
-      font-size: 1.2rem;
+    > a {
+      font-size: 1.1rem;
     }
   }
 

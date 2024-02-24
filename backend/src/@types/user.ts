@@ -1,4 +1,4 @@
 export type TUserToken = {
-  id: string;
+  id: number;
   email: string;
 }

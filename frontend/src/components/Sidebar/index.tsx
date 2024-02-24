@@ -15,7 +15,7 @@ const sidebarItems = [
   },
   {
     name: "Criar Evento",
-    href: "/organizador/criar-evento",
+    href: "/organizador/events/criar",
     icon: CalendarPlus,
   },
   {
@@ -40,7 +40,7 @@ export function Sidebar({ isCollapsed, onCollapse, screenWidth } : SidebarProps)
   const router = useRouter();
 
   function handleDismiss() {
-    if (screenWidth < 667) {
+    if (screenWidth < 667 && !isCollapsed) {
       onCollapse()
     }
   }
