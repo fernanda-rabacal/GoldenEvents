@@ -17,7 +17,7 @@ This is a collaborative full stack project of a website where you can see the la
 ### How to run:
 
 This repository has the frontend and the backend of the application. Clone the repository on your machine and enter the respective folders to run the comands below if you wanna run locally or use Docker. 
-To use this code you need to have Node.js and npm installed. Also, you need to have MySQL server. 
+To use this code without Docker, you need to have Node.js and npm installed. Also, you need to have MySQL server. 
 
   - Backend
 
