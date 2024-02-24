@@ -88,50 +88,7 @@ export const getStaticProps: GetStaticProps = async () => {
   return {
     props: {
         events: eventData.data.events ? eventData.data.events : [],
-        categories: categoryData.data.categories ? categoryData.data.categories : [],  /* [
-        {
-          id: 1, 
-          name: "Evento Teste 1",
-          category: "Teatro",
-          capacity: 100,
-          created_at: "2023-12-31T12:00:00",
-          start_date: "2023-12-31T12:00:00",
-        },
-        {
-          id: 2, 
-          name: "Evento Teste 2",
-          category: "Esportes",
-          capacity: 105,
-          created_at: "2023-12-31T12:00:00",
-          start_date: "2023-12-31T12:00:00",
-        },
-        {
-          id: 3, 
-          name: "Evento Teste 3",
-          category: "Esportes",
-          capacity: 105,
-          created_at: "2023-12-31T12:00:00",
-          start_date: "2023-12-31T12:00:00",
-        },
-        {
-          id: 4, 
-          name: "Evento Teste 4",
-          category: "Esportes",
-          capacity: 105,
-          created_at: "2023-12-31T12:00:00",
-          start_date: "2023-12-31T12:00:00",
-        },
-      ],
-      categories: [
-        {
-          id: 1,
-          name: 'Teatro',
-        },
-        {
-          id: 2,
-          name: 'Esportes'
-        }
-      ] */
+        categories: categoryData.data.categories ? categoryData.data.categories : [],  
     }
   }
 }
