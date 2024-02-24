@@ -1,6 +1,6 @@
 import { api } from "@/lib/axios";
 import { ReactNode, createContext, useEffect, useState } from "react"
-import { setCookie, parseCookies, destroyCookie } from 'nookies'
+import { setCookie, destroyCookie, parseCookies } from 'nookies'
 import { toastNotify } from "@/lib/toastify";
 
 interface AuthProps {
@@ -34,7 +34,7 @@ export function AuthContextProvider({ children } : AuthProps) {
   const isAuthenticated = !!user;
 
   function signOut() {
-    destroyCookie(undefined, 'nextauth.token')
+    destroyCookie(undefined, 'golden_token')
   }
 
   async function signIn({ email, password, keep_connected }: SignInData) {
@@ -48,7 +48,7 @@ export function AuthContextProvider({ children } : AuthProps) {
 
       const maxAge = keep_connected ? 60 * 60 * 24 * 7 : 60 * 60 * 24 * 30 //7 days or 30 days
       
-      setCookie(undefined, 'nextauth.token', token, { maxAge })
+      setCookie(undefined, 'golden_token', token, { maxAge })
       
       setUser(user)
 
@@ -61,16 +61,16 @@ export function AuthContextProvider({ children } : AuthProps) {
   }
 
   async function getUserByToken() {
-    const token = parseCookies(null, "nextauth.token")
+    const { golden_token } = parseCookies()
 
-    if(!token) {
+    if(!golden_token) {
       return setUser(null) 
     }
 
     try {
       const response = await api.get("/users/token", {
         headers: {
-          'Authorization': `Bearer ${token["nextauth.token"]}`,
+          'Authorization': `Bearer ${golden_token}`,
           'Access-Control-Allow-Origin': '*',
         }
       })
