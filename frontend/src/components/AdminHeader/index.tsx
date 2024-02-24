@@ -1,6 +1,7 @@
 import { CaretDown, CaretUp, List, SignOut } from "phosphor-react";
 import styles from './styles.module.scss'
 import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
 
 interface AdminHeaderProps {
   onSidebarCollapse: () => void;
@@ -8,6 +9,7 @@ interface AdminHeaderProps {
 
 export function AdminHeader({ onSidebarCollapse }: AdminHeaderProps) {
   const [openMenu, setOpenMenu] = useState(false)
+  const { user } = useAuth()
 
   function toggleMenu() {
     setOpenMenu(prev => !prev)
@@ -24,7 +26,7 @@ export function AdminHeader({ onSidebarCollapse }: AdminHeaderProps) {
       </button>
 
       <button className={styles.userInfo} onClick={toggleMenu}>
-        <span>Fernanda</span>
+        <span>{user?.name}</span>
 
         <CaretDown size={22} />
 

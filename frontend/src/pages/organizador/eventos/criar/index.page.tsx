@@ -6,15 +6,35 @@ import { Button } from "@/components/Button";
 import { ChangeEvent, useState } from "react";
 import { GetStaticProps } from "next";
 import { api } from "@/lib/axios";
-import { RichTextEditor } from "@/components/RichTextEditor";
 import { EventCategory } from '@/@types/interfaces';
 import { useRouter } from 'next/router';
+import dynamic from "next/dynamic";
+import { createEventSchema } from '@/utils/schemaValidations';
+import z  from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+const RichTextEditor = dynamic(() => import('../../../../components/RichTextEditor'), {
+  ssr: false,
+})
 
 interface CreateEventPageProps {
   categories: EventCategory[]
 }
 
+type createEventFormData = z.infer<typeof createEventSchema>
+
 export default function CreateEvent({ categories }: CreateEventPageProps) {
+  const { 
+    register, 
+    watch, 
+    setValue, 
+    handleSubmit, 
+    formState: { errors, isSubmitting }
+  } = useForm<createEventFormData>({
+    resolver: zodResolver(createEventSchema)
+  })
+  
   const [photoSrc, setPhotoSrc] = useState("/images/photo-placeholder.jpg")
   const router = useRouter()
 
@@ -50,21 +70,27 @@ export default function CreateEvent({ categories }: CreateEventPageProps) {
             <Input
               id="name"
               label="Nome do evento *"
+              {...register("name")}
               />
             <Input
               id="location"
               label="Local do evento *"
+              {...register("location")}
               />
             <div className={styles.numberFields}>
               <Input
                 id="capacity"
                 type="number"
+                min={0}
                 label="Capacidade *"
+                {...register("capacity")}
                 />
               <Input
                 id="price"
                 type="number"
+                min={0}
                 label="Preço *"
+                {...register("price")}
               />
             </div>
 
@@ -73,7 +99,7 @@ export default function CreateEvent({ categories }: CreateEventPageProps) {
               <Select 
                 placeholder="Categoria"
                 options={formattedCategories}
-                onChangeSelect={(option) => { console.log( option )}}
+                onChangeSelect={(option) => { setValue("category", Number(option) )}}
               />
             </div>
 
@@ -82,18 +108,20 @@ export default function CreateEvent({ categories }: CreateEventPageProps) {
                 id="start_date"
                 type="datetime-local"
                 label="Data de início *"
+                {...register("start_date")}
                 />
               <Input
                 id="end_date"
                 type="datetime-local"
                 label="Data Final (opcional)"
+                {...register("end_date")}
               />
             </div>
           </div>
           
           <div className={styles.description}>
             <span>Descrição do Evento *</span>
-            <RichTextEditor />
+            <RichTextEditor onChange={(value) => setValue("description", value)} />
           </div>
         </div>
 
