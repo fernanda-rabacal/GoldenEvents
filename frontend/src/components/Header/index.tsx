@@ -6,12 +6,17 @@ import { useAuth } from "@/hooks/useAuth"
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const { user } = useAuth()
 
   const userFirstName = user?.name.slice(0, user?.name.indexOf(" "))
 
   function toggleMenu() {
     setMenuOpen(prevState => !prevState)
+  }
+
+  function toggleUserMenu() {
+    setUserMenuOpen(prevState => !prevState)
   }
 
   return(
@@ -27,10 +32,25 @@ export function Header() {
         <div className={`${styles.linksWrapper}`}>
           <Link href="/#upcoming_events">Próximos eventos</Link>
           <Link href="/login">Contato</Link>
-          {user ?
-            <Link href={`/profile/${user.name}`}  className={styles.loginLink}>{userFirstName}</Link>
+          {user ? (
+              <div className={styles.userMenu} data-open={userMenuOpen}>
+                <button className={styles.loginLink} onClick={toggleUserMenu}>{userFirstName}</button>
+
+                <ul>
+                  <li>
+                    <Link href="/organizador/perfil">Perfil</Link>
+                  </li>
+                  <li>
+                    <Link href="/organizador">Área do Produtor</Link>
+                  </li>
+                  <li>
+                    <button>Sair</button>
+                  </li>
+                </ul>
+              </div>
+            )
             :
-            <Link href="/login"  className={styles.loginLink}>Login</Link>
+            <Link href="/login" className={styles.loginLink}>Login</Link>
           }
       </div>
     </header>
