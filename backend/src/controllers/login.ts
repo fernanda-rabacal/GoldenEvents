@@ -9,9 +9,9 @@ export const login = async (req: Request, res: Response) => {
     const { email, password } = req.body
 
     const user = await prisma.user.findFirst({
-        where: {
-            email
-        }
+      where: {
+        email
+      }
     });
 
     if (!user) {
@@ -30,6 +30,6 @@ export const login = async (req: Request, res: Response) => {
 
     return res.json({ user: { id, name, email } ,token });
   } catch (error) {
-    return InternalErrorResponse("Falha ao fazer login", res)
+    return InternalErrorResponse("Falha ao fazer login, tente novamente", res)
   }
 };

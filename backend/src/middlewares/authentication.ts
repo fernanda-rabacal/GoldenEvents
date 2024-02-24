@@ -19,16 +19,15 @@ const authentication = async (req: Request, res: Response, next: NextFunction) =
     }
 
     const user = await prisma.user.findUnique({
-        where: { 
-            id: tokenInfo.id 
-        }
+      where: { 
+        id: tokenInfo.id 
+      }
     });
 
     if (!user) {
       return UnauthorizedResponse("Usuário não encontrado.", res);
     }
-
-    console.log(token)
+    
     next();
   } catch (error) {
     return UnauthorizedResponse("Erro de Autenticação.", res);
