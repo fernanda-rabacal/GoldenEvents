@@ -8,6 +8,7 @@ import { GetStaticProps } from "next";
 import { api } from "@/lib/axios";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { EventCategory } from '@/@types/interfaces';
+import { useRouter } from 'next/router';
 
 interface CreateEventPageProps {
   categories: EventCategory[]
@@ -15,6 +16,7 @@ interface CreateEventPageProps {
 
 export default function CreateEvent({ categories }: CreateEventPageProps) {
   const [photoSrc, setPhotoSrc] = useState("/images/photo-placeholder.jpg")
+  const router = useRouter()
 
   const formattedCategories = categories?.map(category => ({
     key: category.id,
@@ -25,9 +27,14 @@ export default function CreateEvent({ categories }: CreateEventPageProps) {
 
   }
 
+  function handleGoBack() {
+    router.back()
+  }
+
   return (
     <AdminLayout>
       <h2 className={styles.pageTitle}>Criar evento</h2>
+
       <form className={styles.container}>
         <div className={styles.formContainer}>
           <div className={styles.photoPreview}>
@@ -91,7 +98,7 @@ export default function CreateEvent({ categories }: CreateEventPageProps) {
         </div>
 
         <div className={styles.optionsBtn}>
-          <Button type="button" colorType="white">
+          <Button type="button" colorType="white" onClick={handleGoBack}>
               Voltar
           </Button>
           <Button>
