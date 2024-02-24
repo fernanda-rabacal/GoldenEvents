@@ -10,8 +10,8 @@ export const Button = ({ children, colorType = 'primary', ...props }: ButtonProp
   return(
     <button 
       className={styles.button} 
-      {...props}
       data-type={colorType}
+      {...props}
       >
       {children}
     </button>
