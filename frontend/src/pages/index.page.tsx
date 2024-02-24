@@ -81,7 +81,7 @@ export default function Home( { events, categories } : PageProps) {
                     <p>E agende instantaneamente conosco</p>
                 </div>
                 <div className={styles.searchWrapper}>
-                    <Input  
+                    <input  
                         type="search" 
                         placeholder="Encontre o evento que deseja.." 
                         onChange={(e) => setSearch(e.target.value)}
