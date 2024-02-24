@@ -18,10 +18,10 @@ export default function NotFound() {
                 <div>
                     <h1>404</h1>
                     <p>Oops... parece que esta rota não foi encontrada</p>
-                    <Link href={previousPath} >Voltar para o inicio</Link>
+                    <Link href={previousPath}>Voltar para o inicio</Link>
                 </div>
                 
-                <img src="/images/20.svg" alt="" />
+                <img src="/images/20.svg" alt="Sad animated woman looking to a withered flower" />
             </main>
         </>
     )
