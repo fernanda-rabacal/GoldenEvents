@@ -15,7 +15,7 @@ const sidebarItems = [
   },
   {
     name: "Criar Evento",
-    href: "/organizador/criar-evento",
+    href: "/organizador/events/criar",
     icon: CalendarPlus,
   },
   {
