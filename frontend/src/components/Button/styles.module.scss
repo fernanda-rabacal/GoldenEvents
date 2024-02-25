@@ -16,11 +16,11 @@
     cursor: not-allowed;
   }
 
-  &[data-type="primary"]:not(:disabled):hover {
+  &[data-secondary=false]:not(:disabled):hover {
     background: var(--orange-700);
   }
 
-  &[data-type="white"] {
+  &[data-secondary=true] {
     color: var(--orange-500);
     background-color: transparent;
     border: 1px solid var(--orange-500);

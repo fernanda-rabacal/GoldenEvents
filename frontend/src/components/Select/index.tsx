@@ -1,6 +1,7 @@
 import { useState } from "react"
 import styles from './styles.module.scss'
 import { CaretDown, CaretUp } from "phosphor-react";
+import { ErrorMessage } from "../ErrorMessage";
 
 interface Option {
   key: string | number;
@@ -10,13 +11,15 @@ interface Option {
 interface SelectProps {
   placeholder: string;
   options: Option[];
-  onChangeSelect: (optionKey: number | string) => void
+  error?: string;
+  label?: string;
+  onChangeSelect: (optionKey: number | string) => void;
 }
 
 
-export function Select({ placeholder, options, onChangeSelect }: SelectProps) {
+export function Select({ placeholder, options, onChangeSelect, error, label }: SelectProps) {
   const[openList, setOpenList] = useState(false)
-  const[label, setLabel] = useState(placeholder)
+  const[selectPlaceholder, setSelectPlaceholder] = useState(placeholder)
   const[optionChanged, setOptionChanged] = useState(false); 
 
   function toggleOpenList() {
@@ -24,7 +27,7 @@ export function Select({ placeholder, options, onChangeSelect }: SelectProps) {
   }
 
   function handleSelect(option: Option) {
-    setLabel(option.value)
+    setSelectPlaceholder(option.value)
 
     toggleOpenList()
 
@@ -34,8 +37,10 @@ export function Select({ placeholder, options, onChangeSelect }: SelectProps) {
 
   return (
     <div className={styles.container}>
+      <label>{label}</label>
+
       <button type="button" className={styles.label} onClick={toggleOpenList} style={{ color: optionChanged ? "#202020" : ''}}>
-        {label}
+        {selectPlaceholder}
 
         {openList ? <CaretUp color="#4e4e4e" /> : <CaretDown color="#4e4e4e" /> }
       </button>
@@ -54,6 +59,8 @@ export function Select({ placeholder, options, onChangeSelect }: SelectProps) {
           </ul>
         )
       }
+
+      {error && <ErrorMessage>{error}</ErrorMessage>}
     </div>
   )
 }

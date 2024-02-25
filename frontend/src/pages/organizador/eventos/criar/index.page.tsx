@@ -3,7 +3,7 @@ import { AdminLayout } from "@/layouts/AdminLayout";
 import { Input } from "@/components/Input";
 import { Select } from "@/components/Select";
 import { Button } from "@/components/Button";
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { GetStaticProps } from "next";
 import { api } from "@/lib/axios";
 import { EventCategory } from '@/@types/interfaces';
@@ -13,6 +13,7 @@ import { createEventSchema } from '@/utils/schemaValidations';
 import z  from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { ImageUpload } from '@/components/ImageUpload';
 
 const RichTextEditor = dynamic(() => import('../../../../components/RichTextEditor'), {
   ssr: false,
@@ -32,10 +33,12 @@ export default function CreateEvent({ categories }: CreateEventPageProps) {
     handleSubmit, 
     formState: { errors, isSubmitting }
   } = useForm<createEventFormData>({
-    resolver: zodResolver(createEventSchema)
+    resolver: zodResolver(createEventSchema),
+    defaultValues: {
+      description: '',
+      category: 0
+   }
   })
-  
-  const [photoSrc, setPhotoSrc] = useState("/images/photo-placeholder.jpg")
   const router = useRouter()
 
   const formattedCategories = categories?.map(category => ({
@@ -43,38 +46,37 @@ export default function CreateEvent({ categories }: CreateEventPageProps) {
     value: category.name
   }))
 
-  function handleUploadPhoto(e: ChangeEvent) {
-
-  }
-
   function handleGoBack() {
     router.back()
+  }
+
+  function handleCreateEvent(data: createEventFormData) {
+    console.log(data)
   }
 
   return (
     <AdminLayout>
       <h2 className={styles.pageTitle}>Criar evento</h2>
 
-      <form className={styles.container}>
+      <form className={styles.container} onSubmit={handleSubmit(handleCreateEvent)}>
         <div className={styles.formContainer}>
-          <div className={styles.photoPreview}>
-            <span>Imagem do evento (opcional)</span>
-            <input type="file" id="photo" onChange={handleUploadPhoto} />
-
-            <label htmlFor="photo">
-              <img src={photoSrc} alt="photo preview" />
-            </label>
-          </div>
+          <ImageUpload 
+            onChange={(value: string) => setValue("photo", value)} 
+            label='Foto do Evento (PNG ou JPEG de até 2MB)'
+            value="/images/photo-placeholder.jpg"
+            />
 
           <div className={styles.fields}>
             <Input
               id="name"
               label="Nome do evento *"
+              error={errors.name?.message}
               {...register("name")}
               />
             <Input
               id="location"
               label="Local do evento *"
+              error={errors.location?.message}
               {...register("location")}
               />
             <div className={styles.numberFields}>
@@ -83,6 +85,7 @@ export default function CreateEvent({ categories }: CreateEventPageProps) {
                 type="number"
                 min={0}
                 label="Capacidade *"
+                error={errors.capacity?.message}
                 {...register("capacity")}
                 />
               <Input
@@ -90,16 +93,18 @@ export default function CreateEvent({ categories }: CreateEventPageProps) {
                 type="number"
                 min={0}
                 label="Preço *"
+                error={errors.price?.message}
                 {...register("price")}
               />
             </div>
 
             <div>
-              <span>Categoria do evento *</span>
               <Select 
+                label="Categoria do evento *"
                 placeholder="Categoria"
-                options={formattedCategories}
+                options={formattedCategories} 
                 onChangeSelect={(option) => { setValue("category", Number(option) )}}
+                error={errors.category?.message}
               />
             </div>
 
@@ -108,25 +113,31 @@ export default function CreateEvent({ categories }: CreateEventPageProps) {
                 id="start_date"
                 type="datetime-local"
                 label="Data de início *"
+                error={errors.start_date?.message}
                 {...register("start_date")}
                 />
               <Input
                 id="end_date"
                 type="datetime-local"
                 label="Data Final (opcional)"
+                error={errors.end_date?.message}
                 {...register("end_date")}
               />
             </div>
           </div>
           
           <div className={styles.description}>
-            <span>Descrição do Evento *</span>
-            <RichTextEditor onChange={(value) => setValue("description", value)} />
+            <RichTextEditor 
+              name="description"
+              label="Descrição do Evento (mínimo 100 caracteres) * "
+              onChange={(value) => setValue("description", value)} 
+              error={errors.description?.message}
+              />
           </div>
         </div>
 
         <div className={styles.optionsBtn}>
-          <Button type="button" colorType="white" onClick={handleGoBack}>
+          <Button type="button" secondary onClick={handleGoBack}>
               Voltar
           </Button>
           <Button>
