@@ -14,6 +14,8 @@ import z  from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ImageUpload } from '@/components/ImageUpload';
+import { useMutationData } from '@/hooks/apiHooks';
+import { toastNotify } from '@/lib/toastify';
 
 const RichTextEditor = dynamic(() => import('../../../../components/RichTextEditor'), {
   ssr: false,
@@ -27,19 +29,28 @@ type createEventFormData = z.infer<typeof createEventSchema>
 
 export default function CreateEvent({ categories }: CreateEventPageProps) {
   const { 
-    register, 
-    watch, 
+    register,
     setValue, 
     handleSubmit, 
-    formState: { errors, isSubmitting }
+    formState: { errors }
   } = useForm<createEventFormData>({
     resolver: zodResolver(createEventSchema),
     defaultValues: {
       description: '',
-      category: 0
+      categoryId: 0
    }
   })
   const router = useRouter()
+  const { mutate: createEvent, isLoading } = useMutationData("/events", 
+      'post', 
+      data => {
+        toastNotify('success', 'Evento criado com sucesso!')
+        router.push("/organizador/meus-eventos")
+      },
+      error => {
+        toastNotify('error', error.response.data.message)
+      }
+    )
 
   const formattedCategories = categories?.map(category => ({
     key: category.id,
@@ -51,7 +62,8 @@ export default function CreateEvent({ categories }: CreateEventPageProps) {
   }
 
   function handleCreateEvent(data: createEventFormData) {
-    console.log(data)
+    //console.log(data)
+    createEvent(data)
   }
 
   return (
@@ -103,25 +115,25 @@ export default function CreateEvent({ categories }: CreateEventPageProps) {
                 label="Categoria do evento *"
                 placeholder="Categoria"
                 options={formattedCategories} 
-                onChangeSelect={(option) => { setValue("category", Number(option) )}}
-                error={errors.category?.message}
+                onChangeSelect={(option) => { setValue("categoryId", Number(option))}}
+                error={errors.categoryId?.message}
               />
             </div>
 
             <div className={styles.datesFields}>
               <Input
-                id="start_date"
+                id="startDatetime"
                 type="datetime-local"
                 label="Data de início *"
-                error={errors.start_date?.message}
-                {...register("start_date")}
+                error={errors.startDatetime?.message}
+                {...register("startDatetime")}
                 />
               <Input
-                id="end_date"
+                id="endDateTime"
                 type="datetime-local"
                 label="Data Final (opcional)"
-                error={errors.end_date?.message}
-                {...register("end_date")}
+                error={errors.endDateTime?.message}
+                {...register("endDateTime")}
               />
             </div>
           </div>
@@ -137,7 +149,7 @@ export default function CreateEvent({ categories }: CreateEventPageProps) {
         </div>
 
         <div className={styles.optionsBtn}>
-          <Button type="button" secondary onClick={handleGoBack}>
+          <Button type="button" secondary onClick={handleGoBack} disabled={isLoading}>
               Voltar
           </Button>
           <Button>

@@ -137,6 +137,7 @@ export const createEvent = async (req: Request, res: Response) => {
     const { 
         name, 
         startDatetime, 
+        endDateTime = null,
         photo = '', 
         description, 
         categoryId, 
@@ -169,7 +170,8 @@ export const createEvent = async (req: Request, res: Response) => {
             data: {
                 name,
                 start_date: startDatetime,
-                photo,
+                end_date: endDateTime,
+                //photo,
                 description,
                 category_id: categoryId,
                 user_id: user!.id,
@@ -192,8 +194,8 @@ export const createEvent = async (req: Request, res: Response) => {
                 location,
             } 
         }, res)
-    } catch (e) {
-        return InternalErrorResponse("Houve um erro e a solicitação não pôde ser concluida.", res)
+    } catch (e: any) {
+        return InternalErrorResponse(/* "Houve um erro e a solicitação não pôde ser concluida." */e.message, res)
     }
 
 }

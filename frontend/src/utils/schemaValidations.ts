@@ -5,7 +5,7 @@ export const createEventSchema = z.object({
   photo: z.string().optional(),
   name: z.string().min(5, "O nome é obrigatório"),
   location: z.string().min(5, "O local do evento é obrigatório"),
-  category: z.coerce
+  categoryId: z.coerce
     .number()
     .min(1, "A categoria do evento é obrigatória"),
   capacity: z.coerce
@@ -27,7 +27,7 @@ export const createEventSchema = z.object({
     }, {
       message: "Você precisa fornecer uma descrição para o evento"
     }),
-  start_date: z
+  startDatetime: z
     .string({
       required_error: 'A data de início é obrigatória'
     })
@@ -38,17 +38,17 @@ export const createEventSchema = z.object({
     }, {
       message: 'A data precisa ser posterior a data de hoje'
     }),
-  end_date: z.string().optional(),
+  endDateTime: z.string().optional(),
 })
 .refine(data => {
-  if (!data.end_date) return true;
+  if (!data.endDateTime) return true;
   
-  const end_date = dayjs(data.end_date);
-  const start_date = dayjs(data.start_date);
-  const isValid = end_date.isAfter(dayjs()) && end_date.isAfter(start_date)
+  const endDateTime = dayjs(data.endDateTime);
+  const startDatetime = dayjs(data.startDatetime);
+  const isValid = endDateTime.isAfter(dayjs()) && endDateTime.isAfter(startDatetime)
 
   return isValid;
 }, {
   message: 'A data final precisa ser posterior a data de início',
-  path: ["end_date"]
+  path: ["endDateTime"]
 })

@@ -7,7 +7,7 @@ import { eventsRouter, usersRouter } from "./routes";
 export const createApp = (app: Express): Express => {
   const baseRouter = Router();
   
-  baseRouter.use(express.json());
+  baseRouter.use(express.json({limit: '50mb'}));
   baseRouter.use(cors({
     origin: 'http://localhost:3000',
     methods: ['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS']

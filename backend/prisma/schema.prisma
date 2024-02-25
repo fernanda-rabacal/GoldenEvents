@@ -11,7 +11,7 @@ model Event {
   id            Int        @id @default(autoincrement())
   name          String
   slug          String
-  photo         String
+  photo         String?
   description   String      @db.Text
   start_date    DateTime
   end_date      DateTime?  

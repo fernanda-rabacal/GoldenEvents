@@ -2,6 +2,7 @@ import { CaretDown, CaretUp, List, SignOut } from "phosphor-react";
 import styles from './styles.module.scss'
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useRouter } from "next/router";
 
 interface AdminHeaderProps {
   onSidebarCollapse: () => void;
@@ -9,14 +10,17 @@ interface AdminHeaderProps {
 
 export function AdminHeader({ onSidebarCollapse }: AdminHeaderProps) {
   const [openMenu, setOpenMenu] = useState(false)
-  const { user } = useAuth()
+  const { user, signOut } = useAuth()
+  const router = useRouter()
 
   function toggleMenu() {
     setOpenMenu(prev => !prev)
   }
 
   function handleLogout() {
+    signOut()
 
+    router.push("/")
   }
 
   return (
