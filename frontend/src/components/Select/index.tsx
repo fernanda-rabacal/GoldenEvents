@@ -37,7 +37,7 @@ export function Select({ placeholder, options, onChangeSelect, error, label }: S
 
   return (
     <div className={styles.container}>
-      <label>{label}</label>
+      {label && <label>{label}</label>}
 
       <button type="button" className={styles.label} onClick={toggleOpenList} style={{ color: optionChanged ? "#202020" : ''}}>
         {selectPlaceholder}

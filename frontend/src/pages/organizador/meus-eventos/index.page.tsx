@@ -1,15 +1,16 @@
 import styles from './styles.module.scss';
 import Head from "next/head";
 import { GetStaticProps } from "next"
-import { api } from "@/lib/axios"
-import { Sidebar } from "@/components/Sidebar";
-import { Event, EventCategory } from "@/@types/interfaces";
+
 import Link from 'next/link';
 import { Pencil } from 'phosphor-react';
-import { Select } from '@/components/Select';
-import { formatDate } from '@/utils/format_date';
-import { AdminHeader } from '@/components/AdminHeader';
 import { AdminLayout } from '@/layouts/AdminLayout';
+import { Select } from '@/components/Select';
+import { Input } from '@/components/Input';
+
+import { Event, EventCategory } from "@/@types/interfaces";
+import { formatDate } from '@/utils/format_date';
+import { api } from "@/lib/axios"
 
 interface EventsListPageProps {
   events: Event[],
@@ -32,14 +33,14 @@ export default function EventsList({ events, categories }: EventsListPageProps) 
           <h2>Meus Eventos</h2>
 
           <div className={styles.filters}>
-            <input placeholder='ID' />
-            <input placeholder='Nome' />
+            <Input placeholder='ID' />
+            <Input placeholder='Nome' />
             <Select 
               placeholder="Categoria" 
               options={formattedCategories}
               onChangeSelect={(option) => { console.log(option) }}
               />
-            <input placeholder='Data de Início' />
+            <Input placeholder='Data de Início' />
           </div>
 
           <table>

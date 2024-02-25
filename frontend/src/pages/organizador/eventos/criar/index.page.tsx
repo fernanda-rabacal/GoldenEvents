@@ -1,19 +1,20 @@
 import styles from './styles.module.scss';
+import { GetStaticProps } from "next";
+import { useRouter } from 'next/router';
+import dynamic from "next/dynamic";
+
 import { AdminLayout } from "@/layouts/AdminLayout";
 import { Input } from "@/components/Input";
 import { Select } from "@/components/Select";
 import { Button } from "@/components/Button";
-import { ChangeEvent, useEffect, useState } from "react";
-import { GetStaticProps } from "next";
-import { api } from "@/lib/axios";
-import { EventCategory } from '@/@types/interfaces';
-import { useRouter } from 'next/router';
-import dynamic from "next/dynamic";
-import { createEventSchema } from '@/utils/schemaValidations';
-import z  from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { ImageUpload } from '@/components/ImageUpload';
+
+import { useForm } from 'react-hook-form';
+import { api } from "@/lib/axios";
+import z  from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { EventCategory } from '@/@types/interfaces';
+import { createEventSchema } from '@/utils/schemaValidations';
 import { useMutationData } from '@/hooks/apiHooks';
 import { toastNotify } from '@/lib/toastify';
 
