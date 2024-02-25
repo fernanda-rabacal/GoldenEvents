@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/useAuth"
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const { user } = useAuth()
+  const { user, signOut } = useAuth()
 
   const userFirstName = user?.name.slice(0, user?.name.indexOf(" "))
 
@@ -43,9 +43,7 @@ export function Header() {
                   <li>
                     <Link href="/organizador">Área do Produtor</Link>
                   </li>
-                  <li>
-                    <button>Sair</button>
-                  </li>
+                  <li onClick={signOut}>Sair</li>
                 </ul>
               </div>
             )
