@@ -1,8 +1,9 @@
+import { ErrorMessage } from "../ErrorMessage";
 import styles from "./input.module.scss"
 import { InputHTMLAttributes, forwardRef } from "react";
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
-  label: string;
+  label?: string;
   error?: string;
 }
 
@@ -12,7 +13,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({error, label, cl
     <div className={styles.inputContainer}>
       <label htmlFor={id}>{label}</label>
       <input className={styles.input} id={id} {...props} ref={ref} />
-      {error && <span className={styles.errorMessage}>{error}</span>}
+      {error && <ErrorMessage>{error}</ErrorMessage>}
     </div>
   )
 })

@@ -1,6 +1,5 @@
 import styles from './styles.module.scss'
 import Head from 'next/head'
-import { Sidebar } from '@/components/Sidebar'
 import { AdminLayout } from '@/layouts/AdminLayout'
 
 export default function OrganizerDashboard() {
@@ -12,7 +11,7 @@ export default function OrganizerDashboard() {
       </Head>
 
       <AdminLayout>
-        <div></div>
+        <div className={styles.container}></div>
       </AdminLayout>
     </>
   )

@@ -7,7 +7,7 @@ import { Header } from "@/components/Header"
 import { Footer } from "@/components/Footer/Footer"
 import { GetStaticProps } from "next"
 import { api } from "@/lib/axios"
-import { Event } from "@/@types/interfaces"
+import { Event, EventCategory } from "@/@types/interfaces"
 import { useEffect, useState } from "react"
 import { EventCategoryDisplay } from "@/components/EventCategoryDisplay"
 import { ToastContainer } from "react-toastify"
@@ -15,11 +15,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 interface PageProps {
     events: Event[],
-    categories: {
-        id: string;
-        name: string;
-        photo: string;
-    }[]
+    categories: EventCategory[]
 }
 
 export default function Home( { events, categories } : PageProps) {

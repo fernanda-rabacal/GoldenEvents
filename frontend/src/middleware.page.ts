@@ -3,13 +3,13 @@ import type { NextRequest } from 'next/server'
  
 // This function can be marked `async` if using `await` inside
 export function middleware(request: NextRequest) {
-  const isUserLogged = request.cookies.get('nextauth.token')
+  const token = request.cookies.get('golden_token')
 
-  if (!isUserLogged) {
+  if (!token?.value) {
     return NextResponse.redirect(new URL('/home', request.url))
   }
 }
  
 export const config = {
-  matcher: '/organizador/*',
+  matcher: ['/organizador/:path*'],
 }

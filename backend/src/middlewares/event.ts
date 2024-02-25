@@ -9,13 +9,21 @@ export const validateEventData = (req: Request, res: Response, next: NextFunctio
     }
 
     if (!body.startDatetime) {
-        return EntityValitionResponse("O campo 'startDatetime' é obrigatório.", res)
+        return EntityValitionResponse("O campo 'start_date' é obrigatório.", res)
     }
 
     body.startDatetime = new Date(body.startDatetime)
     
     if (isNaN(body.startDatetime)) {
-        return EntityValitionResponse("Data inválida, informe no formato 'yyyy-MM-dd'T'HH:mm'.", res)
+        return EntityValitionResponse("Data 'startDatetime' inválida, informe no formato 'yyyy-MM-dd'T'HH:mm'.", res)
+    }
+
+    if (body.endDateTime) {
+        body.endDateTime = new Date(body.endDateTime)
+    }
+
+    if (body.endDateTime && isNaN(body.endDateTime)) {
+        return EntityValitionResponse("Data 'end_date' inválida, informe no formato 'yyyy-MM-dd'T'HH:mm'.", res)
     }
     
     if (!body.description) {

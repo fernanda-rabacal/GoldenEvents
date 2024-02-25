@@ -3,14 +3,14 @@ import styles from "./styles.module.scss"
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: string | React.ReactNode;
-  colorType?: 'primary' | 'white'
+  secondary?: boolean
 }
 
-export const Button = ({ children, colorType = 'primary', ...props }: ButtonProps) => {
+export const Button = ({ children, secondary = false, ...props }: ButtonProps) => {
   return(
     <button 
       className={styles.button} 
-      data-type={colorType}
+      data-secondary={secondary}
       {...props}
       >
       {children}

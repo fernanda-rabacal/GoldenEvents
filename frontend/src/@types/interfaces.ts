@@ -12,3 +12,9 @@ export interface Event {
 }
 
 export type CreateEventProps = Omit<Event, 'id' | 'created_at'>
+
+export interface EventCategory {
+  id: number;
+  name: string;
+  photo: string;
+}

@@ -1,17 +1,28 @@
 import styles from './styles.module.scss';
 import Head from "next/head";
 import { GetStaticProps } from "next"
-import { api } from "@/lib/axios"
-import { Sidebar } from "@/components/Sidebar";
-import { Event } from "@/@types/interfaces";
+
 import Link from 'next/link';
 import { Pencil } from 'phosphor-react';
-import { Select } from '@/components/Select';
-import { formatDate } from '@/utils/format_date';
-import { AdminHeader } from '@/components/AdminHeader';
 import { AdminLayout } from '@/layouts/AdminLayout';
+import { Select } from '@/components/Select';
+import { Input } from '@/components/Input';
 
-export default function EventsList({ events }: { events: Event[] }) {
+import { Event, EventCategory } from "@/@types/interfaces";
+import { formatDate } from '@/utils/format_date';
+import { api } from "@/lib/axios"
+
+interface EventsListPageProps {
+  events: Event[],
+  categories: EventCategory[]
+}
+
+export default function EventsList({ events, categories }: EventsListPageProps) {
+
+  const formattedCategories = categories?.map(category => ({
+    key: category.id,
+    value: category.name
+  }))
 
   return (
     <>
@@ -22,21 +33,14 @@ export default function EventsList({ events }: { events: Event[] }) {
           <h2>Meus Eventos</h2>
 
           <div className={styles.filters}>
-            <input placeholder='ID' />
-            <input placeholder='Nome' />
+            <Input placeholder='ID' />
+            <Input placeholder='Nome' />
             <Select 
               placeholder="Categoria" 
-              options={[
-                'Teatro',
-                'Escola',
-                'Esportes',
-                'Negócios',
-                'Cursos'
-              ]}
-
-              onChangeSelect={(option: string) => { console.log(option) }}
+              options={formattedCategories}
+              onChangeSelect={(option) => { console.log(option) }}
               />
-            <input placeholder='Data de Início' />
+            <Input placeholder='Data de Início' />
           </div>
 
           <table>
@@ -79,52 +83,13 @@ export default function EventsList({ events }: { events: Event[] }) {
 }
 
 export const getStaticProps: GetStaticProps = async () => {
+  const eventData = await api.get('/events')
+  const categoryData = await api.get('/events/categories')
+
   return {
     props: {
-      events: [
-        {
-          id: 1, 
-          name: "Evento Teste 1",
-          category: "Teatro",
-          capacity: 100,
-          created_at: "2023-12-31T12:00:00",
-          start_date: "2023-12-31T12:00:00",
-        },
-        {
-          id: 2, 
-          name: "Evento Teste 2",
-          category: "Esportes",
-          capacity: 105,
-          created_at: "2023-12-31T12:00:00",
-          start_date: "2023-12-31T12:00:00",
-        },
-        {
-          id: 3, 
-          name: "Evento Teste 3",
-          category: "Esportes",
-          capacity: 105,
-          created_at: "2023-12-31T12:00:00",
-          start_date: "2023-12-31T12:00:00",
-        },
-        {
-          id: 4, 
-          name: "Evento Teste 4",
-          category: "Esportes",
-          capacity: 105,
-          created_at: "2023-12-31T12:00:00",
-          start_date: "2023-12-31T12:00:00",
-        },
-      ],
-      categories: [
-        {
-          id: 1,
-          name: 'Teatro',
-        },
-        {
-          id: 2,
-          name: 'Esportes'
-        }
-      ]
+        events: eventData.data.events ? eventData.data.events : [],
+        categories: categoryData.data.categories ? categoryData.data.categories : [],  
     }
   }
 }
