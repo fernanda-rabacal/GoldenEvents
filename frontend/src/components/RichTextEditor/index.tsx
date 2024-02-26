@@ -1,31 +1,57 @@
-import 'suneditor/dist/css/suneditor.min.css';
-import { buttonList } from "suneditor-react";
-import dynamic from 'next/dynamic';
+import {
+  headingsPlugin,
+  listsPlugin,
+  quotePlugin,
+  thematicBreakPlugin,
+  markdownShortcutPlugin,
+  MDXEditor,
+  MDXEditorProps,
+  toolbarPlugin,
+  BoldItalicUnderlineToggles,
+  ListsToggle,
+  BlockTypeSelect
+} from '@mdxeditor/editor';
+import '@mdxeditor/editor/style.css';
 import { ErrorMessage } from '../ErrorMessage';
+import styles from './styles.module.scss'
 
-const SunEditor = dynamic(() => import('suneditor-react'), {
-  ssr: false,
-})
 
-interface RichTextProps {
+interface RichTextProps extends MDXEditorProps {
   error?: string
   label?: string
-  name: string
-  onChange: (value: string) => void
 }
 
-export default function RichTextEditor({ onChange, name, error, label }: RichTextProps) {
+export function Toolbar() {
+  return (
+    <>
+      <BoldItalicUnderlineToggles />
+      <ListsToggle />
+      <BlockTypeSelect />
+    </>
+  )
+}
+
+export default function RichTextEditor({ error, label, ...props }: RichTextProps) {
   return (
     <div>
       <label>{label}</label>
-      <SunEditor 
-        height="300"
-        name={name}
-        onChange={onChange} 
-        setOptions={{
-          buttonList: buttonList.complex
-        }} />
+      <MDXEditor
+        contentEditableClassName={styles.content}
+        className={styles.richTextContainer}
+        plugins={[
+          // Example Plugin Usage
+          headingsPlugin(),
+          listsPlugin(),
+          quotePlugin(),
+          thematicBreakPlugin(),
+          toolbarPlugin({toolbarContents: () => <Toolbar />}),
+          markdownShortcutPlugin(),
+        ]}
+        {...props}
+      />
       {error && <ErrorMessage>{error}</ErrorMessage>}
     </div>
   )
 }
+
+RichTextEditor.displayName = 'RichTextEditor'

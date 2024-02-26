@@ -52,7 +52,6 @@ export default function EventDetails({ event }: PageProps) {
         <title>{event.name} | Eventos</title>
       </Head>
       
-
       <main>
         <Header />
         <section className={styles.container}>
@@ -60,9 +59,8 @@ export default function EventDetails({ event }: PageProps) {
             <CaretLeft />
             Voltar
           </Link>
-
            
-          <img src={event.photo} alt={`${event.name} poster`}/>
+          <img src={event.photo || "/images/photo-placeholder.jpg"} alt={`${event.name} poster`}/>
 
           <div className={styles.eventDetails}>
             <div className={styles.titleAndDay}>
@@ -71,7 +69,7 @@ export default function EventDetails({ event }: PageProps) {
                 <Clock />
                 {date}
               </time>
-              <p>{event.description}</p>
+              <p dangerouslySetInnerHTML={{ __html: event.description }} />
             </div>
 
             <aside className={styles.buyTicket}>
@@ -97,7 +95,6 @@ export default function EventDetails({ event }: PageProps) {
 }
 
 export const getStaticPaths: GetStaticPaths = async () => {
-
   return {
     paths: [],
     fallback: 'blocking'

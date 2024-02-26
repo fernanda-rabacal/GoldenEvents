@@ -52,24 +52,33 @@ export default function Login() {
 
           <form className={styles.formContainer} onSubmit={handleSubmit(handleSignIn)}>
             <div>
-              <label htmlFor="email">E-mail</label>
-              <Input type="email" id="email" required {...register('email')} error={errors.email?.message} />
-            </div>
-
-            <div>
-              <label htmlFor="password">Senha</label>
-              <PasswordInput id="password" required {...register('password')} error={errors.password?.message} />
-            </div>
-
-            <div className={styles.keepConnectedContainer}>
-              <input 
-                id="keep-connect" 
-                type="checkbox" 
-                value="true"
-                {...register("keep_connected")}
+              <Input 
+                id="email" 
+                type="email"
+                label="E-mail" 
+                {...register("email")} 
+                error={errors.email?.message}
                 />
-              <label htmlFor="keep-connect">Mantenha-me conectado</label>
+
+              <PasswordInput 
+                id="password"  
+                label="Senha"
+                placeholder="Pelo menos 6 caracteres"
+                error={errors.password?.message}  
+                {...register("password")} 
+              />
+              
+              <div className={styles.keepConnectedContainer}>
+                <input 
+                  id="keep-connect" 
+                  type="checkbox" 
+                  value="true"
+                  {...register("keep_connected")}
+                  />
+                <label htmlFor="keep-connect">Mantenha-me conectado</label>
+              </div>
             </div>
+
 
             <Button type="submit">Login</Button>
             <p>Esqueceu sua senha? <Link href="#">Clique aqui</Link></p>

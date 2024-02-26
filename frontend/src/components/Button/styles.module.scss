@@ -1,5 +1,4 @@
 .button {
-  width: 100%;
   color: var(--white);
   background: var(--orange-500);
   font-size: 1rem;
@@ -16,13 +15,17 @@
     cursor: not-allowed;
   }
 
-  &[data-secondary=false]:not(:disabled):hover {
+  &[data-type="primary"]:not(:disabled):hover {
     background: var(--orange-700);
   }
 
-  &[data-secondary=true] {
+  &[data-type="secondary"] {
     color: var(--orange-500);
     background-color: transparent;
     border: 1px solid var(--orange-500);
+  }
+
+  &[data-type="danger"] {
+    background-color: var(--red-500);
   }
 }

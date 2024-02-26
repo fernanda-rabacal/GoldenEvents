@@ -1,7 +1,7 @@
-import z from "zod";
+import z, { ZodSchema } from "zod";
 import dayjs from "dayjs";
 
-export const createEventSchema = z.object({
+export const eventValidationSchema = z.object({
   photo: z.string().optional(),
   name: z.string().min(5, "O nome é obrigatório"),
   location: z.string().min(5, "O local do evento é obrigatório"),
@@ -15,7 +15,6 @@ export const createEventSchema = z.object({
     .positive("A capacidade não pode ser negativa"),
   price: z.coerce
     .number()
-    .min(1, "O preço do evento é obrigatório")
     .positive("O preço não pode ser negativo"),
   description: z
     .string()
@@ -51,4 +50,4 @@ export const createEventSchema = z.object({
 }, {
   message: 'A data final precisa ser posterior a data de início',
   path: ["endDateTime"]
-})
+}) 

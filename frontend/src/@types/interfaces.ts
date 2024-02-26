@@ -3,11 +3,14 @@ export interface Event {
   slug: string;
   name: string;
   description: string;
-  start_date: Date;
+  start_date: string;
+  end_date: string;
   photo: string;
   price: number;
-  category: number;
+  category_id: number;
+  location: string;
   capacity: number;
+  quantity_left: number;
   created_at: Date;
 }
 

@@ -52,7 +52,13 @@
 .optionsBtn {
   margin-top: 2rem;
   display: flex;
-  gap: 1rem
+  justify-content: space-between;
+  width: 100%;
+
+  div {
+    display: flex;
+    gap: 1rem;
+  }
 }
 
 @media(min-width: 996px) {
@@ -64,10 +70,5 @@
 
   .description {
     grid-column: span 2;
-  }
-
-  .optionsBtn {
-    width: 25rem;
-    margin-left: auto;
   }
 }

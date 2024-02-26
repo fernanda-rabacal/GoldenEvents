@@ -94,51 +94,40 @@ export default function RegisterPage() {
 
         <div className={styles.registerContent}>
           <form className={styles.formContainer} onSubmit={handleSubmit(handleRegister)}>
-              <div>
-                <label htmlFor="name">Nome</label>
-                <Input id="name" type="text" placeholder="Nome e sobrenome" {...register("name")} />
-                {errors.name && <p className={styles.formError}>{errors.name.message}</p>}
-              </div>
-              <div>
-                <label htmlFor="cpf">CPF</label>
-                <Input type="text" maxLength={14}
-                {...register("cpf")} />
-              </div>
-              <div>
-                <label htmlFor="email">E-mail</label>
-                <Input id="email" type="email" {...register("email")} />
-                {errors.email && <p className={styles.formError}>{errors.email.message}</p>}
-              </div>
-              <div>
-                <label htmlFor="password">Senha</label>
-                <Input 
-                  id="password" 
-                  type="password" 
-                  placeholder="Pelo menos 6 caracteres"  
-                  {...register("password")} 
-                  />
-                {errors.password && <p className={styles.formError}>{errors.password.message}</p>}
-              </div>
-              <div>
-                <label htmlFor="confirm_password">Confirme a senha</label>
-                <Input 
-                  id="confirm_password" 
-                  type="password"  
-                  {...register("confirm_password")} 
-                  />
-                {errors.confirm_password && <p className={styles.formError}>{errors.confirm_password.message}</p>}
-              </div>
-              {/* <div className={styles.isPromoter}>
-                <p>Deseja criar eventos?</p>
-                  <div>
-                    <Input id="true" type="radio" value={1} {...register("isPromotor")} />
-                    <label htmlFor="true">Sim</label>
-                  </div>
-                  <div>
-                    <Input id="false" type="radio" value={0} {...register("isPromotor")}/>
-                    <label htmlFor="false">Não</label>
-                  </div>
-              </div> */}
+              <Input 
+                id="name" 
+                type="text" 
+                label="Nome"
+                placeholder="Nome e sobrenome" 
+                error={errors.name?.message}
+                {...register("name")} 
+                />
+              <Input 
+                type="text" 
+                label="CPF"
+                maxLength={14}
+                {...register("cpf")}
+                 />
+              <Input 
+                id="email" 
+                type="email"
+                label="E-mail" 
+                {...register("email")} 
+                error={errors.email?.message}
+                />
+              <PasswordInput 
+                id="password"  
+                label="Senha"
+                placeholder="Pelo menos 6 caracteres"
+                error={errors.password?.message}  
+                {...register("password")} 
+              />
+              <PasswordInput 
+                id="confirm_password" 
+                label="Confirmar senha" 
+                error={errors.confirm_password?.message}
+                {...register("confirm_password")} 
+              />
               <Button disabled={isSubmitting}>Cadastrar</Button>
 
               <p>Já possui uma conta? <Link href="/login">Faça login</Link></p>
