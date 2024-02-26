@@ -58,6 +58,12 @@
   }
 }
 
+.pagination {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 2rem;
+}
+
 @media(max-width: 667px) {
   .content {
     table {

@@ -11,19 +11,37 @@ import { Input } from '@/components/Input';
 import { Event, EventCategory } from "@/@types/interfaces";
 import { formatDate } from '@/utils/format_date';
 import { api } from "@/lib/axios"
-import { useMutationData } from '@/hooks/apiHooks';
-import { useState } from 'react';
+import { useQueryData } from '@/hooks/apiHooks';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import dayjs from 'dayjs';
 import { toastNotify } from '@/lib/toastify';
+import { Pagination } from '@/components/Pagination';
+import { useDebounce } from '@/hooks/useDebounce';
 
 interface EventsListPageProps {
-  events: Event[],
   categories: EventCategory[]
 }
 
-export default function EventsList({ events, categories }: EventsListPageProps) {
+export default function EventsList({ categories }: EventsListPageProps) {
+  const [currentPage, setCurrentPage] = useState(1)
+  const [searchQuery, setSearchQuery] = useState({
+    name: '',
+    categoryId: '',
+    startDate: ''
+  })
+  const debouncedQueryName = useDebounce(searchQuery.name)
+  const debouncedQueryCategory = useDebounce(searchQuery.categoryId)
+  const debouncedQueryStartDate= useDebounce(searchQuery.startDate)
+  const url = `/events?take=10&skip=${currentPage - 1}&name=${debouncedQueryName}&category_id=${debouncedQueryCategory}&start_date=${debouncedQueryStartDate}`
+
   const router = useRouter()
+
+  const { data, isLoading, isError, refetch } = useQueryData(url)
+
+  if (isError) {
+    toastNotify('error', "Não foi possivel captar os eventos")
+  }
 
   const formattedCategories = categories?.map(category => ({
     key: category.id,
@@ -46,6 +64,21 @@ export default function EventsList({ events, categories }: EventsListPageProps) 
     router.push(`/organizador/eventos/editar/${event.slug}`)
   }
 
+  function handleSearchQuery(key: keyof typeof searchQuery, value: string) {
+    setSearchQuery(prev => ({...prev, [key]: value }))
+  }
+
+  console.log(data)
+
+  useEffect(() => {
+    setCurrentPage(1)
+    refetch()
+  }, [
+    debouncedQueryName,
+    debouncedQueryCategory,
+    debouncedQueryStartDate,
+    refetch,
+  ])
 
   return (
     <>
@@ -57,13 +90,13 @@ export default function EventsList({ events, categories }: EventsListPageProps) 
 
           <div className={styles.filters}>
             <Input placeholder='ID' />
-            <Input placeholder='Nome' />
+            <Input placeholder='Nome' onChange={(e) => handleSearchQuery('name', e.target.value)} />
             <Select 
               placeholder="Categoria" 
               options={formattedCategories}
-              onChangeSelect={(option) => { console.log(option) }}
+              onChangeSelect={(option) => handleSearchQuery('categoryId', String(option))}
               />
-            <Input placeholder='Data de Início' />
+            <Input placeholder='Data de Início' onChange={(e) => handleSearchQuery('startDate', e.target.value)}  />
           </div>
 
           <table>
@@ -80,7 +113,7 @@ export default function EventsList({ events, categories }: EventsListPageProps) 
             </thead>
             <tbody>
               {
-                events.map(event => (
+                data?.events?.content?.map((event: Event) => (
                   <tr key={event.id}>
                     <td>{event.id}</td>
                     <td>{event.name}</td>
@@ -98,7 +131,16 @@ export default function EventsList({ events, categories }: EventsListPageProps) 
               }
             </tbody>
           </table>
+          
+          <div className={styles.pagination}>
+            <Pagination
+              totalPages={data?.totalPages}
+              currentPage={currentPage}
+              onPageChange={setCurrentPage}
+            />
+            </div>
         </div>
+
       </AdminLayout>
     </>
   )

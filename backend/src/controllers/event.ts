@@ -11,6 +11,9 @@ export const getEvents = async (req: Request, res: Response) => {
     const { name, category_id, take, skip, start_date } = req.query as unknown as EventQuery;
 
     try {
+        const takeValue = take || 10
+        const skipValue = skip || 0
+
         if (name) {
             where = {
               ...where,
@@ -43,20 +46,16 @@ export const getEvents = async (req: Request, res: Response) => {
         })
 
         
-        if (take && skip) {
-            const totalRecords = await prisma.event.count();
-    
-            const paginator = new OffsetPagination(
-                totalRecords,
-                events.length,
-                skip,
-                take,
-            );
-    
-            return res.json({ events: paginator.buildPage(events.splice(skip * take, take)) });
-        }
+        const totalRecords = await prisma.event.count();
 
-        return res.json({ events })
+        const paginator = new OffsetPagination(
+            totalRecords,
+            events.length,
+            skipValue,
+            takeValue,
+        );
+
+        return res.json({ events: paginator.buildPage(events.splice(skipValue * takeValue, takeValue)) });
 
     } catch (e) {
         return InternalErrorResponse("Houve um erro e a solicitação não pôde ser concluida.", res)

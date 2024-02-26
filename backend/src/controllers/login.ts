@@ -28,7 +28,7 @@ export const login = async (req: Request, res: Response) => {
 
     const token = generateUserToken({ id, email });
 
-    return res.json({ user: { id, name, email } ,token });
+    return res.json({ user: { id, name, email } , token });
   } catch (error) {
     return InternalErrorResponse("Falha ao fazer login, tente novamente", res)
   }
