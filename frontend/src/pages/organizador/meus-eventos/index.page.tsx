@@ -3,7 +3,7 @@ import Head from "next/head";
 import { GetStaticProps } from "next"
 
 import Link from 'next/link';
-import { Pencil } from 'phosphor-react';
+import { Pencil, Trash } from 'phosphor-react';
 import { AdminLayout } from '@/layouts/AdminLayout';
 import { Select } from '@/components/Select';
 import { Input } from '@/components/Input';
@@ -11,18 +11,74 @@ import { Input } from '@/components/Input';
 import { Event, EventCategory } from "@/@types/interfaces";
 import { formatDate } from '@/utils/format_date';
 import { api } from "@/lib/axios"
+import { useQueryData } from '@/hooks/apiHooks';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
+import dayjs from 'dayjs';
+import { toastNotify } from '@/lib/toastify';
+import { Pagination } from '@/components/Pagination';
+import { useDebounce } from '@/hooks/useDebounce';
 
 interface EventsListPageProps {
-  events: Event[],
   categories: EventCategory[]
 }
 
-export default function EventsList({ events, categories }: EventsListPageProps) {
+export default function EventsList({ categories }: EventsListPageProps) {
+  const [currentPage, setCurrentPage] = useState(1)
+  const [searchQuery, setSearchQuery] = useState({
+    name: '',
+    categoryId: '',
+    startDate: ''
+  })
+  const debouncedQueryName = useDebounce(searchQuery.name)
+  const debouncedQueryCategory = useDebounce(searchQuery.categoryId)
+  const debouncedQueryStartDate= useDebounce(searchQuery.startDate)
+  const url = `/events?take=10&skip=${currentPage - 1}&name=${debouncedQueryName}&category_id=${debouncedQueryCategory}&start_date=${debouncedQueryStartDate}`
+
+  const router = useRouter()
+
+  const { data, isLoading, isError, refetch } = useQueryData(url)
+
+  if (isError) {
+    toastNotify('error', "Não foi possivel captar os eventos")
+  }
 
   const formattedCategories = categories?.map(category => ({
     key: category.id,
     value: category.name
   }))
+
+  function getCategoryName(categoryId: number) {
+    const eventCategory = categories.find(category => category.id === categoryId)
+
+    return eventCategory?.name 
+  }
+
+  function handleEditEvent(event: Event) {
+    const eventAlreadyHappened = dayjs(event.start_date).isBefore(dayjs())
+
+    if (eventAlreadyHappened) {
+      return toastNotify("error", 'Você não pode editar um evento que já passou.')
+    }
+
+    router.push(`/organizador/eventos/editar/${event.slug}`)
+  }
+
+  function handleSearchQuery(key: keyof typeof searchQuery, value: string) {
+    setSearchQuery(prev => ({...prev, [key]: value }))
+  }
+
+  console.log(data)
+
+  useEffect(() => {
+    setCurrentPage(1)
+    refetch()
+  }, [
+    debouncedQueryName,
+    debouncedQueryCategory,
+    debouncedQueryStartDate,
+    refetch,
+  ])
 
   return (
     <>
@@ -34,13 +90,13 @@ export default function EventsList({ events, categories }: EventsListPageProps) 
 
           <div className={styles.filters}>
             <Input placeholder='ID' />
-            <Input placeholder='Nome' />
+            <Input placeholder='Nome' onChange={(e) => handleSearchQuery('name', e.target.value)} />
             <Select 
               placeholder="Categoria" 
               options={formattedCategories}
-              onChangeSelect={(option) => { console.log(option) }}
+              onChangeSelect={(option) => handleSearchQuery('categoryId', String(option))}
               />
-            <Input placeholder='Data de Início' />
+            <Input placeholder='Data de Início' onChange={(e) => handleSearchQuery('startDate', e.target.value)}  />
           </div>
 
           <table>
@@ -57,29 +113,37 @@ export default function EventsList({ events, categories }: EventsListPageProps) 
             </thead>
             <tbody>
               {
-                events.map(event => (
+                data?.events?.content?.map((event: Event) => (
                   <tr key={event.id}>
                     <td>{event.id}</td>
                     <td>{event.name}</td>
-                    <td>{event.category}</td>
+                    <td>{getCategoryName(event.category_id)}</td>
                     <td>{event.capacity}</td>
                     <td>{formatDate(event.start_date)}</td>
                     <td>{formatDate(event.created_at)}</td>
                     <td>
-                      <Link href={`/editar/${event.id}`}>
+                      <button onClick={() => handleEditEvent(event)}>
                         <Pencil size={22} />
-                      </Link>
+                      </button>
                     </td>
                   </tr>
                 ))
               }
             </tbody>
           </table>
+          
+          <div className={styles.pagination}>
+            <Pagination
+              totalPages={data?.totalPages}
+              currentPage={currentPage}
+              onPageChange={setCurrentPage}
+            />
+            </div>
         </div>
+
       </AdminLayout>
     </>
   )
-
 }
 
 export const getStaticProps: GetStaticProps = async () => {

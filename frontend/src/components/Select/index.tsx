@@ -13,14 +13,24 @@ interface SelectProps {
   options: Option[];
   error?: string;
   label?: string;
+  defaultValue?: number;
   onChangeSelect: (optionKey: number | string) => void;
 }
 
 
-export function Select({ placeholder, options, onChangeSelect, error, label }: SelectProps) {
+export function Select({ 
+  placeholder, 
+  options,
+  onChangeSelect, 
+  defaultValue, 
+  error, 
+  label 
+}: SelectProps) {
   const[openList, setOpenList] = useState(false)
   const[selectPlaceholder, setSelectPlaceholder] = useState(placeholder)
   const[optionChanged, setOptionChanged] = useState(false); 
+
+  const selectedValue = defaultValue && options.find(option => option.key === defaultValue)
 
   function toggleOpenList() {
     setOpenList(prev => !prev)
@@ -39,8 +49,8 @@ export function Select({ placeholder, options, onChangeSelect, error, label }: S
     <div className={styles.container}>
       {label && <label>{label}</label>}
 
-      <button type="button" className={styles.label} onClick={toggleOpenList} style={{ color: optionChanged ? "#202020" : ''}}>
-        {selectPlaceholder}
+      <button type="button" className={styles.label} onClick={toggleOpenList} style={{ color: optionChanged || defaultValue ? "#202020" : ''}}>
+        {selectedValue ? selectedValue?.value : selectPlaceholder}
 
         {openList ? <CaretUp color="#4e4e4e" /> : <CaretDown color="#4e4e4e" /> }
       </button>

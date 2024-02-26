@@ -29,16 +29,17 @@
   display: flex;
   flex-direction: column;
   gap: 2rem;
-
-  label {
-    margin: 0.5rem 0;
-    align-items: baseline;
+  
+  > div {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
   }
-   
-   p {
-     font-size: 1rem;
-     text-align: center;
-   }
+
+  p {
+    font-size: 1rem;
+    text-align: center;
+  }
   
   a {
     color: var(--orange-500);
@@ -55,7 +56,7 @@
   align-items: center;
   gap: 1rem;
 
-  label {
-    font-size: 1rem;
+  input {
+    margin-bottom: 0.5rem;
   }
 }

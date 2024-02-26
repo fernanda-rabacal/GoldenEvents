@@ -35,8 +35,6 @@ export function AuthContextProvider({ children } : AuthProps) {
 
   function signOut() {
     destroyCookie(undefined, 'golden_token')
-    api.defaults.headers.common['Authorization'] = ""
-
     setUser(null)
   }
 
@@ -50,8 +48,6 @@ export function AuthContextProvider({ children } : AuthProps) {
       const { user, token } = response.data
 
       const maxAge = keep_connected ? 60 * 60 * 24 * 7 : 60 * 60 * 24 * 30 //7 days or 30 days
-
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`
       
       setCookie(undefined, 'golden_token', token, { maxAge })
       

@@ -1,5 +1,5 @@
 {
-  "name": "make-me-an-event",
+  "name": "golden-events",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^3.1.1",
+    "@mdxeditor/editor": "^2.9.0",
     "@types/node": "20.3.2",
     "@types/react": "18.2.14",
     "@types/react-dom": "18.2.6",

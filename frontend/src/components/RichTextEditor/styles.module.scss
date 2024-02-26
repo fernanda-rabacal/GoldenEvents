@@ -1,0 +1,17 @@
+.richTextContainer {
+  border: 1px solid var(--gray-200);
+  border-radius: 6px;
+}
+
+.content {
+  height: 20rem;
+  overflow: auto;
+  
+  ul {
+    list-style: initial;
+  }
+  
+  ul, ol {
+    padding-left: 1.5rem;
+  }
+}

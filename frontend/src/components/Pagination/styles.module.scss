@@ -1,0 +1,31 @@
+.paginationContainer {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.restPagination {
+  color: var(--gray-100);
+  user-select: none;
+}
+
+.currentPage, .pageButtons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  border-radius: 5px;
+  box-shadow: 0 0 5px var(--gray-100);
+  border: 1px solid var(--gray-200);
+  width: 2rem;
+  height: 2rem;
+  font-weight: bold;
+}
+
+.pageButtons {
+  transition: 0.4s;
+
+  &:hover {
+    transform: translateY(-10px);
+  }
+}
+

@@ -6,7 +6,7 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get('golden_token')
 
   if (!token?.value) {
-    return NextResponse.redirect(new URL('/home', request.url))
+    return NextResponse.redirect(new URL('/', request.url))
   }
 }
  

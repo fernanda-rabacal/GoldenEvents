@@ -32,6 +32,10 @@
   }
 }
 
+.actions {
+  display: flex;
+  gap: 1.5rem
+}
 
 .filters {
   width: 100%;
@@ -52,6 +56,12 @@
       color: var(--gray-300)
     }
   }
+}
+
+.pagination {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 2rem;
 }
 
 @media(max-width: 667px) {

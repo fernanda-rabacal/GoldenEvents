@@ -24,14 +24,14 @@ export function EventCard({ name, description, photo, start_date, id, slug } : E
   return(
     <div className={styles.cardContainer} onClick={navigateToDetails}>
       <img src={photo} alt=""/>
-      <div className={styles.description}>
+      <div className={styles.infos}>
         <div className={styles.dateContainer}>
           <span>{day}</span>
           {date}
         </div>
         <div>
           <h4>{name}</h4>
-          <p>{description}</p>
+          <div className={styles.description} dangerouslySetInnerHTML={{ __html: description }} />
         </div>
       </div>
     </div>

@@ -15,19 +15,32 @@ export const useQueryData = (url: string, options = {}) => {
 
 export const useMutationData = (
   url: string,
-  method: 'post' | 'put' | 'delete',
+  method: 'post' | 'put',
   onSuccess: (data: any) => void,
   onError: (error: any) => void,
 ) => {
   return useMutation(
-    async (data: object) => {
-      let response;
+    async (data?: object) => {
+      const response = await api[method](url, data);
 
-      if (method === 'delete') {
-        response = await api.delete(url);
-      } else {
-        response = await api[method](url, data);
-      }
+      return response.data;
+    },
+    {
+      onSuccess,
+      onError,
+    },
+  );
+};
+
+export const useDeleteData = (
+  url: string,
+  method: 'delete',
+  onSuccess: (data: any) => void,
+  onError: (error: any) => void,
+) => {
+  return useMutation(
+    async () => {
+      const response = await api.delete(url);
 
       return response.data;
     },
