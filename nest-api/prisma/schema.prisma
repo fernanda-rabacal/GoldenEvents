@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Event {
+  id            Int        @id @default(autoincrement())
+  name          String
+  slug          String
+  photo         String?
+  description   String      @db.Text
+  start_date    DateTime
+  end_date      DateTime?  
+  user_id       Int
+  category_id   Int
+  capacity      Int
+  quantity_left Int
+  active        Boolean       @default(true)
+  price         Float         @default(0)
+  location      String
+  created_at    DateTime      @default(now())
+  updated_at    DateTime      @default(now()) @updatedAt
+
+  category      EventCategory @relation(fields: [category_id], references: [id])
+  user          User          @relation(fields: [user_id], references: [id])
+  Ticket        Ticket[]
+
+  @@map("event")
+}
+
+model Ticket {
+  id             Int    @id @default(autoincrement())
+  event_id       Int
+  user_id        Int
+  price          Int
+  payment_method String
+  created_at     DateTime  @default(now())
+  updated_at     DateTime  @default(now()) @updatedAt
+  deleted_at     DateTime?
+  event          Event     @relation(fields: [event_id], references: [id])
+  user           User      @relation(fields: [user_id], references: [id])
+
+  @@index([user_id, event_id])
+  @@map("ticket")
+}
+
+model EventCategory {
+  id    Int @id @default(autoincrement())
+  name  String
+  photo String
+
+  events Event[]
+
+  @@map("event_category")
+}
+
+model User {
+  id           Int    @id @default(autoincrement())
+  name         String
+  user_type_id Int
+  email        String
+  password     String
+  document     String
+  active       Boolean   @default(true)
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @default(now()) @updatedAt
+
+  user_type UserType @relation(fields: [user_type_id], references: [id])
+
+  events  Event[]
+  tickets Ticket[]
+
+  @@map("user")
+}
+
+model UserType {
+  id   Int    @id @default(autoincrement())
+  name String
+  User User[]
+
+  @@map("user_type")
+}
