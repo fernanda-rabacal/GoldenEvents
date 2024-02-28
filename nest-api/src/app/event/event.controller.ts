@@ -19,6 +19,7 @@ import { JwtAuthGuard } from '../auth/guard/jwt.guard';
 import { Request } from 'express';
 import { MessageResponse } from 'src/response/message.response';
 import { CategoryService } from './category.service';
+import { BuyEventTicket } from './dto/buy-ticket.dto';
 
 @ApiTags('Event')
 @Controller('/event')
@@ -33,16 +34,6 @@ export class EventController {
     return await this.eventService.findAll(query);
   }
 
-  @Get('/:id')
-  async findById(@Param('id') id: string) {
-    return this.eventService.findById(+id);
-  }
-
-  @Get('/:slug')
-  async findBySlug(@Param('slug') slug: string) {
-    return this.eventService.findBySlug(slug);
-  }
-
   @Get('/categories')
   async findAllCategories() {
     return this.categoryService.findAll();
@@ -51,6 +42,16 @@ export class EventController {
   @Get('/categories/:id')
   async findCategoryById(@Param('id') id: string) {
     return this.categoryService.findById(+id);
+  }
+
+  @Get('/:slug')
+  async findBySlug(@Param('slug') slug: string) {
+    return this.eventService.findBySlug(slug);
+  }
+
+  @Get('/:id')
+  async findById(@Param('id') id: number) {
+    return this.eventService.findById(id);
   }
 
   @Post()
@@ -67,7 +68,17 @@ export class EventController {
   @Post('/:id/buy-ticket')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  async buyTickets() {}
+  async buyTicket(
+    @Param('id') id: number,
+    @Req() req: Request,
+    @Body() buyTicketDto: BuyEventTicket,
+  ) {
+    buyTicketDto.userId = req.user['id'];
+    buyTicketDto.eventId = id;
+
+    await this.eventService.buyTicket(buyTicketDto);
+    return new MessageResponse('Ingresso(s) comprado(s) com sucesso.');
+  }
 
   @Put('/:id')
   @ApiBearerAuth()
@@ -75,15 +86,17 @@ export class EventController {
   async update(
     @Param('id') id: string,
     @Body() updateEventDto: UpdateEventDto,
+    @Req() req: Request,
   ) {
-    const event = this.eventService.update(+id, updateEventDto);
+    const userId = req.user['id'];
+    const event = this.eventService.update(+id, userId, updateEventDto);
     return new MessageResponse('Evento atualizado com sucesso.', event);
   }
 
   @Delete('/:id')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  async delete(@Param('id') id: string) {
+  async delete(@Param('id') id: number) {
     return this.eventService.delete(+id);
   }
 }

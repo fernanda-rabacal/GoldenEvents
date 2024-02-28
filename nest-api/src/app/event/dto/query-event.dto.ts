@@ -1,20 +1,30 @@
-import { IsDate, IsNumber, IsString } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsOptional } from 'class-validator';
 
 export class QueryEventDto {
-  @IsString()
-  name: string;
+  @IsOptional()
+  @ApiProperty()
+  name?: string;
 
-  @IsNumber()
-  category_id: number;
+  @IsOptional()
+  @ApiProperty()
+  active?: string;
 
-  @IsNumber()
+  @IsOptional()
+  @ApiProperty()
+  category_id?: number;
+
+  @IsOptional()
+  @ApiProperty()
   skip: number = 0;
 
-  @IsNumber()
+  @IsOptional()
+  @ApiProperty()
   take: number = 10;
 
-  @IsDate()
-  start_date: Date;
+  @IsOptional()
+  @ApiProperty()
+  start_date?: Date;
 
   public mountWhere() {
     let where = {};
@@ -28,10 +38,17 @@ export class QueryEventDto {
       };
     }
 
+    if (this.active) {
+      where = {
+        ...where,
+        active: Boolean(Number(this.active)),
+      };
+    }
+
     if (this.category_id) {
       where = {
         ...where,
-        category_id: this.category_id,
+        category_id: Number(this.category_id),
       };
     }
 
@@ -40,8 +57,7 @@ export class QueryEventDto {
       where = {
         ...where,
         start_date: {
-          gte: new Date(this.start_date).toISOString(),
-          lte: new Date(this.start_date).toISOString(),
+          gte: new Date(this.start_date),
         },
       };
     }

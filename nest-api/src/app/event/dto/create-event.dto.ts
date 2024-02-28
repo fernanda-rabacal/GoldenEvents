@@ -1,14 +1,15 @@
 import {
   IsDate,
-  IsDecimal,
   IsNotEmpty,
   IsNumber,
+  IsOptional,
   IsString,
   Length,
   Min,
   MinDate,
 } from 'class-validator';
 import { ApiProperty, ApiHideProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 
 export class CreateEventDto {
   @IsString()
@@ -25,7 +26,7 @@ export class CreateEventDto {
   @ApiProperty()
   categoryId: number;
 
-  @IsDecimal()
+  @IsNumber()
   @Min(0)
   @ApiProperty()
   price: number;
@@ -36,14 +37,17 @@ export class CreateEventDto {
   capacity: number;
 
   @IsDate()
-  @MinDate(new Date())
+  @Transform(({ value }) => new Date(value))
+  @MinDate(() => new Date())
   @ApiProperty()
-  startDateTime: Date;
+  startDateTime: string;
 
+  @IsOptional()
+  @Transform(({ value }) => (value ? new Date(value) : null))
   @IsDate()
   @MinDate(new Date())
-  @ApiProperty()
-  endDateTime: Date;
+  @ApiProperty({ required: false })
+  endDateTime?: Date;
 
   @IsString()
   @IsNotEmpty()

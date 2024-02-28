@@ -13,16 +13,15 @@ import { JwtStrategy } from './strategy/jwt.strategy';
     PassportModule,
     JwtModule.register({
       secret: process.env.SECRET,
-      signOptions: { expiresIn: '1h' },
     }),
   ],
   controllers: [AuthController],
   providers: [
     PrismaService,
-    UserService,
     AuthService,
     LocalStrategy,
     JwtStrategy,
+    UserService,
   ],
   exports: [JwtModule],
 })

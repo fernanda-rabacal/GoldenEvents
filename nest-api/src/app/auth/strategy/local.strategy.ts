@@ -12,17 +12,14 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(email: string, password: string) {
-    const token = await this.authService.createToken({
-      email,
-      password,
-    });
+    const user = await this.authService.validateUser(email, password);
 
-    if (!token) {
+    if (!user) {
       throw new UnauthorizedException({
         message: 'Credenciais Inválidas.',
       });
     }
 
-    return token;
+    return user;
   }
 }

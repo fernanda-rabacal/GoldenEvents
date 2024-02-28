@@ -8,48 +8,57 @@ datasource db {
 }
 
 model Event {
-  id            Int        @id @default(autoincrement())
+  id            Int       @id @default(autoincrement())
   name          String
   slug          String
   photo         String?
-  description   String      @db.Text
+  description   String    @db.Text
   start_date    DateTime
-  end_date      DateTime?  
+  end_date      DateTime?
   user_id       Int
   category_id   Int
   capacity      Int
   quantity_left Int
-  active        Boolean       @default(true)
-  price         Float         @default(0)
+  active        Boolean   @default(true)
+  price         Float     @default(0)
   location      String
-  created_at    DateTime      @default(now())
-  updated_at    DateTime      @default(now()) @updatedAt
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @default(now()) @updatedAt
 
-  category      EventCategory @relation(fields: [category_id], references: [id])
-  user          User          @relation(fields: [user_id], references: [id])
-  Ticket        Ticket[]
+  category EventCategory @relation(fields: [category_id], references: [id])
+  user     User          @relation(fields: [user_id], references: [id])
+  Ticket   Ticket[]
 
   @@map("event")
 }
 
 model Ticket {
-  id             Int    @id @default(autoincrement())
-  event_id       Int
-  user_id        Int
-  price          Int
-  payment_method String
-  created_at     DateTime  @default(now())
-  updated_at     DateTime  @default(now()) @updatedAt
-  deleted_at     DateTime?
-  event          Event     @relation(fields: [event_id], references: [id])
-  user           User      @relation(fields: [user_id], references: [id])
+  id                Int           @id @default(autoincrement())
+  event_id          Int
+  user_id           Int
+  price             Int
+  payment_method_id Int
+  created_at        DateTime      @default(now())
+  updated_at        DateTime      @default(now()) @updatedAt
+
+  event             Event         @relation(fields: [event_id], references: [id])
+  user              User          @relation(fields: [user_id], references: [id])
+  payment_method    PaymentMethod @relation(fields: [payment_method_id], references: [id])
 
   @@index([user_id, event_id])
   @@map("ticket")
 }
 
+model PaymentMethod {
+  id     Int      @id @default(autoincrement())
+  name   String
+  Ticket Ticket[]
+
+  @@map("payment_method")
+}
+
 model EventCategory {
-  id    Int @id @default(autoincrement())
+  id    Int    @id @default(autoincrement())
   name  String
   photo String
 
@@ -59,15 +68,15 @@ model EventCategory {
 }
 
 model User {
-  id           Int    @id @default(autoincrement())
+  id           Int      @id @default(autoincrement())
   name         String
   user_type_id Int
   email        String
   password     String
   document     String
-  active       Boolean   @default(true)
-  created_at   DateTime  @default(now())
-  updated_at   DateTime  @default(now()) @updatedAt
+  active       Boolean  @default(true)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @default(now()) @updatedAt
 
   user_type UserType @relation(fields: [user_type_id], references: [id])
 

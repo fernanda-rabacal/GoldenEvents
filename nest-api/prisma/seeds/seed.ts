@@ -3,6 +3,7 @@ import { createUserTypes } from './createUserTypeSeeder';
 import { createEventCategories } from './createEventCategoriesSeeder';
 import { createUsers } from './createUsersSeeder';
 import { createEvents } from './createEventsSeeder';
+import { createPaymentMethods } from './createPaymentMethodsSeeder';
 
 const prisma = new PrismaClient();
 
@@ -11,6 +12,7 @@ async function main() {
   await createEventCategories(prisma);
   await createUsers(prisma);
   await createEvents(prisma);
+  await createPaymentMethods(prisma);
 }
 
 main()

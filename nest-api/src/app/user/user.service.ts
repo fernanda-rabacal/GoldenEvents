@@ -79,7 +79,10 @@ export class UserService {
       throw new NotFoundException({ message: 'Usuário não encontrado.' });
     }
 
-    return user;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...rest } = user;
+
+    return rest;
   }
 
   async findByEmail(email: string) {

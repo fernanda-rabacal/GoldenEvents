@@ -1,6 +1,7 @@
 import {
   Injectable,
   InternalServerErrorException,
+  NotAcceptableException,
   NotFoundException,
 } from '@nestjs/common';
 import { CreateEventDto } from './dto/create-event.dto';
@@ -9,6 +10,7 @@ import { QueryEventDto } from './dto/query-event.dto';
 import { PrismaService } from 'src/db/prisma.service';
 import { OffsetPagination } from 'src/response/pagination.response';
 import { generateSlug } from 'src/util/slug';
+import { BuyEventTicket } from './dto/buy-ticket.dto';
 
 @Injectable()
 export class EventService {
@@ -97,7 +99,52 @@ export class EventService {
     return event;
   }
 
-  async update(id: number, updateEventDto: UpdateEventDto) {
+  async buyTicket(buyEventTicket: BuyEventTicket) {
+    try {
+      const event = await this.findById(buyEventTicket.eventId);
+      const tickets = [];
+
+      for (let i = 1; i <= buyEventTicket.quantity; i++) {
+        tickets.push(
+          this.prismaService.ticket.create({
+            data: {
+              event_id: buyEventTicket.eventId,
+              user_id: buyEventTicket.userId,
+              payment_method_id: buyEventTicket.paymentMethodId,
+              price: event.price,
+            },
+          }),
+        );
+      }
+
+      Promise.all(tickets);
+
+      await this.prismaService.event.update({
+        where: {
+          id: event.id,
+        },
+        data: {
+          quantity_left: event.quantity_left - buyEventTicket.quantity,
+        },
+      });
+
+      return true;
+    } catch (e) {
+      throw new InternalServerErrorException({
+        message: 'Houve um erro e a solicitação não pôde ser concluida.',
+      });
+    }
+  }
+
+  async update(id: number, userId: number, updateEventDto: UpdateEventDto) {
+    const { user_id } = await this.findById(id);
+
+    if (userId !== user_id) {
+      throw new NotAcceptableException(
+        'Você não pode editar um evento que não é seu.',
+      );
+    }
+
     const event = await this.prismaService.event.update({
       where: {
         id: Number(id),

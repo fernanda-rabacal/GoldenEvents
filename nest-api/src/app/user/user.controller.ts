@@ -28,16 +28,16 @@ export class UserController {
     return await this.userService.findAll();
   }
 
-  @Get('/:id')
-  async findById(@Param('id') id: string) {
-    return await this.userService.findById(+id);
-  }
-
   @Get('/token')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   async getMe(@Req() req: Request) {
     return req.user;
+  }
+
+  @Get('/:id')
+  async findById(@Param('id') id: string) {
+    return await this.userService.findById(+id);
   }
 
   @Post()

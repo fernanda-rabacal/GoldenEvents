@@ -1,7 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { ExtractJwt } from 'passport-jwt';
-import { Strategy } from 'passport-jwt';
+import { ExtractJwt, Strategy } from 'passport-jwt';
 import { AuthTokenDto } from '../dto/auth-token.dto';
 import { UserService } from 'src/app/user/user.service';
 
@@ -16,7 +15,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: AuthTokenDto) {
-    console.log('Inside JWT Validate');
     if (!payload) {
       throw new UnauthorizedException('Não autenticado.');
     }
