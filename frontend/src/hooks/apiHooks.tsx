@@ -1,7 +1,7 @@
-import { useMutation, useQuery } from 'react-query';
+import { UseQueryOptions, useMutation, useQuery } from 'react-query';
 import { api } from '@/lib/axios';
 
-export const useQueryData = (url: string, options = {}) => {
+export const useQueryData = (url: string, options?: Omit<UseQueryOptions<any, unknown, any, string>, "queryKey" | "queryFn">) => {
   return useQuery(
     url,
     async () => {

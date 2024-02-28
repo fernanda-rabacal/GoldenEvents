@@ -2,7 +2,7 @@ import styles from './styles.module.scss'
 import Head from 'next/head'
 import { useCart } from '@/hooks/useCart'
 import { formatDateExtensive } from '@/utils/format_date'
-import { ChangeEvent, useEffect, useState } from 'react'
+import { ChangeEvent, useState } from 'react'
 import { useRouter } from 'next/router'
 import { formatMoney } from '@/utils/format_money'
 import { QuantityInput } from '@/components/QuantityInput'
@@ -12,31 +12,35 @@ import { BilletForm } from './components/BilletForm'
 import { PixForm } from './components/PixForm'
 import { api } from '@/lib/axios'
 import { toastNotify } from '@/lib/toastify'
-import { useAuth } from '@/hooks/useAuth'
 import { parseCookies } from 'nookies'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css';
+import { useMutationData } from '@/hooks/apiHooks'
+import { useAuth } from '@/hooks/useAuth'
 
 
 export default function Checkout() {
-    const [paymentMethod, setPaymentMethod] = useState("credit")
+    const [paymentMethod, setPaymentMethod] = useState(3)
     const router = useRouter()
     const { event, changeEventQuantity } = useCart()
+    const { user } = useAuth()
     
-   /*  useEffect(() => {
-        if(!event) {
-           return router.push('/')
+    const { mutate: buyTicket, isLoading } = useMutationData(`/event/${event!.id}/buy-ticket`,
+        'post',
+        data => {
+            toastNotify("success", data.message || "Compra realizada com sucesso!")
+            router.push("/")
+        },
+        error => {
+            toastNotify("error", error.response.data.message)
         }
-    }, []) */
-    
-    if(!event) {
-        return <></>
-    }
+    )
 
-    const eventDate = formatDateExtensive(event.start_date)
-    const eventPrice = formatMoney(event.price * event.quantity)
-    const tax = formatMoney(event.price * 0.1 * event.quantity)
-    const totalCost = formatMoney(event.price * 1.1 * event.quantity)
+    const eventDate = formatDateExtensive(event!.start_date)
+    const eventPrice = formatMoney(event!.price * event!.quantity)
+    const tax = formatMoney(event!.price * 0.1 * event!.quantity)
+    const totalCost = formatMoney(event!.price * 1.1 * event!.quantity)
+
 
     const handleIncrease = () => {
         changeEventQuantity("increase")
@@ -47,50 +51,30 @@ export default function Checkout() {
     }
 
     const handleOptionChange = (e: ChangeEvent<HTMLInputElement>) => {
-        setPaymentMethod(e.target.value)
+        setPaymentMethod(Number(e.target.value))
     }
 
     const handleBuyTicket = async () => {
-        const token = parseCookies(null, "nextauth.token")
-
         const ticketInfos = {
-            quantity: event.quantity,
-            payment_method: paymentMethod
+            quantity: event!.quantity,
+            paymentMethodId: paymentMethod,
+            eventId: event!.id,
         }
 
-        try {
-            const response = await api.post(`/events/buy-ticket/${event.id}`, ticketInfos,
-            {
-                headers: {
-                    'Authorization': `Bearer ${token["nextauth.token"]}`
-                }
-            })
-
-            if(response.status !== 201) {
-                throw new Error(response.data.message)
-            }
-
-            console.log("oie")
-    
-            toastNotify("success", "Compra realizada com sucesso!")
-            router.push("/")
-        } catch(err: any) {
-            toastNotify("error", err.message)
-        }
+        buyTicket(ticketInfos)
     }
 
     const handleCancelOperation = () => {
         router.push("/")
     }
 
-
     return (
         <>
             <Head>
                 <title>Checkout - Golden Eventos</title>
             </Head>
-            <Header />
             <ToastContainer />
+            <Header />
             <main className={styles.container}>
                 <section className={styles.paymentMethods}>
                     <h2>Escolha sua forma de pagamento</h2>
@@ -101,9 +85,9 @@ export default function Checkout() {
                                 <input 
                                     type='radio' 
                                     id='credit'
-                                    value="credit"
+                                    value="3"
                                     name='payment_option'
-                                    checked={paymentMethod === "credit"}
+                                    checked={paymentMethod === 3}
                                     onChange={handleOptionChange}
                                     />
                                 <label htmlFor='credit'>Crédito</label>
@@ -112,9 +96,9 @@ export default function Checkout() {
                                 <input 
                                     type='radio' 
                                     id="pix"
-                                    value="pix"
+                                    value="2"
                                     name='payment_option'
-                                    checked={paymentMethod === "pix"}
+                                    checked={paymentMethod === 2}
                                     onChange={handleOptionChange}
                                     />
                                 <label htmlFor='pix'>Pix</label>
@@ -123,23 +107,21 @@ export default function Checkout() {
                                 <input 
                                     type='radio' 
                                     id="billet"
-                                    value="billet"
+                                    value="1"
                                     name='payment_option'
-                                    checked={paymentMethod === "billet"}
+                                    checked={paymentMethod === 1}
                                     onChange={handleOptionChange}
                                     />
                                 <label>Boleto</label>
                             </div>
                         </div>
-                        {
-                            paymentMethod === "credit" ?
-                                <CreditCardForm 
-                                />
-                                :
-                            paymentMethod === "billet" ?
-                                <BilletForm /> 
-                                :
-                                <PixForm />
+                        {paymentMethod === 3 ?
+                            <CreditCardForm />
+                            :
+                        paymentMethod === 1 ?
+                            <BilletForm /> 
+                            :
+                            <PixForm />
                         }
                     </form>
                 </section>
@@ -149,7 +131,7 @@ export default function Checkout() {
 
                     <div className={styles.eventInfos}>
                         <div>
-                            <h2>{event.name}</h2>
+                            <h2>{event?.name}</h2>
                             <p>{eventDate}</p>
                         </div>
                         <div>
@@ -157,7 +139,7 @@ export default function Checkout() {
                             <QuantityInput 
                                 onIncrease={handleIncrease}
                                 onDecrease={handleDecrease}
-                                quantity={event.quantity}
+                                quantity={event?.quantity || 1}
                             />
                         </div>
                     </div>
@@ -184,8 +166,7 @@ export default function Checkout() {
                     </div>
 
                     <div className={styles.actionButtons}> 
-                        <button 
-                            onClick={handleCancelOperation} className={styles.cancelBuyingButton}>Cancelar</button>
+                        <button onClick={handleCancelOperation} className={styles.cancelBuyingButton}>Cancelar</button>
                         <button onClick={handleBuyTicket} className={styles.buyTicketButton}>Comprar</button>
                     </div>
                 </section>

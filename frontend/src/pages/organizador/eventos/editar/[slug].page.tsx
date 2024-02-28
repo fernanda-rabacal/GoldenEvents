@@ -46,12 +46,12 @@ export default function EditEvent({ categories, event }: CreateEventPageProps) {
       name: event.name,
       photo: event.photo,
       endDateTime: event.end_date?.substring(0, 16),
-      startDatetime: event.start_date?.substring(0, 16),
+      startDateTime: event.start_date?.substring(0, 16),
    },
   })
   
   const router = useRouter()
-  const { mutate: updateEvent, isLoading: isLoadingUpdate } = useMutationData(`/events/${event.id}`, 
+  const { mutate: updateEvent, isLoading: isLoadingUpdate } = useMutationData(`/event/${event.id}`, 
       'put', 
       data => {
         toastNotify('success', 'Evento atualizado com sucesso!')
@@ -62,7 +62,7 @@ export default function EditEvent({ categories, event }: CreateEventPageProps) {
       }
     )
 
-  const { mutate: deleteEvent, isLoading: isLoadingDelete } = useDeleteData(`/events/${event.id}`, 
+  const { mutate: deleteEvent, isLoading: isLoadingDelete } = useDeleteData(`/event/${event.id}`, 
       'delete', 
       data => {
         toastNotify('success', 'Evento deletado com sucesso!')
@@ -83,8 +83,6 @@ export default function EditEvent({ categories, event }: CreateEventPageProps) {
   }
 
   function handleUpdateEvent(data: createEventFormData) {
-    console.log(api.defaults.headers.common['Authorization'])
-
     if (event.quantity_left < event.capacity) {
       return toastNotify("error", "Você não pode atualizar o valor do evento pois já existem ingressos comprados.")
     }
@@ -160,8 +158,8 @@ export default function EditEvent({ categories, event }: CreateEventPageProps) {
                 id="startDatetime"
                 type="datetime-local"
                 label="Data de início *"
-                error={errors.startDatetime?.message}
-                {...register("startDatetime")}
+                error={errors.startDateTime?.message}
+                {...register("startDateTime")}
                 />
               <Input
                 id="endDateTime"
@@ -208,13 +206,13 @@ export const getStaticPaths: GetStaticPaths = async () => {
 }
 
 export const getStaticProps: GetStaticProps = async ({ params }) => {
-  const { data: categoryData } = await api.get("/events/categories")
-  const { data: eventData } = await api.get(`/events/${params?.slug}`)
+  const { data: categoryData } = await api.get("/event/categories")
+  const { data: eventData } = await api.get(`/event/${params?.slug}`)
 
   return {
     props: {
-      categories: categoryData.categories,
-      event: eventData.event
+      categories: categoryData,
+      event: eventData
     }
   }
 }

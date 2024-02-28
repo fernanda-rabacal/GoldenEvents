@@ -8,10 +8,9 @@ import { PasswordInput } from "@/components/PasswordInput";
 import { Button } from "@/components/Button";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useContext } from "react";
-import { AuthContext } from "@/contexts/AuthContext";
 import { useRouter } from "next/router";
 import { ToastContainer } from "react-toastify";
+import { useAuth } from "@/hooks/useAuth";
 
 
 const loginFormSchema = z.object({
@@ -28,7 +27,7 @@ export default function Login() {
   })
 
   const router = useRouter()
-  const { signIn } = useContext(AuthContext)
+  const { signIn } = useAuth()
 
   const handleSignIn = async (data: LoginFormData) => {
     const hasLogged = await signIn(data)

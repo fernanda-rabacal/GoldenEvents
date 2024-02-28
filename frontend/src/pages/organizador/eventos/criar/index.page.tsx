@@ -17,6 +17,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { EventCategory } from '@/@types/interfaces';
 import { eventValidationSchema } from '@/utils/schemaValidations';
 import { useMutationData } from '@/hooks/apiHooks';
+import { useEffect } from 'react';
+import { maskMoney } from '@/utils/masks';
 
 const RichTextEditor = dynamic(() => import('../../../../components/RichTextEditor'), {
   ssr: false,
@@ -29,10 +31,13 @@ interface CreateEventPageProps {
 type createEventFormData = z.infer<typeof eventValidationSchema>
 
 export default function CreateEvent({ categories }: CreateEventPageProps) {
+  const router = useRouter()
   const { 
     register,
     setValue, 
+    watch,
     handleSubmit, 
+    control,
     formState: { errors }
   } = useForm<createEventFormData>({
     resolver: zodResolver(eventValidationSchema),
@@ -41,8 +46,15 @@ export default function CreateEvent({ categories }: CreateEventPageProps) {
       categoryId: 0
    }
   })
-  const router = useRouter()
-  const { mutate: createEvent, isLoading } = useMutationData("/events", 
+
+  const price = watch('price')
+
+  const formattedCategories = categories?.map(category => ({
+    key: category.id,
+    value: category.name
+  }))
+
+  const { mutate: createEvent, isLoading } = useMutationData("/event", 
       'post', 
       data => {
         toastNotify('success', 'Evento criado com sucesso!')
@@ -53,18 +65,12 @@ export default function CreateEvent({ categories }: CreateEventPageProps) {
       }
     )
 
-  const formattedCategories = categories?.map(category => ({
-    key: category.id,
-    value: category.name
-  }))
-
   function handleGoBack() {
     router.back()
   }
 
   function handleCreateEvent(data: createEventFormData) {
-    const regex = `<script(?:(?!\/\/)(?!\/\*)[^'"]|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|\/\/.*(?:\n)|\/\*(?:(?:.|\s))*?\*\/)*?<\script>`
-
+    //console.log(data)
     createEvent(data)
   }
 
@@ -104,7 +110,7 @@ export default function CreateEvent({ categories }: CreateEventPageProps) {
                 />
               <Input
                 id="price"
-                type="number"
+                type="text"
                 min={0}
                 label="Preço *"
                 error={errors.price?.message}
@@ -127,8 +133,8 @@ export default function CreateEvent({ categories }: CreateEventPageProps) {
                 id="startDatetime"
                 type="datetime-local"
                 label="Data de início *"
-                error={errors.startDatetime?.message}
-                {...register("startDatetime")}
+                error={errors.startDateTime?.message}
+                {...register("startDateTime")}
                 />
               <Input
                 id="endDateTime"
@@ -164,11 +170,11 @@ export default function CreateEvent({ categories }: CreateEventPageProps) {
 }
 
 export const getStaticProps: GetStaticProps = async () => {
-  const categoryData = await api.get("/events/categories")
+  const categoryData = await api.get("/event/categories")
 
   return {
     props: {
-      categories: categoryData.data.categories
+      categories: categoryData.data
     }
   }
 }

@@ -28,12 +28,14 @@ export default function EventsList({ categories }: EventsListPageProps) {
   const [searchQuery, setSearchQuery] = useState({
     name: '',
     categoryId: '',
+    active: '',
     startDate: ''
   })
   const debouncedQueryName = useDebounce(searchQuery.name)
   const debouncedQueryCategory = useDebounce(searchQuery.categoryId)
-  const debouncedQueryStartDate= useDebounce(searchQuery.startDate)
-  const url = `/events?take=10&skip=${currentPage - 1}&name=${debouncedQueryName}&category_id=${debouncedQueryCategory}&start_date=${debouncedQueryStartDate}`
+  const debouncedQueryStartDate = useDebounce(searchQuery.startDate)
+  const debouncedQueryActive = useDebounce(searchQuery.active)
+  const url = `/event?take=10&skip=${currentPage - 1}&name=${debouncedQueryName}&category_id=${debouncedQueryCategory}&start_date=${debouncedQueryStartDate}&active=${debouncedQueryActive}`
 
   const router = useRouter()
 
@@ -68,15 +70,15 @@ export default function EventsList({ categories }: EventsListPageProps) {
     setSearchQuery(prev => ({...prev, [key]: value }))
   }
 
-  console.log(data)
-
   useEffect(() => {
+    console.log(url)
     setCurrentPage(1)
     refetch()
   }, [
     debouncedQueryName,
     debouncedQueryCategory,
     debouncedQueryStartDate,
+    debouncedQueryActive,
     refetch,
   ])
 
@@ -89,14 +91,21 @@ export default function EventsList({ categories }: EventsListPageProps) {
           <h2>Meus Eventos</h2>
 
           <div className={styles.filters}>
-            <Input placeholder='ID' />
             <Input placeholder='Nome' onChange={(e) => handleSearchQuery('name', e.target.value)} />
             <Select 
               placeholder="Categoria" 
               options={formattedCategories}
               onChangeSelect={(option) => handleSearchQuery('categoryId', String(option))}
               />
-            <Input placeholder='Data de Início' onChange={(e) => handleSearchQuery('startDate', e.target.value)}  />
+            <Input 
+              placeholder='Data de Início' 
+              onChange={(e) => handleSearchQuery('startDate', e.target.value)}  
+              />
+            <Select 
+              placeholder="Ativo" 
+              options={[{ key: 1, value: "Sim" }, { key: 0, value: 'Não'}]}
+              onChangeSelect={(option) => handleSearchQuery('active', String(option))}
+              />
           </div>
 
           <table>
@@ -107,13 +116,14 @@ export default function EventsList({ categories }: EventsListPageProps) {
                 <th>Categoria</th>
                 <th>Capacidade</th>
                 <th>Data de início</th>
-                <th>Criado em</th>
+                <th>Criado em</th> 
+                <th>Ativo</th> 
                 <th></th>
               </tr>
             </thead>
             <tbody>
               {
-                data?.events?.content?.map((event: Event) => (
+                data?.content?.map((event: Event) => (
                   <tr key={event.id}>
                     <td>{event.id}</td>
                     <td>{event.name}</td>
@@ -121,6 +131,7 @@ export default function EventsList({ categories }: EventsListPageProps) {
                     <td>{event.capacity}</td>
                     <td>{formatDate(event.start_date)}</td>
                     <td>{formatDate(event.created_at)}</td>
+                    <td>{event.active ? "Sim" : "Não"}</td>
                     <td>
                       <button onClick={() => handleEditEvent(event)}>
                         <Pencil size={22} />
@@ -147,13 +158,13 @@ export default function EventsList({ categories }: EventsListPageProps) {
 }
 
 export const getStaticProps: GetStaticProps = async () => {
-  const eventData = await api.get('/events')
-  const categoryData = await api.get('/events/categories')
+  const eventData = await api.get('/event')
+  const categoryData = await api.get('/event/categories')
 
   return {
     props: {
-        events: eventData.data.events ? eventData.data.events : [],
-        categories: categoryData.data.categories ? categoryData.data.categories : [],  
+        events: eventData.data,
+        categories: categoryData.data,  
     }
   }
 }

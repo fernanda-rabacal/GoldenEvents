@@ -1,6 +1,6 @@
 import { ChangeEvent, useEffect, useState } from "react"
 import styles from "./styles.module.scss"
-import { mask } from "@/utils/mask"
+import { mask } from "@/utils/masks"
 import { FormInput } from "../FormInput"
 
 const documentTypePlaceholder = {

@@ -8,58 +8,35 @@ import { Footer } from "@/components/Footer/Footer"
 import { GetStaticProps } from "next"
 import { api } from "@/lib/axios"
 import { Event, EventCategory } from "@/@types/interfaces"
-import { useEffect, useState } from "react"
+import { use, useEffect, useState } from "react"
 import { EventCategoryDisplay } from "@/components/EventCategoryDisplay"
 import { ToastContainer } from "react-toastify"
 import 'react-toastify/dist/ReactToastify.css';
+import { useQueryData } from "@/hooks/apiHooks"
 
 interface PageProps {
-    events: Event[],
     categories: EventCategory[]
 }
 
-export default function Home( { events, categories } : PageProps) {
-    const [offset, setOffset] = useState(6)
-    const [filteredEvents, setFilteredEvents] = useState(events)
+export default function Home({ categories } : PageProps) {
+    const [currentPage, setCurrentPage] = useState(1)
     const [search, setSearch] = useState("")
+    const [events, setEvents] = useState<Event[]>([])
+
+    const now = new Date().toISOString()
+    const url = `/event?take=6&skip=${currentPage - 1}&name=${search}`;
+
+    const { data, isLoading } = useQueryData(url);
 
     const handleLoadMoreEvents = () => {
-        
-      //  setFilteredEvents(filteredEvents)
-        setOffset(prevState => prevState + 6)
+      setCurrentPage(prevState => prevState + 1)
     }
-
-    const filterEvents = () => {
-        let updatedEvents : Event[] = []
-
-        updatedEvents = events.filter((event : Event) => {
-            if(search) {
-                const name = event.name.toLowerCase()
-    
-                return name.includes(search.toLowerCase())
-            }
-
-            return event
-        })
-        
-        updatedEvents = updatedEvents.filter((_ : any, index: number) => index < offset)
-
-        setFilteredEvents(updatedEvents)
-    }
-
-    /* const filterPerQuantity = (_ : any, index: number) => {
-        return index < offset
-    }
-
-    const filterPerSearch = (event : Event) => {
-        const name = event.name.toLowerCase()
-
-        return name.includes(search.toLowerCase())
-    } */
 
     useEffect(() => {
-        filterEvents()
-    }, [search, offset])
+        if (data) {
+            setEvents([...events, ...data?.content])
+        }
+    }, [currentPage, data])
 
   return (
     <>  
@@ -90,7 +67,7 @@ export default function Home( { events, categories } : PageProps) {
                 <h2>Próximos eventos</h2>
 
                 <div>
-                    {filteredEvents?.map(event => {
+                    {events?.map((event: Event) => {
                         return (
                             <EventCard 
                                 key={event.id}
@@ -162,13 +139,11 @@ export default function Home( { events, categories } : PageProps) {
 }
 
 export const getStaticProps: GetStaticProps = async () => {
-    const eventData = await api.get("/events")
-    const categoryData = await api.get("/events/categories")
+    const categoryData = await api.get("/event/categories")
 
     return {
       props: {
-        events: eventData.data.events ? eventData.data.events : [],
-        categories: categoryData.data.categories ? categoryData.data.categories : [], 
+        categories: categoryData.data, 
       },
       revalidate: 60 * 60 
     }

@@ -13,6 +13,8 @@ import { useCart } from '@/hooks/useCart'
 import { useState } from 'react'
 import styles from './styles.module.scss'
 import { QuantityInput } from '@/components/QuantityInput'
+import { useAuth } from '@/hooks/useAuth'
+import { toastNotify } from '@/lib/toastify'
 
 interface PageProps {
   event: Event
@@ -23,11 +25,18 @@ export default function EventDetails({ event }: PageProps) {
   const router = useRouter()
 
   const { addEventToCart } = useCart()
+  const { user } = useAuth()
 
   const date = formatDateExtensive(event.start_date)
   const price = formatMoney(event.price)
 
   const handleNavigateToCheckout = () => {
+    if(!user) {
+      toastNotify('info', "Você precisa logar antes para comprar")
+
+      return router.push('/login')
+    }
+
     const eventToBuy = {
       ...event,
       quantity
@@ -102,11 +111,11 @@ export const getStaticPaths: GetStaticPaths = async () => {
 }
 
 export const getStaticProps: GetStaticProps = async ({ params }) => {
-  const data = await api.get(`/events/${params?.slug}`)
+  const { data: event } = await api.get(`/event/${params?.slug}`)
 
   return {
     props: {
-      event: data.data.event
+      event: event
     },
     revalidate: 60 * 60
   }
