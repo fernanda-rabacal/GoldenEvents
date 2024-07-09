@@ -2,6 +2,11 @@
 
 This is a collaborative full stack project of a website where you can see the latest events near to you, see the details of it, register or login in your account to buy a ticket and/or create an event. Besides, you can see and edit your profile, see the order history, edit or delete your created events and many more. This project is made with Next.js e Express.js, also using Sass and Prisma, using JWT authentication, data validation, MySQL database and Docker.
 
+<div style="">
+  <img src="https://github.com/fernanda-rabacal/GoldenEvents/assets/99514714/8d93fedd-8cb9-4cfb-9473-6155ec0ee3f8" />
+  <img src="https://github.com/fernanda-rabacal/GoldenEvents/assets/99514714/5a3a2412-474f-4566-b8c1-45d28f5b6d47" />
+</div>
+
 ### Status: In progress 🚧
 
 #### Doing:
