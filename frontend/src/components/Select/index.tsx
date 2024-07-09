@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import styles from './styles.module.scss'
 import { CaretDown, CaretUp } from "phosphor-react";
 import { ErrorMessage } from "../ErrorMessage";
@@ -28,7 +28,14 @@ export function Select({
 }: SelectProps) {
   const[openList, setOpenList] = useState(false)
   const[selectPlaceholder, setSelectPlaceholder] = useState(placeholder)
-  const[optionChanged, setOptionChanged] = useState(false); 
+
+  const optionsWithSelect = [
+    {
+      key: '',
+      value: 'Selecione'
+    },
+    ...options
+  ]
 
   const selectedValue = defaultValue && options.find(option => option.key === defaultValue)
 
@@ -37,19 +44,20 @@ export function Select({
   }
 
   function handleSelect(option: Option) {
-    setSelectPlaceholder(option.value)
+    setSelectPlaceholder(option.value === 'Selecione' ? placeholder : option.value)
 
     toggleOpenList()
 
     onChangeSelect(option.key)
-    setOptionChanged(true)
   }
 
   return (
     <div className={styles.container}>
       {label && <label>{label}</label>}
 
-      <button type="button" className={styles.label} onClick={toggleOpenList} style={{ color: optionChanged || defaultValue ? "#202020" : ''}}>
+      <button type="button" className={styles.label} onClick={toggleOpenList} style={{ 
+        color: selectPlaceholder !== placeholder ? "#202020" : ''
+        }}>
         {selectedValue ? selectedValue?.value : selectPlaceholder}
 
         {openList ? <CaretUp color="#4e4e4e" /> : <CaretDown color="#4e4e4e" /> }
@@ -58,7 +66,7 @@ export function Select({
       {
         openList && (
           <ul className={styles.list}>
-            {options.map(option => (
+            {optionsWithSelect.map(option => (
               <li 
                 key={option.key} 
                 onClick={() => handleSelect(option)} 

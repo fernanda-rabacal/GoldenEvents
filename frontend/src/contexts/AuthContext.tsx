@@ -29,6 +29,7 @@ type AuthContextType = {
 export const AuthContext = createContext({} as AuthContextType)
 
 export function AuthContextProvider({ children } : AuthProps) {
+  const { golden_token } = parseCookies()
   const [user, setUser] = useState<User | null>(null)
 
   const isAuthenticated = !!user;
@@ -40,18 +41,18 @@ export function AuthContextProvider({ children } : AuthProps) {
 
   async function signIn({ email, password, keep_connected }: SignInData) {
     try {
-      const response = await api.post('/users/login', {
+      const response = await api.post('/login', {
         email,
         password
       })
 
-      const { user, token } = response.data
+      const { token } = response.data
 
-      const maxAge = keep_connected ? 60 * 60 * 24 * 7 : 60 * 60 * 24 * 30 //7 days or 30 days
+      const maxAge = keep_connected ? 60 * 60 * 24 * 30 : 60 * 60 //7 days or 30 days
       
       setCookie(undefined, 'golden_token', token, { maxAge })
       
-      setUser(user)
+      await getUserByToken(token)
 
       return true
     } catch (err: any) {
@@ -61,18 +62,11 @@ export function AuthContextProvider({ children } : AuthProps) {
     }
   }
 
-  async function getUserByToken() {
-    const { golden_token } = parseCookies()
-
-    if(!golden_token) {
-      return setUser(null) 
-    }
-
+  async function getUserByToken(token: string) {
     try {
-      const response = await api.get("/users/token", {
+      const response = await api.get("/user/token", {
         headers: {
-          'Authorization': `Bearer ${golden_token}`,
-          'Access-Control-Allow-Origin': '*',
+          'Authorization': `Bearer ${token}`,
         }
       })
 
@@ -80,17 +74,23 @@ export function AuthContextProvider({ children } : AuthProps) {
         throw new Error(response.data.message) 
       }
 
-      const { user } = response.data
+      const user = response.data
 
       setUser(user)
     } catch(err: any) {
+      if (err.status === 401) {
+        return destroyCookie(undefined, 'golden_token')
+      }
+
       toastNotify('error', err.response?.data?.message)
     }
   }
 
   useEffect(() => {
-    getUserByToken()
-  }, [])
+    if (golden_token) {
+      getUserByToken(golden_token)
+    }
+  }, [golden_token])
   
 
   return (

@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod";
 import z  from 'zod'
 import { Button } from "@/components/Button";
-import { mask } from "@/utils/mask";
+import { maskDocument } from "@/utils/masks";
 import { Input } from "@/components/Input";
 import { PasswordInput } from "@/components/PasswordInput";
 import { toastNotify } from "@/lib/toastify";
@@ -62,7 +62,7 @@ export default function RegisterPage() {
   const cpfValue = watch("cpf")
 
   useEffect(() => {
-    setValue("cpf", mask(cpfValue))
+    setValue("cpf", maskDocument(cpfValue))
 
   },[cpfValue])
 
@@ -70,7 +70,7 @@ export default function RegisterPage() {
 
   const handleRegister = async (data: IRegister) => {
     try {
-      let response = await api.post("/users/register", data)
+      let response = await api.post("/user", data)
   
       if(response.status !== 200) {
         return toastNotify('error', response.data.message)

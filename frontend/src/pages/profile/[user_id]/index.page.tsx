@@ -28,7 +28,7 @@ export default function UserProfile({ user } : PageProps) {
 export const getServerSideProps : GetServerSideProps = async ({ params }) => {
     const userId = String(params?.user_id)
 
-    const user = await api.get(`/users/${userId}`)
+    const user = await api.get(`/user/${userId}`)
 
     if (!user) {
         return {

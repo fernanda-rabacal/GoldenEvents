@@ -1,6 +1,6 @@
 .headerContainer {
   width: 100%;
-  padding-block: 1.2rem;
+  padding: 1.2rem 2rem;
   margin-inline: auto;
   display: grid;
   grid-template-columns: 1fr 2rem;
@@ -67,6 +67,11 @@
   
   li {
     padding: 0.6rem 0.8rem;
+    cursor: pointer;
+
+    &:hover {
+      font-weight: bold;
+    }
   }
   
   button {
@@ -85,6 +90,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 1.2rem 5rem;
   }
 
   .headerContainer img {

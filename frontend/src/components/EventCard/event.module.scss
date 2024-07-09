@@ -1,6 +1,7 @@
 .cardContainer {
   width: 21.5rem;
   max-width: 21.5rem;
+  height: 24rem;
   display: flex;
   flex-direction: column;
   border-radius: 10px;
@@ -31,6 +32,7 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  word-break: break-word;
 }
 
 .dateContainer {
