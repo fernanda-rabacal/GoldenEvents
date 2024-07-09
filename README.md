@@ -6,12 +6,10 @@ This is a collaborative full stack project of a website where you can see the la
 
 #### Doing:
 - Creating the Profile Dashboard
-- Creating the event creation page
 
 #### Needs to do:
 
 - User CRUD funcionality
-- Admin Dashboard
 - Order history
 
 ### How to run:
