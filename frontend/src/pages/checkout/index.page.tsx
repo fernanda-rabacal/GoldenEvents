@@ -2,30 +2,25 @@ import styles from './styles.module.scss'
 import Head from 'next/head'
 import { useCart } from '@/hooks/useCart'
 import { formatDateExtensive } from '@/utils/format_date'
-import { ChangeEvent, useState } from 'react'
-import { useRouter } from 'next/router'
+import { ChangeEvent, useEffect, useState } from 'react'
 import { formatMoney } from '@/utils/format_money'
 import { QuantityInput } from '@/components/QuantityInput'
 import { Header } from '@/components/Header'
 import { CreditCardForm } from './components/CreditCardForm'
 import { BilletForm } from './components/BilletForm'
 import { PixForm } from './components/PixForm'
-import { api } from '@/lib/axios'
 import { toastNotify } from '@/lib/toastify'
-import { parseCookies } from 'nookies'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css';
 import { useMutationData } from '@/hooks/apiHooks'
-import { useAuth } from '@/hooks/useAuth'
-
+import { useRouter } from 'next/router'
 
 export default function Checkout() {
     const [paymentMethod, setPaymentMethod] = useState(3)
     const router = useRouter()
     const { event, changeEventQuantity } = useCart()
-    const { user } = useAuth()
     
-    const { mutate: buyTicket, isLoading } = useMutationData(`/event/${event!.id}/buy-ticket`,
+    const { mutate: buyTicket, isLoading } = useMutationData(`/event/${event?.id}/buy-ticket`,
         'post',
         data => {
             toastNotify("success", data.message || "Compra realizada com sucesso!")
@@ -36,11 +31,14 @@ export default function Checkout() {
         }
     )
 
-    const eventDate = formatDateExtensive(event!.start_date)
-    const eventPrice = formatMoney(event!.price * event!.quantity)
-    const tax = formatMoney(event!.price * 0.1 * event!.quantity)
-    const totalCost = formatMoney(event!.price * 1.1 * event!.quantity)
+    if(!event) {
+        return <></>
+    }
 
+    const eventDate = formatDateExtensive(event.start_date)
+    const eventPrice = formatMoney(event?.price * event?.quantity)
+    const tax = formatMoney(event?.price * 0.1 * event?.quantity)
+    const totalCost = formatMoney(event?.price * 1.1 * event?.quantity)
 
     const handleIncrease = () => {
         changeEventQuantity("increase")
@@ -67,6 +65,13 @@ export default function Checkout() {
     const handleCancelOperation = () => {
         router.push("/")
     }
+
+   /*  useEffect(() => {
+        if (!event) {
+            router.push("/")
+        }
+    }, [event]) */
+
 
     return (
         <>

@@ -1,8 +1,9 @@
-import { CaretDown, CaretUp, List, SignOut } from "phosphor-react";
+import { CaretDown, CaretUp, List, SignOut, House } from "phosphor-react";
 import styles from './styles.module.scss'
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/router";
+import Link from "next/link";
 
 interface AdminHeaderProps {
   onSidebarCollapse: () => void;
@@ -39,6 +40,12 @@ export function AdminHeader({ onSidebarCollapse }: AdminHeaderProps) {
             <li onClick={handleLogout}>
               <SignOut size={16} weight="bold" />
               <span>Sair</span>
+            </li>
+            <li>
+              <Link href="/">
+                <House size={16} weight="bold" />
+                <span>Ir para início</span>
+              </Link>
             </li>
           </ul>
         )}

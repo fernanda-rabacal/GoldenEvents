@@ -2,9 +2,9 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    padding: 0 4rem;
-    gap: 4rem;
-    margin-top: 5rem;
+    padding: 0 4rem 2rem;
+    gap: 5rem;
+    margin-top: 2rem;
 
     strong {
         font-size: 1.6rem;
@@ -84,7 +84,7 @@
 }
 
 .paymentMethods {
-    padding: 3rem 5rem;
+    padding: 3rem;
 
     form {
         display: flex;
@@ -100,10 +100,10 @@
     }
 
     .selectedTicket {
-        width: 40%;
+        width: 45%;
     }
 
     .paymentMethods {
-        width: 60%;
+        width: 55%;
     }
 }

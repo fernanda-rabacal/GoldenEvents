@@ -35,9 +35,7 @@ export default function CreateEvent({ categories }: CreateEventPageProps) {
   const { 
     register,
     setValue, 
-    watch,
     handleSubmit, 
-    control,
     formState: { errors }
   } = useForm<createEventFormData>({
     resolver: zodResolver(eventValidationSchema),
@@ -46,8 +44,6 @@ export default function CreateEvent({ categories }: CreateEventPageProps) {
       categoryId: 0
    }
   })
-
-  const price = watch('price')
 
   const formattedCategories = categories?.map(category => ({
     key: category.id,
@@ -170,11 +166,19 @@ export default function CreateEvent({ categories }: CreateEventPageProps) {
 }
 
 export const getStaticProps: GetStaticProps = async () => {
-  const categoryData = await api.get("/event/categories")
-
-  return {
-    props: {
-      categories: categoryData.data
+  try {
+    const categoryData = await api.get("/event/categories")
+  
+    return {
+      props: {
+        categories: categoryData.data
+      }
+    }
+  } catch (e) {
+    return {
+      props: {
+        categories: []
+      }
     }
   }
 }

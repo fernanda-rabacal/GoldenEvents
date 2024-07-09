@@ -158,13 +158,22 @@ export default function EventsList({ categories }: EventsListPageProps) {
 }
 
 export const getStaticProps: GetStaticProps = async () => {
-  const eventData = await api.get('/event')
-  const categoryData = await api.get('/event/categories')
-
-  return {
-    props: {
+  try {
+    const eventData = await api.get('/event')
+    const categoryData = await api.get("/event/categories")
+  
+    return {
+      props: {
         events: eventData.data,
-        categories: categoryData.data,  
+        categories: categoryData.data
+      }
+    }
+  } catch (e) {
+    return {
+      props: {
+        events: [],
+        categories: []
+      }
     }
   }
 }

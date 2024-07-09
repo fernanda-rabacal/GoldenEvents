@@ -44,8 +44,9 @@ export default function Home({ categories } : PageProps) {
             <title>Golden Eventos</title>
         </Head>
         
+        <Header />
+        
         <main className={styles.pageContainer}>
-            <Header />
             <ToastContainer />
             <section>
                 <div className={styles.homeContent}>
@@ -139,13 +140,21 @@ export default function Home({ categories } : PageProps) {
 }
 
 export const getStaticProps: GetStaticProps = async () => {
-    const categoryData = await api.get("/event/categories")
-
-    return {
-      props: {
-        categories: categoryData.data, 
-      },
-      revalidate: 60 * 60 
-    }
+    try {
+        const categoryData = await api.get("/event/categories")
+      
+        console.log("teste")
+        return {
+          props: {
+            categories: categoryData.data
+          }
+        }
+      } catch (e) {
+        return {
+          props: {
+            categories: []
+          }
+        }
+      }
   }
   

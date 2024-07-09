@@ -29,7 +29,7 @@ export function Header() {
           <List size={32} color="#eba417" />
         </button>
 
-        <div className={`${styles.linksWrapper}`}>
+        <div className={styles.linksWrapper}>
           <Link href="/#upcoming_events">Próximos eventos</Link>
           <Link href="/login">Contato</Link>
           {user ? (

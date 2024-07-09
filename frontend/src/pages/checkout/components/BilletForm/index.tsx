@@ -1,6 +1,6 @@
 import { ChangeEvent, useEffect, useState } from "react"
 import styles from "./styles.module.scss"
-import { mask } from "@/utils/masks"
+import { maskDocument } from "@/utils/masks"
 import { FormInput } from "../FormInput"
 
 const documentTypePlaceholder = {
@@ -19,7 +19,7 @@ export function BilletForm() {
     }
 
     const handleMaskInput = (e: ChangeEvent<HTMLInputElement>) => {
-        const maskedValue = mask(e.target.value)
+        const maskedValue = maskDocument(e.target.value)
 
         setDocument(maskedValue)
     }
