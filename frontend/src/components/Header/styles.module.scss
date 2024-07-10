@@ -1,9 +1,10 @@
 .headerContainer {
   width: 100%;
-  padding: 1.2rem 2rem;
+  padding: 1.7rem 2rem;
   margin-inline: auto;
   display: grid;
   grid-template-columns: 1fr 2rem;
+  max-width: 60rem;
 }
 
 .headerContainer img {
@@ -90,7 +91,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.2rem 5rem;
+    padding: 1.7rem 5rem;
+    max-width: 110rem;
   }
 
   .headerContainer img {

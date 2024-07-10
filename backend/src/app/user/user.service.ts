@@ -11,6 +11,8 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from '../../db/prisma.service';
 import { UserTypeEnum } from './entities/user.entity';
 import { encryptData } from '../../util/crypt';
+import { OffsetPagination } from 'src/response/pagination.response';
+import { QueryUserTicketsDto } from './dto/query-user-ticket.dto';
 
 @Injectable()
 export class UserService {
@@ -147,6 +149,65 @@ export class UserService {
           id: userId,
         },
       });
+    } catch (e) {
+      throw new InternalServerErrorException({
+        message: 'Não foi possivel realizar sua solicitação',
+      });
+    }
+  }
+
+  async getUserTickets(userId: number, query: QueryUserTicketsDto) {
+    try {
+      let tickets = [];
+
+      const resultData = await this.prismaService.ticket.findMany({
+        where: {
+          user_id: userId,
+        },
+        include: {
+          event: true,
+        },
+      });
+
+      for (const item of resultData) {
+        const category = await this.prismaService.eventCategory.findUnique({
+          where: {
+            id: item.event.category_id,
+          },
+        });
+
+        const sameEventTicket = tickets.find(
+          (ticket) => ticket.event_id === item.event_id,
+        );
+
+        if (sameEventTicket) {
+          tickets = tickets.map((ticket) => {
+            if (sameEventTicket.event_id === ticket.event_id)
+              ticket.quantity += 1;
+
+            return ticket;
+          });
+        } else {
+          tickets.push({
+            ...item,
+            category: category.name,
+            quantity: 1,
+          });
+        }
+      }
+
+      const totalRecords = tickets.length;
+
+      const paginator = new OffsetPagination(
+        totalRecords,
+        totalRecords,
+        query.skip,
+        query.take,
+      );
+
+      return paginator.buildPage(
+        tickets.splice(query.skip * query.take, query.take),
+      );
     } catch (e) {
       throw new InternalServerErrorException({
         message: 'Não foi possivel realizar sua solicitação',

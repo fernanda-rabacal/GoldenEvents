@@ -10,7 +10,7 @@ async function bootstrap() {
 
   // Swagger Documentation
   const docConfig = new DocumentBuilder()
-    .setTitle('Golten Events API')
+    .setTitle('Golden Events API')
     .setDescription('Api para disponibilizar os serviços do golden events.')
     .addBearerAuth()
     .build();

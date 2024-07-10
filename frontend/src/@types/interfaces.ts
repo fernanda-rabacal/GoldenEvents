@@ -13,6 +13,7 @@ export interface Event {
   active: boolean;
   quantity_left: number;
   created_at: string;
+  category?: EventCategory;
 }
 
 export type CreateEventProps = Omit<Event, 'id' | 'created_at'>

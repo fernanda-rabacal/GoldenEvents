@@ -2,8 +2,7 @@ import styles from './styles.module.scss';
 import Head from "next/head";
 import { GetStaticProps } from "next"
 
-import Link from 'next/link';
-import { Pencil, Trash } from 'phosphor-react';
+import { Pencil } from 'phosphor-react';
 import { AdminLayout } from '@/layouts/AdminLayout';
 import { Select } from '@/components/Select';
 import { Input } from '@/components/Input';
@@ -50,12 +49,6 @@ export default function EventsList({ categories }: EventsListPageProps) {
     value: category.name
   }))
 
-  function getCategoryName(categoryId: number) {
-    const eventCategory = categories.find(category => category.id === categoryId)
-
-    return eventCategory?.name 
-  }
-
   function handleEditEvent(event: Event) {
     const eventAlreadyHappened = dayjs(event.start_date).isBefore(dayjs())
 
@@ -71,7 +64,6 @@ export default function EventsList({ categories }: EventsListPageProps) {
   }
 
   useEffect(() => {
-    console.log(url)
     setCurrentPage(1)
     refetch()
   }, [
@@ -127,7 +119,7 @@ export default function EventsList({ categories }: EventsListPageProps) {
                   <tr key={event.id}>
                     <td>{event.id}</td>
                     <td>{event.name}</td>
-                    <td>{getCategoryName(event.category_id)}</td>
+                    <td>{event?.category?.name}</td>
                     <td>{event.capacity}</td>
                     <td>{formatDate(event.start_date)}</td>
                     <td>{formatDate(event.created_at)}</td>
