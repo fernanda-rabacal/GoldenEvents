@@ -52,15 +52,16 @@ export function ImageUpload({ value, onChange, isError: isErrorForm, label }: Im
       <div className={styles.photoPreview}>
         <span>{label}</span>
 
-        <img 
-          src={photoSrc} 
-          alt="photo preview" 
-          onError={({ currentTarget }) => {
-            currentTarget.onerror = null
-            currentTarget.src = "/images/photo-placeholder.jpg"
-          }}
-          />
-      </div>
+        <div className={styles.selectPhotoInfo}>Arraste ou clique para selecionar uma foto</div>
+          <img 
+            src={photoSrc} 
+            alt="photo preview" 
+            onError={({ currentTarget }) => {
+              currentTarget.onerror = null
+              currentTarget.src = "/images/photo-placeholder.jpg"
+            }}
+            />
+        </div>
       {isError && <ErrorMessage>{messageError}</ErrorMessage>}
     </Dropzone>
   )

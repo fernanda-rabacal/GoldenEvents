@@ -17,8 +17,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { EventCategory } from '@/@types/interfaces';
 import { eventValidationSchema } from '@/utils/schemaValidations';
 import { useMutationData } from '@/hooks/apiHooks';
-import { useEffect } from 'react';
-import { maskMoney } from '@/utils/masks';
 
 const RichTextEditor = dynamic(() => import('../../../../components/RichTextEditor'), {
   ssr: false,
@@ -66,7 +64,6 @@ export default function CreateEvent({ categories }: CreateEventPageProps) {
   }
 
   function handleCreateEvent(data: createEventFormData) {
-    //console.log(data)
     createEvent(data)
   }
 

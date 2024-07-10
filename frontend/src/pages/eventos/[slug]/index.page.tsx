@@ -27,7 +27,7 @@ export default function EventDetails({ event }: PageProps) {
   const { addEventToCart } = useCart()
   const { user } = useAuth()
 
-  const date = formatDateExtensive(event.start_date)
+  const startDate = formatDateExtensive(event.start_date)
   const price = formatMoney(event.price)
 
   const handleNavigateToCheckout = () => {
@@ -61,8 +61,8 @@ export default function EventDetails({ event }: PageProps) {
         <title>{event.name} | Eventos</title>
       </Head>
       
+      <Header />
       <main>
-        <Header />
         <section className={styles.container}>
           <Link href="/" className={styles.goBackButton}>
             <CaretLeft />
@@ -74,10 +74,24 @@ export default function EventDetails({ event }: PageProps) {
           <div className={styles.eventDetails}>
             <div className={styles.titleAndDay}>
               <h1>{event.name}</h1>
-              <time>
-                <Clock />
-                {date}
-              </time>
+
+              <div>
+                <time>
+                  <Clock />
+                  {startDate}
+                </time>
+                {
+                  event.end_date && (
+                    <span>
+                        {' > '}
+                      <time>
+                        <Clock />
+                        {formatDateExtensive(event.end_date)}
+                      </time>
+                    </span>
+                  )
+                }
+              </div>
               <p dangerouslySetInnerHTML={{ __html: event.description }} />
             </div>
 

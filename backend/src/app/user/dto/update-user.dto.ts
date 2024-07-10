@@ -1,5 +1,14 @@
-import { CreateUserDto } from './create-user.dto';
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
-export class UpdateUserDto extends CreateUserDto {
-  id: number;
+export class UpdateUserDto {
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  name: string;
+
+  @IsNumber()
+  @IsNotEmpty()
+  @ApiProperty()
+  userTypeId: number;
 }

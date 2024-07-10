@@ -1,4 +1,4 @@
-import z, { ZodSchema } from "zod";
+import z from "zod";
 import dayjs from "dayjs";
 
 export const eventValidationSchema = z.object({
@@ -56,3 +56,32 @@ export const eventValidationSchema = z.object({
   message: 'A data final precisa ser posterior a data de início',
   path: ["endDateTime"]
 }) 
+
+export const registerFormSchema = z.object({
+  name: z
+    .string()
+    .min(3, { message: "Digite pelo menos três letras."}),
+  email: z
+    .string()
+    .min(1, { message: "Este campo é obrigatório" })
+    .email("Informe um email válido."),
+  cpf: z
+    .string()
+    .min(1, { message: "Este campo é obrigatório" }),
+  password: z
+    .string()
+    .min(1, { message: "Este campo é obrigatório" }),
+  confirm_password: z
+    .string()
+    .min(1, { message: "Este campo é obrigatório" }),
+})
+.refine((data) => data.password === data.confirm_password, {
+  message: "Senhas não conferem.",
+  path: ["confirm"],
+});
+
+export const updateUserValidationSchema = z.object({
+  photo: z.string().optional().nullable(),
+  name: z.string().min(5, "O nome é obrigatório"),
+  userTypeId: z.coerce.number().min(1, "O tipo de usuário é obrigatório")
+});

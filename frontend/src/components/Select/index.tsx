@@ -17,7 +17,6 @@ interface SelectProps {
   onChangeSelect: (optionKey: number | string) => void;
 }
 
-
 export function Select({ 
   placeholder, 
   options,
@@ -26,8 +25,16 @@ export function Select({
   error, 
   label 
 }: SelectProps) {
-  const[openList, setOpenList] = useState(false)
-  const[selectPlaceholder, setSelectPlaceholder] = useState(placeholder)
+  const [openList, setOpenList] = useState(false)
+  const [selectPlaceholder, setSelectPlaceholder] = useState(() => {
+    if (defaultValue) {
+      const option = options.find(option => option.key === defaultValue)
+
+      return option?.value
+    }
+
+     return placeholder
+  })
 
   const optionsWithSelect = [
     {
@@ -36,8 +43,6 @@ export function Select({
     },
     ...options
   ]
-
-  const selectedValue = defaultValue && options.find(option => option.key === defaultValue)
 
   function toggleOpenList() {
     setOpenList(prev => !prev)
@@ -58,7 +63,7 @@ export function Select({
       <button type="button" className={styles.label} onClick={toggleOpenList} style={{ 
         color: selectPlaceholder !== placeholder ? "#202020" : ''
         }}>
-        {selectedValue ? selectedValue?.value : selectPlaceholder}
+        {selectPlaceholder}
 
         {openList ? <CaretUp color="#4e4e4e" /> : <CaretDown color="#4e4e4e" /> }
       </button>

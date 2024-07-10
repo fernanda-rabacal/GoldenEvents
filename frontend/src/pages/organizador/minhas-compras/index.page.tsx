@@ -2,8 +2,6 @@ import styles from './styles.module.scss';
 import Head from "next/head";
 
 import { AdminLayout } from "@/layouts/AdminLayout";
-import { GetStaticProps } from 'next';
-import { api } from '@/lib/axios';
 import { useAuth } from '@/hooks/useAuth';
 import { useEffect, useState } from 'react';
 import { useQueryData } from '@/hooks/apiHooks';

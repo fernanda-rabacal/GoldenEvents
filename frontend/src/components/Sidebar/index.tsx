@@ -1,58 +1,51 @@
+import { useAuth } from "@/hooks/useAuth";
 import styles from "./styles.module.scss"
 import { useRouter } from "next/router";
 import { ArrowLeft, ArrowRight, CalendarPlus, ClipboardText, House, ShoppingBag, User } from "phosphor-react";
 
-const sidebarItems = [
-  {
-    name: "Home",
-    href: "/organizador",
-    icon: House,
-  },
-  {
-    name: "Perfil",
-    href: "/organizador/perfil",
-    icon: User,
-  },
-  {
-    name: "Criar Evento",
-    href: "/organizador/eventos/criar",
-    icon: CalendarPlus,
-  },
-  {
-    name: "Meus Eventos",
-    href: "/organizador/meus-eventos",
-    icon: ClipboardText,
-  },
-  {
-    name: "Minhas Compras",
-    href: "/organizador/minhas-compras",
-    icon: ShoppingBag,
-  },
-];
-
 interface SidebarProps {
   isCollapsed: boolean;
   onCollapse: () => void;
-  screenWidth: number;
 }
 
-export function Sidebar({ isCollapsed, onCollapse, screenWidth } : SidebarProps) {
+export function Sidebar({ isCollapsed, onCollapse } : SidebarProps) {
   const router = useRouter();
-
-  function handleDismiss() {
-    if (screenWidth < 667 && !isCollapsed) {
-      onCollapse()
-    }
-  }
+  const { user } = useAuth();
 
   function handleNavigate(href: string) {
-    handleDismiss()
-
     router.push(href)
   }
 
+  const sidebarItems = [
+    {
+      name: "Home",
+      href: "/organizador",
+      icon: House,
+    },
+    {
+      name: "Perfil",
+      href: `/perfil/${user?.id}`,
+      icon: User,
+    },
+    {
+      name: "Criar Evento",
+      href: "/organizador/eventos/criar",
+      icon: CalendarPlus,
+    },
+    {
+      name: "Meus Eventos",
+      href: "/organizador/meus-eventos",
+      icon: ClipboardText,
+    },
+    {
+      name: "Minhas Compras",
+      href: "/organizador/minhas-compras",
+      icon: ShoppingBag,
+    },
+  ];
+
   return (
-    <div className={styles.sidebarWrapper} data-collapse={isCollapsed} onClick={handleDismiss}>
+    <div className={styles.sidebarWrapper} data-collapse={isCollapsed}>
       <button className={styles.openSidebarBtn} onClick={onCollapse}>
         {isCollapsed ? <ArrowRight /> : <ArrowLeft />}
       </button>

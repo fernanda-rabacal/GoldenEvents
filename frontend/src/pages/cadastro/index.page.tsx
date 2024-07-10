@@ -13,6 +13,7 @@ import { PasswordInput } from "@/components/PasswordInput";
 import { toastNotify } from "@/lib/toastify";
 import { api } from "@/lib/axios";
 import { AxiosError } from "axios";
+import { registerFormSchema } from "@/utils/schemaValidations";
 
 interface IRegister {
   name: string;
@@ -22,29 +23,6 @@ interface IRegister {
   confirm_password: string;/* 
   isPromotor: boolean; */
 }
-
-const registerFormSchema = z.object({
-  name: z
-    .string()
-    .min(3, { message: "Digite pelo menos três letras."}),
-  email: z
-    .string()
-    .min(1, { message: "Este campo é obrigatório" })
-    .email("Informe um email válido."),
-  cpf: z
-    .string()
-    .min(1, { message: "Este campo é obrigatório" }),
-  password: z
-    .string()
-    .min(1, { message: "Este campo é obrigatório" }),
-  confirm_password: z
-    .string()
-    .min(1, { message: "Este campo é obrigatório" }),
-})
-.refine((data) => data.password === data.confirm_password, {
-  message: "Senhas não conferem.",
-  path: ["confirm"],
-});
 
 type RegisterFormData = z.infer<typeof registerFormSchema>
 

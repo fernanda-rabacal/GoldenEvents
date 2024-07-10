@@ -34,7 +34,12 @@ export class UserController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   async getMe(@Req() req: Request) {
-    return req.user;
+    return await this.userService.findById(req.user.id);
+  }
+
+  @Get('/types')
+  async getUserTypes() {
+    return await this.userService.getUserTypes();
   }
 
   @Get('/tickets/:id')

@@ -1,0 +1,46 @@
+.container {
+  padding: 2rem;
+  background-color: white;
+  box-shadow: 0 0 10px var(--gray-100);
+  border-radius: 5px;
+}
+
+.formContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem
+}
+
+.fields {
+  display: flex;
+  gap: 1.5rem
+}
+
+.optionsBtn {
+  display: flex;
+  gap: 1rem
+}
+
+@media(min-width: 996px) {
+  .formContainer {
+    display: grid;
+    grid-template-columns: 40% 1fr;
+    align-items: start;
+    justify-items: center;
+  }
+
+  .fields {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    div:first-child {
+      grid-column: span 2;
+    }
+  }
+
+  .optionsBtn {
+    width: 15rem;
+    margin-left: auto;
+  }
+}  

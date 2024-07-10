@@ -10,27 +10,24 @@ interface AdminLayoutProps {
 }
 
 export function AdminLayout({ children }: AdminLayoutProps) {
-  const [isCollapsed, setIsCollapsed] = useState(true);
-  const [width, setWidth] = useState(0);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   function toggleSidebarCollapse() {
     setIsCollapsed(prevState => !prevState)
   }
 
   useEffect(() => {
-    setWidth(window?.innerWidth)
-  }, [])
+    const width = window && window.innerWidth;
 
-  useEffect(() => {
-    if (width < 667) {
+    if (width && width < 667) {
       setIsCollapsed(true)
     }
-  }, [width])
+  }, [])
 
   return (
     <div className={styles.container}>
       <ToastContainer />
-      <Sidebar isCollapsed={isCollapsed} onCollapse={toggleSidebarCollapse} screenWidth={width} />
+      <Sidebar isCollapsed={isCollapsed} onCollapse={toggleSidebarCollapse} />
 
       <div className={styles.page}>
         <AdminHeader onSidebarCollapse={toggleSidebarCollapse} />

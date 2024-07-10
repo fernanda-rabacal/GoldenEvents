@@ -2,12 +2,32 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  
+  gap: 0.7rem;
+  cursor: pointer;
+  position: relative;
+  max-width: 25rem;
+
+  &:hover .selectPhotoInfo {
+    display: flex;
+  }
+
   img {
     border: 2px solid var(--orange-500);
     padding: 0.5rem;
     border-radius: 5px;
     width: 100%;
-    max-width: 25rem;
   }
+}
+
+.selectPhotoInfo {
+  position: absolute;
+  top: 1.2rem;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.149);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  border-radius: 5px;
 }

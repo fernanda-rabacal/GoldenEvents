@@ -61,6 +61,9 @@ export class UserService {
       where: {
         active: true,
       },
+      include: {
+        user_type: true,
+      },
     });
 
     if (users.length == 0) {
@@ -74,6 +77,9 @@ export class UserService {
     const user = await this.prismaService.user.findFirst({
       where: {
         id,
+      },
+      include: {
+        user_type: true,
       },
     });
 
@@ -103,11 +109,22 @@ export class UserService {
     }
   }
 
+  async getUserTypes() {
+    const userTypes = await this.prismaService.userType.findMany();
+
+    if (userTypes.length == 0) {
+      throw new HttpException([], HttpStatus.NO_CONTENT);
+    }
+
+    return userTypes;
+  }
+
   async update(userId: number, updateUserDto: UpdateUserDto) {
     try {
       const user = await this.prismaService.user.update({
         data: {
-          ...updateUserDto,
+          name: updateUserDto.name,
+          user_type_id: updateUserDto.userTypeId,
         },
         where: {
           id: userId,

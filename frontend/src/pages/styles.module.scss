@@ -6,7 +6,7 @@
 
   h2 {
     color: var(--red-800);
-    font-size: 2.5rem;
+    font-size: 2.2rem;
   }
 }
 
@@ -72,6 +72,7 @@
     color: var(--white);
     border: none;
     background-color: transparent;
+    outline: none;
    }
 
    input::placeholder {
@@ -85,7 +86,7 @@
 
 .eventsSection {
   width: 100%;
-  margin-block: 5rem;
+  margin-block: 4rem;
 
   display: flex;
   flex-direction: column;
@@ -207,7 +208,8 @@
   }
 
   p {
-    font-size: 1.4rem;
+    font-size: 1.3rem;
+    margin-top: 1.5rem;
   }
 }
 

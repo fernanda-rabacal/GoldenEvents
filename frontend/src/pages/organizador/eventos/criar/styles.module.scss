@@ -59,10 +59,12 @@
     display: grid;
     grid-template-columns: 40% 1fr;
     align-items: center;
+    justify-items: center;
   }
 
   .description {
     grid-column: span 2;
+    justify-self: stretch;
   }
 
   .optionsBtn {
