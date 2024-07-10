@@ -50,6 +50,9 @@ export class EventService {
     try {
       const events = await this.prismaService.event.findMany({
         where: query.mountWhere(),
+        include: {
+          category: true,
+        },
       });
 
       const totalRecords = await this.prismaService.event.count();

@@ -32,10 +32,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       <ToastContainer />
       <Sidebar isCollapsed={isCollapsed} onCollapse={toggleSidebarCollapse} screenWidth={width} />
 
-      <div className={styles.content}>
+      <div className={styles.page}>
         <AdminHeader onSidebarCollapse={toggleSidebarCollapse} />
 
-        { children }
+        <div className={styles.pageContent}>
+          { children }
+        </div>
       </div>
     </div>
   )

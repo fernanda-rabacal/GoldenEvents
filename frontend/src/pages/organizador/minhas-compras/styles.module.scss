@@ -1,0 +1,29 @@
+.content {
+  table {
+    width: 100%;
+    text-align: left;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 0 5px var(--gray-200);
+  }
+  
+  table, th, td {
+    padding: 0.8rem;
+    border-collapse: collapse;
+  }
+  
+  thead th {
+    background-color: var(--gray-100);
+  }
+  
+  td {
+    padding: 1.4rem;
+    border-bottom: 1px solid var(--gray-100);
+  }
+}
+
+.pagination {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 2rem;
+}
