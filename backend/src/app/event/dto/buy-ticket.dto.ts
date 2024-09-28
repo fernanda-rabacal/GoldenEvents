@@ -1,7 +1,7 @@
 import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
 import { IsNumber } from 'class-validator';
 
-export class BuyEventTicket {
+export class BuyEventTicketDto {
   @ApiProperty()
   @IsNumber()
   eventId: number;

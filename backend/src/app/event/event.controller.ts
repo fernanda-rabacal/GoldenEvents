@@ -19,7 +19,7 @@ import { JwtAuthGuard } from '../auth/guard/jwt.guard';
 import { Request } from 'express';
 import { MessageResponse } from '../../response/message.response';
 import { CategoryService } from './category.service';
-import { BuyEventTicket } from './dto/buy-ticket.dto';
+import { BuyEventTicketDto } from './dto/buy-ticket.dto';
 
 @ApiTags('Event')
 @Controller('/event')
@@ -71,7 +71,7 @@ export class EventController {
   async buyTicket(
     @Param('id') id: number,
     @Req() req: Request,
-    @Body() buyTicketDto: BuyEventTicket,
+    @Body() buyTicketDto: BuyEventTicketDto,
   ) {
     buyTicketDto.userId = req.user['id'];
     buyTicketDto.eventId = id;

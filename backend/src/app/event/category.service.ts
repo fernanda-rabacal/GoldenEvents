@@ -1,26 +1,15 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../../db/prisma.service';
+import { Injectable } from '@nestjs/common';
+import { CategoryRepository } from './repositories/categories.repository';
 
 @Injectable()
 export class CategoryService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(private readonly repository: CategoryRepository) {}
 
   async findAll() {
-    const categories = await this.prismaService.eventCategory.findMany();
-    return categories;
+    return this.repository.findAll();
   }
 
   async findById(categoryId: number) {
-    const category = this.prismaService.eventCategory.findFirst({
-      where: {
-        id: categoryId,
-      },
-    });
-
-    if (!category) {
-      throw new NotFoundException('Categoria não encontrada.');
-    }
-
-    return category;
+    return this.repository.findById(categoryId);
   }
 }

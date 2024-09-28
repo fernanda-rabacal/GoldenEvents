@@ -17,11 +17,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { EventCategory } from '@/@types/interfaces';
 import { eventValidationSchema } from '@/utils/schemaValidations';
 import { useMutationData } from '@/hooks/apiHooks';
+import { useEffect } from 'react';
+import { maskMoney } from '@/utils/masks';
 
 const RichTextEditor = dynamic(() => import('../../../../components/RichTextEditor'), {
   ssr: false,
 })
-
 interface CreateEventPageProps {
   categories: EventCategory[]
 }
@@ -34,6 +35,7 @@ export default function CreateEvent({ categories }: CreateEventPageProps) {
     register,
     setValue, 
     handleSubmit, 
+    watch,
     formState: { errors }
   } = useForm<createEventFormData>({
     resolver: zodResolver(eventValidationSchema),
@@ -42,6 +44,8 @@ export default function CreateEvent({ categories }: CreateEventPageProps) {
       categoryId: 0
    }
   })
+
+  const price = watch("price");
 
   const formattedCategories = categories?.map(category => ({
     key: category.id,
@@ -66,6 +70,10 @@ export default function CreateEvent({ categories }: CreateEventPageProps) {
   function handleCreateEvent(data: createEventFormData) {
     createEvent(data)
   }
+
+  useEffect(() => {
+    setValue("price", maskMoney(price))
+  }, [price])
 
   return (
     <AdminLayout>

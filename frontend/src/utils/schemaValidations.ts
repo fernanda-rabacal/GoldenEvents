@@ -13,13 +13,15 @@ export const eventValidationSchema = z.object({
     .min(1, "A capacidade do evento é obrigatória")
     .int("Precisa ser um número inteiro")
     .positive("A capacidade não pode ser negativa"),
-  price: z.coerce.number()
-    .positive("O preço não pode ser negativo"),
-   /*  .transform(value => {
+  price: z.string()
+    .transform(value => {
       const formattedValue = value.replace("R$ ", '').replace(',', '.')
 
       return formattedValue
-    }) */
+    })
+    .refine(data => Number(data) >= 0, {
+      message: "O preço não pode ser negativo"
+    }),
   description: z
     .string()
     .min(100, "A descrição é obrigatória")
