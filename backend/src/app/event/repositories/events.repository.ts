@@ -1,4 +1,4 @@
-import { Injectable, NotAcceptableException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/db/prisma.service';
 import { CreateEventDto } from '../dto/create-event.dto';
 import { generateSlug } from 'src/util/slug';
@@ -6,23 +6,12 @@ import { OffsetPagination } from 'src/response/pagination.response';
 import { QueryEventDto } from '../dto/query-event.dto';
 import { BuyEventTicketDto } from '../dto/buy-ticket.dto';
 import { UpdateEventDto } from '../dto/update-event.dto';
-import { NotFoundError } from 'src/app/common/errors/types/NotFoundError';
 
 @Injectable()
 export class EventRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createEventDto: CreateEventDto) {
-    const category = this.prisma.eventCategory.findFirst({
-      where: {
-        id: createEventDto.categoryId,
-      },
-    });
-
-    if (!category) {
-      throw new NotFoundError('Categoria não encontrada.');
-    }
-
     const event = await this.prisma.event.create({
       data: {
         name: createEventDto.name,
@@ -65,31 +54,19 @@ export class EventRepository {
   }
 
   async findById(id: number) {
-    const event = await this.prisma.event.findFirst({
+    return this.prisma.event.findFirst({
       where: {
         id,
       },
     });
-
-    if (!event) {
-      throw new NotFoundError('Evento não encontrado');
-    }
-
-    return event;
   }
 
   async findBySlug(slug: string) {
-    const event = await this.prisma.event.findFirst({
+    return this.prisma.event.findFirst({
       where: {
         slug,
       },
     });
-
-    if (!event) {
-      throw new NotFoundError('Evento não encontrado');
-    }
-
-    return event;
   }
 
   async buyTicket(buyEventTicket: BuyEventTicketDto) {
@@ -124,14 +101,6 @@ export class EventRepository {
   }
 
   async update(id: number, userId: number, updateEventDto: UpdateEventDto) {
-    const { user_id } = await this.findById(id);
-
-    if (userId !== user_id) {
-      throw new NotAcceptableException(
-        'Você não pode editar um evento que não é seu.',
-      );
-    }
-
     const event = await this.prisma.event.update({
       where: {
         id: Number(id),

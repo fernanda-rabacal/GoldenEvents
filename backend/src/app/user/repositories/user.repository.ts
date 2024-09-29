@@ -1,12 +1,12 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/db/prisma.service';
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../../../db/prisma.service';
 import { CreateUserDto } from '../dto/create-user.dto';
-import { encryptData } from 'src/util/crypt';
+import { encryptData } from '../../../util/crypt';
 import { UserTypeEnum } from '../entities/user.entity';
 import { UpdateUserDto } from '../dto/update-user.dto';
-import { OffsetPagination } from 'src/response/pagination.response';
+import { OffsetPagination } from '../../../response/pagination.response';
 import { QueryUserTicketsDto } from '../dto/query-user-ticket.dto';
-import { NotFoundError } from 'src/app/common/errors/types/NotFoundError';
+import { NotFoundError } from '../../common/errors/types/NotFoundError';
 
 @Injectable()
 export class UserRepository {
@@ -35,10 +35,6 @@ export class UserRepository {
         user_type: true,
       },
     });
-
-    if (users.length == 0) {
-      throw new HttpException([], HttpStatus.NO_CONTENT);
-    }
 
     return users;
   }
@@ -85,10 +81,6 @@ export class UserRepository {
 
   async getUserTypes() {
     const userTypes = await this.prisma.userType.findMany();
-
-    if (userTypes.length == 0) {
-      throw new HttpException([], HttpStatus.NO_CONTENT);
-    }
 
     return userTypes;
   }
@@ -138,7 +130,11 @@ export class UserRepository {
         user_id: userId,
       },
       include: {
-        event: true,
+        event: {
+          select: {
+            category_id: true,
+          },
+        },
       },
     });
 

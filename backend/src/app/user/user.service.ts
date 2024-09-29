@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { QueryUserTicketsDto } from './dto/query-user-ticket.dto';
-import { UserRepository } from './repositories/user.reposytory';
+import { UserRepository } from './repositories/user.repository';
 
 @Injectable()
 export class UserService {
@@ -13,7 +13,13 @@ export class UserService {
   }
 
   async findAll() {
-    return this.repository.findAll();
+    const users = await this.repository.findAll();
+
+    if (users.length == 0) {
+      throw new HttpException([], HttpStatus.NO_CONTENT);
+    }
+
+    return users;
   }
 
   async findById(id: number) {
@@ -25,7 +31,13 @@ export class UserService {
   }
 
   async getUserTypes() {
-    return this.repository.getUserTypes();
+    const userTypes = await this.repository.getUserTypes();
+
+    if (userTypes.length == 0) {
+      throw new HttpException([], HttpStatus.NO_CONTENT);
+    }
+
+    return userTypes;
   }
 
   async update(userId: number, updateUserDto: UpdateUserDto) {

@@ -2,7 +2,7 @@ import { DatabaseError } from '../types/DatabaseError';
 import { PrismaClientError } from '../types/PrismaClientError';
 import { UniqueConstraintError } from '../types/UniqueConstraintError';
 
-enum PrismaErrors {
+export enum PrismaErrors {
   UniqueConstraintFail = 'P2002',
 }
 
