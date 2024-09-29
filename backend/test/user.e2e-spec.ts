@@ -48,6 +48,33 @@ describe('UserController', () => {
     await module.close();
   });
 
+  describe('POST /login', () => {
+    it('should login', async () => {
+      const res = await request(app.getHttpServer())
+        .post('/login')
+        .send({
+          email: 'emailteste@email.com',
+          password: '123456',
+        })
+        .expect(200);
+
+      expect(res.body.token).toBeDefined();
+      expect(res.body.type).toBeDefined();
+    });
+
+    it('should throw a NotFoundError on login', async () => {
+      const res = await request(app.getHttpServer())
+        .post('/login')
+        .send({
+          email: 'wrongemail@email.com',
+          password: '123456',
+        })
+        .expect(401);
+
+      expect(res.body.message).toBe('Credenciais Inválidas.');
+    });
+  });
+
   describe('POST /users', () => {
     it('should create a user', async () => {
       const res = await request(app.getHttpServer())
@@ -120,7 +147,7 @@ describe('UserController', () => {
     });
   });
 
-   describe('PATCH /users/:id', () => {
+  describe('PATCH /users/:id', () => {
     const updateData = {
       name: 'New name',
       userTypeId: UserTypeEnum.ADMIN,

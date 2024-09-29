@@ -4,7 +4,6 @@ import { CreateUserDto } from '../dto/create-user.dto';
 import { encryptData } from '../../../util/crypt';
 import { UserTypeEnum } from '../entities/user.entity';
 import { UpdateUserDto } from '../dto/update-user.dto';
-import { NotFoundError } from '../../common/errors/types/NotFoundError';
 import { Prisma } from '@prisma/client';
 
 @Injectable()
@@ -56,10 +55,6 @@ export class UserRepository {
       },
     });
 
-    if (!user) {
-      throw new NotFoundError('Usuário não encontrado.');
-    }
-
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...rest } = user;
 
@@ -75,10 +70,6 @@ export class UserRepository {
         user_type: true,
       },
     });
-
-    if (!user) {
-      throw new NotFoundError('Usuário não encontrado.');
-    }
 
     return user;
   }

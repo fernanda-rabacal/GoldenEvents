@@ -25,11 +25,23 @@ export class UserService {
   }
 
   async findById(id: number) {
-    return this.repository.findById(id);
+    const user = this.repository.findById(id);
+
+    if (!user) {
+      throw new NotFoundError('Usuário não encontrado.');
+    }
+
+    return user;
   }
 
   async findByEmail(email: string) {
-    return this.repository.findByEmail(email);
+    const user = this.repository.findByEmail(email);
+
+    if (!user) {
+      throw new NotFoundError('Usuário não encontrado.');
+    }
+
+    return user;
   }
 
   async getUserTypes() {

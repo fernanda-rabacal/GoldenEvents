@@ -4,6 +4,7 @@ import { AuthLoginDto } from './dto/auth-login.dto';
 import { JwtService } from '@nestjs/jwt';
 import { AuthTokenDto } from './dto/auth-token.dto';
 import { compareEncrypedData } from '../../util/crypt';
+import { NotFoundError } from '../common/errors/types/NotFoundError';
 
 @Injectable()
 export class AuthService {
