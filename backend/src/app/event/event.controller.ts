@@ -1,15 +1,4 @@
-import {
-  Controller,
-  Get,
-  Param,
-  Delete,
-  Query,
-  Post,
-  UseGuards,
-  Body,
-  Req,
-  Put,
-} from '@nestjs/common';
+import { Controller, Get, Param, Delete, Query, Post, UseGuards, Body, Req, Put } from '@nestjs/common';
 import { EventService } from './event.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
@@ -68,11 +57,7 @@ export class EventController {
   @Post('/:id/buy-ticket')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  async buyTicket(
-    @Param('id') id: number,
-    @Req() req: Request,
-    @Body() buyTicketDto: BuyEventTicketDto,
-  ) {
+  async buyTicket(@Param('id') id: number, @Req() req: Request, @Body() buyTicketDto: BuyEventTicketDto) {
     buyTicketDto.userId = req.user['id'];
     buyTicketDto.eventId = id;
 
@@ -83,11 +68,7 @@ export class EventController {
   @Put('/:id')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  async update(
-    @Param('id') id: string,
-    @Body() updateEventDto: UpdateEventDto,
-    @Req() req: Request,
-  ) {
+  async update(@Param('id') id: string, @Body() updateEventDto: UpdateEventDto, @Req() req: Request) {
     const userId = req.user['id'];
     const event = this.eventService.update(+id, userId, updateEventDto);
     return new MessageResponse('Evento atualizado com sucesso.', event);
@@ -96,7 +77,8 @@ export class EventController {
   @Delete('/:id')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  async delete(@Param('id') id: number) {
-    return this.eventService.delete(+id);
+  async delete(@Param('id') id: number, @Req() req: Request) {
+    const userId = req.user['id'];
+    return this.eventService.delete(+id, userId);
   }
 }

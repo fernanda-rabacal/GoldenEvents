@@ -26,6 +26,7 @@ export class QueryEventDto {
   @ApiProperty()
   start_date?: Date;
 
+  @IsOptional()
   public mountWhere() {
     let where = {};
 

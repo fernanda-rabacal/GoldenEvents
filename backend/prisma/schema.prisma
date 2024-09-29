@@ -27,7 +27,7 @@ model Event {
 
   category EventCategory @relation(fields: [category_id], references: [id])
   user     User          @relation(fields: [user_id], references: [id])
-  Ticket   Ticket[]
+  tickets   Ticket[]
 
   @@map("event")
 }
@@ -52,7 +52,7 @@ model Ticket {
 model PaymentMethod {
   id     Int      @id @default(autoincrement())
   name   String
-  Ticket Ticket[]
+  ticket Ticket[]
 
   @@map("payment_method")
 }
@@ -89,7 +89,7 @@ model User {
 model UserType {
   id   Int    @id @default(autoincrement())
   name String
-  User User[]
+  user User[]
 
   @@map("user_type")
 }

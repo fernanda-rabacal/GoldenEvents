@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/db/prisma.service';
+import { PrismaService } from '../../../db/prisma.service';
 import { CreateEventDto } from '../dto/create-event.dto';
-import { generateSlug } from 'src/util/slug';
-import { OffsetPagination } from 'src/response/pagination.response';
+import { generateSlug } from '../../../util/slug';
 import { QueryEventDto } from '../dto/query-event.dto';
 import { BuyEventTicketDto } from '../dto/buy-ticket.dto';
 import { UpdateEventDto } from '../dto/update-event.dto';
@@ -39,18 +38,7 @@ export class EventRepository {
       },
     });
 
-    const totalRecords = await this.prisma.event.count();
-
-    const paginator = new OffsetPagination(
-      totalRecords,
-      events.length,
-      query.skip,
-      query.take,
-    );
-
-    return paginator.buildPage(
-      events.splice(query.skip * query.take, query.take),
-    );
+    return events;
   }
 
   async findById(id: number) {
@@ -71,36 +59,34 @@ export class EventRepository {
 
   async buyTicket(buyEventTicket: BuyEventTicketDto) {
     const event = await this.findById(buyEventTicket.eventId);
-    const tickets = [];
+    const tickets = Array.from({ length: buyEventTicket.quantity }, () => ({
+      event_id: buyEventTicket.eventId,
+      user_id: buyEventTicket.userId,
+      payment_method_id: buyEventTicket.paymentMethodId,
+      price: event.price,
+    }));
 
-    for (let i = 1; i <= buyEventTicket.quantity; i++) {
-      tickets.push(
-        this.prisma.ticket.create({
-          data: {
-            event_id: buyEventTicket.eventId,
-            user_id: buyEventTicket.userId,
-            payment_method_id: buyEventTicket.paymentMethodId,
-            price: event.price,
-          },
-        }),
-      );
-    }
-
-    Promise.all(tickets);
-
-    await this.prisma.event.update({
+    const purchasedTickets = await this.prisma.event.update({
       where: {
         id: event.id,
       },
       data: {
         quantity_left: event.quantity_left - buyEventTicket.quantity,
+        tickets: {
+          createMany: {
+            data: tickets,
+          },
+        },
+      },
+      include: {
+        tickets: true,
       },
     });
 
-    return true;
+    return purchasedTickets;
   }
 
-  async update(id: number, userId: number, updateEventDto: UpdateEventDto) {
+  async update(id: number, updateEventDto: UpdateEventDto) {
     const event = await this.prisma.event.update({
       where: {
         id: Number(id),

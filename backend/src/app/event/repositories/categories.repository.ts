@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { NotFoundError } from 'src/app/common/errors/types/NotFoundError';
-import { PrismaService } from 'src/db/prisma.service';
+import { PrismaService } from '../../../db/prisma.service';
 
 @Injectable()
 export class CategoryRepository {
@@ -12,15 +11,11 @@ export class CategoryRepository {
   }
 
   async findById(id: number) {
-    const category = this.prisma.eventCategory.findFirst({
+    const category = await this.prisma.eventCategory.findFirst({
       where: {
         id,
       },
     });
-
-    if (!category) {
-      throw new NotFoundError('Categoria não encontrada.');
-    }
 
     return category;
   }

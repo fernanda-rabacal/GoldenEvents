@@ -4,8 +4,6 @@ import { CreateUserDto } from '../dto/create-user.dto';
 import { encryptData } from '../../../util/crypt';
 import { UserTypeEnum } from '../entities/user.entity';
 import { UpdateUserDto } from '../dto/update-user.dto';
-import { OffsetPagination } from '../../../response/pagination.response';
-import { QueryUserTicketsDto } from '../dto/query-user-ticket.dto';
 import { NotFoundError } from '../../common/errors/types/NotFoundError';
 import { Prisma } from '@prisma/client';
 
@@ -127,7 +125,7 @@ export class UserRepository {
     });
   }
 
-  async getUserTickets(userId: number, query: QueryUserTicketsDto) {
+  async getUserTickets(userId: number) {
     let tickets = [];
     const categories = await this.prisma.eventCategory.findMany();
 
@@ -159,10 +157,6 @@ export class UserRepository {
       }
     }
 
-    const totalRecords = tickets.length;
-
-    const paginator = new OffsetPagination(totalRecords, totalRecords, query.skip, query.take);
-
-    return paginator.buildPage(tickets.splice(query.skip * query.take, query.take));
+    return tickets;
   }
 }

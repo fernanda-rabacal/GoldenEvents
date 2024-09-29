@@ -6,6 +6,7 @@ import { BuyEventTicketDto } from './dto/buy-ticket.dto';
 import { CategoryRepository } from './repositories/categories.repository';
 import { EventRepository } from './repositories/events.repository';
 import { NotFoundError } from '../common/errors/types/NotFoundError';
+import { OffsetPagination } from '../../response/pagination.response';
 
 @Injectable()
 export class EventService {
@@ -15,9 +16,7 @@ export class EventService {
   ) {}
 
   async create(createEventDto: CreateEventDto) {
-    const category = this.categoryRepository.findById(
-      createEventDto.categoryId,
-    );
+    const category = this.categoryRepository.findById(createEventDto.categoryId);
 
     if (!category) {
       throw new NotFoundError('Categoria não encontrada.');
@@ -27,7 +26,13 @@ export class EventService {
   }
 
   async findAll(query: QueryEventDto) {
-    return this.repository.findAll(query);
+    const events = await this.repository.findAll(query);
+
+    const totalRecords = events.length;
+
+    const paginator = new OffsetPagination(totalRecords, events.length, query.skip, query.take);
+
+    return paginator.buildPage(events.splice(query.skip * query.take, query.take));
   }
 
   async findById(eventId: number) {
@@ -51,22 +56,40 @@ export class EventService {
   }
 
   async buyTicket(buyEventTicket: BuyEventTicketDto) {
+    await this.findById(buyEventTicket.eventId);
+
     return this.repository.buyTicket(buyEventTicket);
   }
 
   async update(id: number, userId: number, updateEventDto: UpdateEventDto) {
-    const { user_id } = await this.findById(id);
+    const { user_id, capacity, quantity_left, start_date } = await this.findById(id);
+
+    const ticketsPurchased = capacity - quantity_left;
 
     if (userId !== user_id) {
+      throw new NotAcceptableException('Você não pode editar um evento que não é seu.');
+    }
+
+    if (ticketsPurchased > updateEventDto.capacity) {
       throw new NotAcceptableException(
-        'Você não pode editar um evento que não é seu.',
+        'A capacidade do evento não pode ser menor do que a quantidade de ingressos já comprados.',
       );
     }
 
-    return this.repository.update(id, userId, updateEventDto);
+    if (new Date(updateEventDto.startDateTime).getTime() < start_date.getTime()) {
+      throw new NotAcceptableException('A data de inicio do evento não pode ser antes de hoje.');
+    }
+
+    return this.repository.update(id, updateEventDto);
   }
 
-  async delete(id: number) {
+  async delete(id: number, userId: number) {
+    const { user_id } = await this.findById(id);
+
+    if (userId !== user_id) {
+      throw new NotAcceptableException('Você não pode deletar um evento que não é seu.');
+    }
+
     return this.repository.delete(id);
   }
 }

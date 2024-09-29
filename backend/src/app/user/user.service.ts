@@ -4,6 +4,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { QueryUserTicketsDto } from './dto/query-user-ticket.dto';
 import { UserRepository } from './repositories/user.repository';
 import { NotFoundError } from '../common/errors/types/NotFoundError';
+import { OffsetPagination } from '../../response/pagination.response';
 
 @Injectable()
 export class UserService {
@@ -54,6 +55,12 @@ export class UserService {
   }
 
   async getUserTickets(userId: number, query: QueryUserTicketsDto) {
-    return this.repository.getUserTickets(userId, query);
+    const tickets = await this.repository.getUserTickets(userId);
+
+    const totalRecords = tickets.length;
+
+    const paginator = new OffsetPagination(totalRecords, totalRecords, query.skip, query.take);
+
+    return paginator.buildPage(tickets.splice(query.skip * query.take, query.take));
   }
 }
