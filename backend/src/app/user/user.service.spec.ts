@@ -11,6 +11,7 @@ import { PrismaService } from '../../db/prisma.service';
 import { PrismaClientError } from '../common/errors/types/PrismaClientError';
 import { PrismaErrors } from '../common/errors/utils/handle-database-errors.util';
 import { NotFoundError } from '../common/errors/types/NotFoundError';
+import { HttpException, HttpStatus } from '@nestjs/common';
 
 describe('UserService', () => {
   let service: UserService;
@@ -69,6 +70,20 @@ describe('UserService', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+  });
+
+  it('should get all user types', async () => {
+    prisma.userType.findMany.mockResolvedValueOnce(expectedOutputUserTypes);
+
+    const userTypes = await service.getUserTypes();
+
+    expect(userTypes).toStrictEqual(expectedOutputUserTypes);
+  });
+
+  it('should throw a HTTPException error on no content types', async () => {
+    prisma.userType.findMany.mockResolvedValueOnce([]);
+
+    await expect(service.getUserTypes()).rejects.toThrow(new HttpException([], HttpStatus.NO_CONTENT));
   });
 
   it('should create a user', async () => {
