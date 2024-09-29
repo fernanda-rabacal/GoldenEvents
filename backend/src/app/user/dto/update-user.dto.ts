@@ -1,14 +1,21 @@
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { UserTypeEnum } from '../entities/user.entity';
 
 export class UpdateUserDto {
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   @ApiProperty()
   name: string;
 
   @IsNumber()
-  @IsNotEmpty()
+  @IsOptional()
+  @IsEnum(UserTypeEnum)
   @ApiProperty()
   userTypeId: number;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty()
+  password: string;
 }

@@ -1,16 +1,4 @@
-import {
-  Get,
-  Put,
-  Post,
-  Body,
-  Param,
-  Delete,
-  Controller,
-  Patch,
-  UseGuards,
-  Req,
-  Query,
-} from '@nestjs/common';
+import { Get, Put, Post, Body, Param, Controller, Patch, UseGuards, Req, Query } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -44,10 +32,8 @@ export class UserController {
 
   @Get('/tickets/:id')
   @ApiBearerAuth()
-  async getUserTickets(
-    @Param('id') id: string,
-    @Query() query: QueryUserTicketsDto,
-  ) {
+  @UseGuards(JwtAuthGuard)
+  async getUserTickets(@Param('id') id: string, @Query() query: QueryUserTicketsDto) {
     return await this.userService.getUserTickets(+id, query);
   }
 
@@ -69,19 +55,16 @@ export class UserController {
     return await this.userService.update(+id, updateUserDto);
   }
 
-  @Delete('/:id/deactivate')
+  @Patch('/:id/active')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  async deactivate(@Param('id') id: string) {
-    await this.userService.deactivate(+id);
-    return new MessageResponse('Usuário desativado com sucesso.');
-  }
+  async toggleActiveUser(@Param('id') id: string) {
+    const activeMessage = {
+      true: 'ativado',
+      false: 'desativado',
+    };
+    const user = await this.userService.toggleActiveUser(+id);
 
-  @Patch('/:id/activate')
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
-  async activate(@Param('id') id: string) {
-    await this.userService.activate(+id);
-    return new MessageResponse('Usuário ativado com sucesso.');
+    return new MessageResponse(`Usuário ${activeMessage[String(user.active)]} com sucesso.`);
   }
 }

@@ -7,6 +7,7 @@ import { UpdateUserDto } from '../dto/update-user.dto';
 import { OffsetPagination } from '../../../response/pagination.response';
 import { QueryUserTicketsDto } from '../dto/query-user-ticket.dto';
 import { NotFoundError } from '../../common/errors/types/NotFoundError';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class UserRepository {
@@ -36,11 +37,18 @@ export class UserRepository {
       },
     });
 
-    return users;
+    const removePassword = users.map(user => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password, ...rest } = user;
+
+      return rest;
+    });
+
+    return removePassword;
   }
 
   async findById(id: number) {
-    const user = await this.prisma.user.findFirst({
+    const user = await this.prisma.user.findUnique({
       where: {
         id,
       },
@@ -86,11 +94,20 @@ export class UserRepository {
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
+    const data: Prisma.UserUpdateInput = {};
+
+    if (updateUserDto.name) data.name = updateUserDto.name;
+    if (updateUserDto.password) data.password = await encryptData(updateUserDto.password);
+    if (updateUserDto.userTypeId) {
+      data.user_type = {
+        connect: {
+          id: updateUserDto.userTypeId,
+        },
+      };
+    }
+
     const user = await this.prisma.user.update({
-      data: {
-        name: updateUserDto.name,
-        user_type_id: updateUserDto.userTypeId,
-      },
+      data,
       where: {
         id,
       },
@@ -99,21 +116,10 @@ export class UserRepository {
     return user;
   }
 
-  async deactivate(id: number) {
+  async toggleActiveUser(id: number, active: boolean) {
     return this.prisma.user.update({
       data: {
-        active: false,
-      },
-      where: {
-        id,
-      },
-    });
-  }
-
-  async activate(id: number) {
-    return this.prisma.user.update({
-      data: {
-        active: true,
+        active,
       },
       where: {
         id,
@@ -139,43 +145,24 @@ export class UserRepository {
     });
 
     for (const ticket of resultData) {
-      const category = categories.find(
-        ct => ct.id === ticket.event.category_id,
-      );
+      const category = categories.find(ct => ct.id === ticket.event.category_id);
+      const ticketAlreadyOnCount = tickets.find(item => item.event_id === ticket.event_id);
 
-      tickets = tickets.reduce(
-        (prev, ticket) => {
-          const ticketAlreadyOnCount = prev.find(
-            item => item.event_id === ticket.event_id,
-          );
+      if (ticketAlreadyOnCount) {
+        tickets = tickets.map(item => {
+          if (item.event_id === ticketAlreadyOnCount.event_id) item.quantity += 1;
 
-          if (ticketAlreadyOnCount) {
-            prev = prev.map(item => {
-              if (item.event_id === ticket.event_id) ticket.quantity += 1;
-
-              return ticket;
-            });
-          } else {
-            prev.push({ ...ticket, category: category.name, quantity: 1 });
-          }
-
-          return prev;
-        },
-        [] as typeof tickets,
-      );
+          return item;
+        });
+      } else {
+        tickets.push({ ...ticket, category: category.name, quantity: 1 });
+      }
     }
 
     const totalRecords = tickets.length;
 
-    const paginator = new OffsetPagination(
-      totalRecords,
-      totalRecords,
-      query.skip,
-      query.take,
-    );
+    const paginator = new OffsetPagination(totalRecords, totalRecords, query.skip, query.take);
 
-    return paginator.buildPage(
-      tickets.splice(query.skip * query.take, query.take),
-    );
+    return paginator.buildPage(tickets.splice(query.skip * query.take, query.take));
   }
 }

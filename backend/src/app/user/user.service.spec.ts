@@ -10,6 +10,7 @@ import { UserRepository } from './repositories/user.repository';
 import { PrismaService } from '../../db/prisma.service';
 import { PrismaClientError } from '../common/errors/types/PrismaClientError';
 import { PrismaErrors } from '../common/errors/utils/handle-database-errors.util';
+import { NotFoundError } from '../common/errors/types/NotFoundError';
 
 describe('UserService', () => {
   let service: UserService;
@@ -33,7 +34,6 @@ describe('UserService', () => {
       id: 1,
       name: 'Teste usuário',
       email: 'emailteste@email.com',
-      password: await encryptData('123456789'),
       document: '12345678910',
       user_type_id: UserTypeEnum.USER,
       created_at: new Date(),
@@ -60,8 +60,6 @@ describe('UserService', () => {
         payment_method_id: 1,
         created_at: new Date(),
         update_at: new Date(),
-        quantity: 1,
-        category: 'teste',
         event: {
           category_id: 1,
         },
@@ -74,6 +72,11 @@ describe('UserService', () => {
   });
 
   it('should create a user', async () => {
+    const createdUser = {
+      ...expectedOutputUser,
+      password: await encryptData('123456789'),
+    };
+
     const mockUser: CreateUserDto = {
       name: 'Teste usuário',
       email: 'emailteste@email.com',
@@ -81,22 +84,22 @@ describe('UserService', () => {
       document: '12345678910',
     };
 
-    prisma.user.create.mockResolvedValueOnce(expectedOutputUser);
+    prisma.user.create.mockResolvedValueOnce(createdUser);
 
     const newUser = await service.create(mockUser);
 
-    expect(newUser).toStrictEqual(expectedOutputUser);
+    expect(newUser).toStrictEqual(createdUser);
   });
 
   it('should throw a conflict error on create with existent email', async () => {
     const mockUser: CreateUserDto = {
       name: 'Teste usuário',
-      email: 'davi@email.com',
+      email: 'emailteste@email.com',
       password: await encryptData('123456789'),
       document: '12345678910',
     };
 
-    prisma.user.create.mockImplementation(() => {
+    prisma.user.create.mockImplementation(newUser => {
       const prismaError: PrismaClientError = {
         meta: { target: 'email' },
         code: PrismaErrors.UniqueConstraintFail,
@@ -106,7 +109,11 @@ describe('UserService', () => {
         [Symbol.toStringTag]: 'sei la',
       };
 
-      throw new UniqueConstraintError(prismaError);
+      if (newUser.data.email === expectedOutputUser.email) {
+        throw new UniqueConstraintError(prismaError);
+      }
+
+      return expectedOutputUser;
     });
 
     await expect(service.create(mockUser)).rejects.toThrow();
@@ -118,5 +125,73 @@ describe('UserService', () => {
     const users = await service.findAll();
 
     expect(expectedOutputUser).toStrictEqual(users[0]);
+  });
+
+  it('should find an user by his id', async () => {
+    prisma.user.findUnique.mockResolvedValueOnce(expectedOutputUser);
+
+    const user = await service.findById(1);
+
+    expect(expectedOutputUser).toStrictEqual(user);
+  });
+
+  it('should find an user by his e-mail', async () => {
+    prisma.user.findFirst.mockResolvedValueOnce(expectedOutputUser);
+
+    const user = await service.findByEmail('emailteste@email.com');
+
+    expect(expectedOutputUser).toStrictEqual(user);
+  });
+
+  it('should update an user', async () => {
+    const updateUserData = {
+      password: '987654321',
+      name: 'Teste 2',
+      userTypeId: UserTypeEnum.ADMIN,
+    };
+    const updatedUser = {
+      ...expectedOutputUser,
+      ...updateUserData,
+    };
+
+    prisma.user.update.mockResolvedValueOnce(updatedUser);
+
+    const user = await service.update(1, updateUserData);
+
+    expect(user).toStrictEqual(updatedUser);
+  });
+
+  it('should deactivate an user', async () => {
+    const deactivatedUser = { ...expectedOutputUser, active: false };
+
+    prisma.user.findUnique.mockResolvedValueOnce(expectedOutputUser);
+    prisma.user.update.mockResolvedValueOnce(deactivatedUser);
+
+    const user = await service.toggleActiveUser(1);
+
+    expect(user).toStrictEqual(deactivatedUser);
+  });
+
+  it('should throw an NotFound error on deactivate an user', async () => {
+    prisma.user.findUnique.mockResolvedValueOnce(undefined);
+
+    await expect(service.toggleActiveUser(1)).rejects.toThrow(new NotFoundError('Usuário não encontrado.'));
+  });
+
+  it('should get all user tickets', async () => {
+    prisma.eventCategory.findMany.mockResolvedValueOnce([{ id: 1, name: 'teste', photo: 'klsmskl' }]);
+    prisma.ticket.findMany.mockResolvedValueOnce(expectedOutputUserTickets);
+
+    const expectedTickets = expectedOutputUserTickets.map(ticket => ({
+      ...ticket,
+      quantity: 1,
+      category: 'teste',
+    }));
+
+    const tickets = await service.getUserTickets(1, { skip: 0, take: 10 });
+
+    expect(tickets).toHaveProperty('content');
+    expect(tickets.totalRecords).toBe(1);
+    expect(tickets.content).toStrictEqual(expectedTickets);
   });
 });

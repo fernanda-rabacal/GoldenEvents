@@ -3,6 +3,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { QueryUserTicketsDto } from './dto/query-user-ticket.dto';
 import { UserRepository } from './repositories/user.repository';
+import { NotFoundError } from '../common/errors/types/NotFoundError';
 
 @Injectable()
 export class UserService {
@@ -44,12 +45,12 @@ export class UserService {
     return this.repository.update(userId, updateUserDto);
   }
 
-  async deactivate(userId: number) {
-    return this.repository.deactivate(userId);
-  }
+  async toggleActiveUser(id: number) {
+    const user = await this.findById(id);
 
-  async activate(userId: number) {
-    return this.repository.activate(userId);
+    if (!user) throw new NotFoundError('Usuário não encontrado.');
+
+    return this.repository.toggleActiveUser(id, !user.active);
   }
 
   async getUserTickets(userId: number, query: QueryUserTicketsDto) {
