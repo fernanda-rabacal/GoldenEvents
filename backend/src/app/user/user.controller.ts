@@ -1,4 +1,14 @@
-import { Get, Put, Post, Body, Param, Controller, Patch, UseGuards, Req, Query } from '@nestjs/common';
+import {
+  Get,
+  Post,
+  Body,
+  Param,
+  Controller,
+  Patch,
+  UseGuards,
+  Req,
+  Query,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -9,7 +19,7 @@ import { Request } from 'express';
 import { QueryUserTicketsDto } from './dto/query-user-ticket.dto';
 
 @ApiTags('User')
-@Controller('/user')
+@Controller('/users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
@@ -44,11 +54,10 @@ export class UserController {
 
   @Post()
   async create(@Body() createUserDto: CreateUserDto) {
-    const user = await this.userService.create(createUserDto);
-    return new MessageResponse('Usuário cadastrado com sucesso.', user);
+    return this.userService.create(createUserDto);
   }
 
-  @Put('/:id')
+  @Patch('/:id')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
@@ -65,6 +74,9 @@ export class UserController {
     };
     const user = await this.userService.toggleActiveUser(+id);
 
-    return new MessageResponse(`Usuário ${activeMessage[String(user.active)]} com sucesso.`);
+    return new MessageResponse(
+      `Usuário ${activeMessage[String(user.active)]} com sucesso.`,
+      user,
+    );
   }
 }

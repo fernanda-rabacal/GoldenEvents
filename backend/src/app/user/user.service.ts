@@ -59,7 +59,12 @@ export class UserService {
 
     const totalRecords = tickets.length;
 
-    const paginator = new OffsetPagination(totalRecords, totalRecords, query.skip, query.take);
+    const paginator = new OffsetPagination(
+      totalRecords,
+      totalRecords,
+      query.skip,
+      query.take,
+    );
 
     return paginator.buildPage(tickets.splice(query.skip * query.take, query.take));
   }

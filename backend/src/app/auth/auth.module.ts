@@ -7,6 +7,7 @@ import { PrismaService } from '../../db/prisma.service';
 import { PassportModule } from '@nestjs/passport';
 import { LocalStrategy } from './strategy/local.strategy';
 import { JwtStrategy } from './strategy/jwt.strategy';
+import { UserRepository } from '../user/repositories/user.repository';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { JwtStrategy } from './strategy/jwt.strategy';
     LocalStrategy,
     JwtStrategy,
     UserService,
+    UserRepository,
   ],
   exports: [JwtModule],
 })

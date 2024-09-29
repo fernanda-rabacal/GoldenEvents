@@ -6,12 +6,6 @@ import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [
-    AuthModule,
-    UserModule,
-    EventModule,
-    PrismaModule,
-    ConfigModule.forRoot(),
-  ],
+  imports: [AuthModule, UserModule, EventModule, PrismaModule, ConfigModule.forRoot()],
 })
 export class AppModule {}

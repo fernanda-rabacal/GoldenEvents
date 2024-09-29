@@ -18,7 +18,11 @@ export class UserRepository {
         email: createUserDto.email,
         password: await encryptData(createUserDto.password),
         document: createUserDto.document,
-        user_type_id: UserTypeEnum.USER,
+        user_type: {
+          connect: {
+            id: UserTypeEnum.USER,
+          },
+        },
       },
     });
 
@@ -29,9 +33,6 @@ export class UserRepository {
     const users = await this.prisma.user.findMany({
       where: {
         active: true,
-      },
-      include: {
-        user_type: true,
       },
     });
 
@@ -79,10 +80,7 @@ export class UserRepository {
       throw new NotFoundError('Usuário não encontrado.');
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...rest } = user;
-
-    return rest;
+    return user;
   }
 
   async getUserTypes() {
@@ -144,7 +142,9 @@ export class UserRepository {
 
     for (const ticket of resultData) {
       const category = categories.find(ct => ct.id === ticket.event.category_id);
-      const ticketAlreadyOnCount = tickets.find(item => item.event_id === ticket.event_id);
+      const ticketAlreadyOnCount = tickets.find(
+        item => item.event_id === ticket.event_id,
+      );
 
       if (ticketAlreadyOnCount) {
         tickets = tickets.map(item => {

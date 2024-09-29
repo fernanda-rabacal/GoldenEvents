@@ -40,12 +40,7 @@ export class OffsetPagination {
   protected _totalFiltered: number;
   private maxTakes = 100;
 
-  constructor(
-    total?: number,
-    totalFiltered?: number,
-    skip?: number,
-    take?: number,
-  ) {
+  constructor(total?: number, totalFiltered?: number, skip?: number, take?: number) {
     this.take = take || this.take;
     this.skip = skip || this.skip;
     this._total = total || 0;
