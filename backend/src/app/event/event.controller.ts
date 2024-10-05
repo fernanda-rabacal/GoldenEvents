@@ -1,4 +1,15 @@
-import { Controller, Get, Param, Delete, Query, Post, UseGuards, Body, Req, Put } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Delete,
+  Query,
+  Post,
+  UseGuards,
+  Body,
+  Req,
+  Patch,
+} from '@nestjs/common';
 import { EventService } from './event.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
@@ -11,7 +22,7 @@ import { CategoryService } from './category.service';
 import { BuyEventTicketDto } from './dto/buy-ticket.dto';
 
 @ApiTags('Event')
-@Controller('/event')
+@Controller('/events')
 export class EventController {
   constructor(
     private readonly eventService: EventService,
@@ -33,14 +44,14 @@ export class EventController {
     return this.categoryService.findById(+id);
   }
 
-  @Get('/:slug')
+  @Get('/slug/:slug')
   async findBySlug(@Param('slug') slug: string) {
     return this.eventService.findBySlug(slug);
   }
 
   @Get('/:id')
-  async findById(@Param('id') id: number) {
-    return this.eventService.findById(id);
+  async findById(@Param('id') id: string) {
+    return this.eventService.findById(+id);
   }
 
   @Post()
@@ -57,7 +68,11 @@ export class EventController {
   @Post('/:id/buy-ticket')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  async buyTicket(@Param('id') id: number, @Req() req: Request, @Body() buyTicketDto: BuyEventTicketDto) {
+  async buyTicket(
+    @Param('id') id: number,
+    @Req() req: Request,
+    @Body() buyTicketDto: BuyEventTicketDto,
+  ) {
     buyTicketDto.userId = req.user['id'];
     buyTicketDto.eventId = id;
 
@@ -65,10 +80,14 @@ export class EventController {
     return new MessageResponse('Ingresso(s) comprado(s) com sucesso.');
   }
 
-  @Put('/:id')
+  @Patch('/:id')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  async update(@Param('id') id: string, @Body() updateEventDto: UpdateEventDto, @Req() req: Request) {
+  async update(
+    @Param('id') id: string,
+    @Body() updateEventDto: UpdateEventDto,
+    @Req() req: Request,
+  ) {
     const userId = req.user['id'];
     const event = this.eventService.update(+id, userId, updateEventDto);
     return new MessageResponse('Evento atualizado com sucesso.', event);

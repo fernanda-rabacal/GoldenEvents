@@ -83,7 +83,9 @@ describe('UserService', () => {
   it('should throw a HTTPException error on no content types', async () => {
     prisma.userType.findMany.mockResolvedValueOnce([]);
 
-    await expect(service.getUserTypes()).rejects.toThrow(new HttpException([], HttpStatus.NO_CONTENT));
+    await expect(service.getUserTypes()).rejects.toThrow(
+      new HttpException([], HttpStatus.NO_CONTENT),
+    );
   });
 
   it('should create a user', async () => {
@@ -190,11 +192,15 @@ describe('UserService', () => {
   it('should throw an NotFound error on deactivate an user', async () => {
     prisma.user.findUnique.mockResolvedValueOnce(undefined);
 
-    await expect(service.toggleActiveUser(1)).rejects.toThrow(new NotFoundError('Usuário não encontrado.'));
+    await expect(service.toggleActiveUser(1)).rejects.toThrow(
+      new NotFoundError('Usuário não encontrado.'),
+    );
   });
 
   it('should get all user tickets', async () => {
-    prisma.eventCategory.findMany.mockResolvedValueOnce([{ id: 1, name: 'teste', photo: 'klsmskl' }]);
+    prisma.eventCategory.findMany.mockResolvedValueOnce([
+      { id: 1, name: 'teste', photo: 'klsmskl' },
+    ]);
     prisma.ticket.findMany.mockResolvedValueOnce(expectedOutputUserTickets);
 
     const expectedTickets = expectedOutputUserTickets.map(ticket => ({

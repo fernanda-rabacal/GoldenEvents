@@ -30,7 +30,12 @@ export class EventService {
 
     const totalRecords = events.length;
 
-    const paginator = new OffsetPagination(totalRecords, events.length, query.skip, query.take);
+    const paginator = new OffsetPagination(
+      totalRecords,
+      events.length,
+      query.skip,
+      query.take,
+    );
 
     return paginator.buildPage(events.splice(query.skip * query.take, query.take));
   }
@@ -62,7 +67,7 @@ export class EventService {
   }
 
   async update(id: number, userId: number, updateEventDto: UpdateEventDto) {
-    const { user_id, capacity, quantity_left, start_date } = await this.findById(id);
+    const { user_id, capacity, quantity_left } = await this.findById(id);
 
     const ticketsPurchased = capacity - quantity_left;
 
@@ -76,8 +81,14 @@ export class EventService {
       );
     }
 
-    if (new Date(updateEventDto.startDateTime).getTime() < start_date.getTime()) {
-      throw new NotAcceptableException('A data de inicio do evento não pode ser antes de hoje.');
+    if (
+      updateEventDto.startDateTime &&
+      updateEventDto.endDateTime &&
+      +updateEventDto.startDateTime > +updateEventDto.endDateTime
+    ) {
+      throw new NotAcceptableException(
+        'A data final do evento não pode ser antes da data de início.',
+      );
     }
 
     return this.repository.update(id, updateEventDto);

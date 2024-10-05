@@ -5,6 +5,7 @@ import { generateSlug } from '../../../util/slug';
 import { QueryEventDto } from '../dto/query-event.dto';
 import { BuyEventTicketDto } from '../dto/buy-ticket.dto';
 import { UpdateEventDto } from '../dto/update-event.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class EventRepository {
@@ -31,8 +32,43 @@ export class EventRepository {
   }
 
   async findAll(query: QueryEventDto) {
+    let where = {};
+
+    if (query.name) {
+      where = {
+        ...where,
+        name: {
+          contains: query.name,
+        },
+      };
+    }
+
+    if (query.active) {
+      where = {
+        ...where,
+        active: Boolean(Number(query.active)),
+      };
+    }
+
+    if (query.category_id) {
+      where = {
+        ...where,
+        category_id: Number(query.category_id),
+      };
+    }
+
+    if (query.start_date) {
+      //tratamento do intervalo
+      where = {
+        ...where,
+        start_date: {
+          gte: new Date(query.start_date),
+        },
+      };
+    }
+
     const events = await this.prisma.event.findMany({
-      where: query.mountWhere(),
+      where,
       include: {
         category: true,
       },
@@ -87,19 +123,41 @@ export class EventRepository {
   }
 
   async update(id: number, updateEventDto: UpdateEventDto) {
+    const data: Prisma.EventUpdateInput = {};
+
+    if (updateEventDto.name) {
+      data.name = updateEventDto.name;
+    }
+
+    if (updateEventDto.startDateTime) {
+      data.start_date = updateEventDto.startDateTime;
+    }
+
+    if (updateEventDto.categoryId) {
+      data.category = {
+        connect: {
+          id: updateEventDto.categoryId,
+        },
+      };
+    }
+
+    if (updateEventDto.capacity) {
+      data.capacity = updateEventDto.capacity;
+    }
+
+    if (updateEventDto.price) {
+      data.price = updateEventDto.price;
+    }
+
+    if (updateEventDto.location) {
+      data.location = updateEventDto.location;
+    }
+
     const event = await this.prisma.event.update({
       where: {
-        id: Number(id),
+        id,
       },
-      data: {
-        name: updateEventDto.name,
-        start_date: updateEventDto.startDateTime,
-        description: updateEventDto.description,
-        category_id: updateEventDto.categoryId,
-        capacity: updateEventDto.capacity,
-        price: updateEventDto.price,
-        location: updateEventDto.location,
-      },
+      data,
     });
 
     return event;

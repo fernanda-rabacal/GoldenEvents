@@ -6,7 +6,6 @@ import { EventService } from './event.service';
 import { EventRepository } from './repositories/events.repository';
 import { PrismaService } from '../../db/prisma.service';
 import { CreateEventDto } from './dto/create-event.dto';
-import { QueryEventDto } from './dto/query-event.dto';
 import { NotFoundError } from '../common/errors/types/NotFoundError';
 import { NotAcceptableException } from '@nestjs/common';
 import { BuyEventTicketDto } from './dto/buy-ticket.dto';
@@ -22,7 +21,13 @@ describe('EventService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [EventService, CategoryService, EventRepository, CategoryRepository, PrismaService],
+      providers: [
+        EventService,
+        CategoryService,
+        EventRepository,
+        CategoryRepository,
+        PrismaService,
+      ],
     })
       .overrideProvider(PrismaService)
       .useValue(mockDeep<PrismaClient>())
@@ -59,7 +64,7 @@ describe('EventService', () => {
     updateEventData = {
       name: 'Teste evento 1',
       description: 'teste unitário 1',
-      startDateTime: String(newStartDate),
+      startDateTime: newStartDate,
       categoryId: 1,
       capacity: 400,
       location: 'Rua do limoeiro, 22',
@@ -78,7 +83,7 @@ describe('EventService', () => {
     const newEvent: CreateEventDto = {
       name: 'Teste evento',
       description: 'teste unitário',
-      startDateTime: String(new Date()),
+      startDateTime: new Date().toISOString(),
       userId: 1,
       categoryId: 1,
       capacity: 300,
@@ -121,7 +126,10 @@ describe('EventService', () => {
       capacity: 100,
     };
 
-    prisma.event.findFirst.mockResolvedValueOnce({ ...expectedOutputEvent, quantity_left: 50 });
+    prisma.event.findFirst.mockResolvedValueOnce({
+      ...expectedOutputEvent,
+      quantity_left: 50,
+    });
 
     await expect(service.update(1, 1, wrongCapacityData)).rejects.toThrow(
       new NotAcceptableException(
@@ -130,19 +138,26 @@ describe('EventService', () => {
     );
   });
 
-  it('should throw an NotAcceptableException on earlier start date than now for update event', async () => {
+  it('should throw an NotAcceptableException on earlier end date than start date at update event', async () => {
     const currentDate = new Date();
-    const wrongStartDate = new Date(currentDate.setMonth(currentDate.getMonth() - 1));
+    const startDate = new Date().setMonth(currentDate.getMonth() + 2);
+    const wrongEndDate = new Date().setMonth(currentDate.getMonth() + 1);
 
-    const wrongStartDateData = {
+    const wrongEndDatePayload = {
       ...updateEventData,
-      startDateTime: String(wrongStartDate),
+      startDateTime: startDate,
+      endDateTime: wrongEndDate,
     };
 
-    prisma.event.findFirst.mockResolvedValueOnce({ ...expectedOutputEvent, quantity_left: 50 });
+    prisma.event.findFirst.mockResolvedValueOnce({
+      ...expectedOutputEvent,
+      quantity_left: 50,
+    });
 
-    await expect(service.update(1, 1, wrongStartDateData)).rejects.toThrow(
-      new NotAcceptableException('A data de inicio do evento não pode ser antes de hoje.'),
+    await expect(service.update(1, 1, wrongEndDatePayload)).rejects.toThrow(
+      new NotAcceptableException(
+        'A data final do evento não pode ser antes da data de início.',
+      ),
     );
   });
 
@@ -171,9 +186,10 @@ describe('EventService', () => {
 
     prisma.event.findMany.mockResolvedValueOnce([returnedEventsData]);
 
-    const queryEventDto = new QueryEventDto();
-
-    const events = await service.findAll({ skip: 0, take: 10, mountWhere: queryEventDto.mountWhere });
+    const events = await service.findAll({
+      skip: 0,
+      take: 10,
+    });
 
     expect(events).toHaveProperty('content');
     expect(events.content).toStrictEqual([returnedEventsData]);
@@ -190,7 +206,9 @@ describe('EventService', () => {
   it('should throw an NotFound error on find event by id', async () => {
     prisma.event.findFirst.mockResolvedValueOnce(null);
 
-    await expect(service.findById(1)).rejects.toThrow(new NotFoundError('Evento não encontrado'));
+    await expect(service.findById(1)).rejects.toThrow(
+      new NotFoundError('Evento não encontrado'),
+    );
   });
 
   it('should find an event by slug', async () => {
@@ -216,7 +234,9 @@ describe('EventService', () => {
       return null;
     });
 
-    await expect(service.findBySlug('teste')).rejects.toThrow(new NotFoundError('Evento não encontrado'));
+    await expect(service.findBySlug('teste')).rejects.toThrow(
+      new NotFoundError('Evento não encontrado'),
+    );
   });
 
   it('should buy a ticket for en event', async () => {
@@ -263,7 +283,9 @@ describe('EventService', () => {
       return null;
     });
 
-    await expect(service.buyTicket(ticket)).rejects.toThrow(new NotFoundError('Evento não encontrado'));
+    await expect(service.buyTicket(ticket)).rejects.toThrow(
+      new NotFoundError('Evento não encontrado'),
+    );
   });
 
   it('should find all categories', async () => {

@@ -42,7 +42,7 @@ export default function EditEvent({ categories, event }: CreateEventPageProps) {
       categoryId: event.category_id,
       capacity: event.capacity,
       location: event.location,
-      price: event.price,
+      price: String(event.price),
       name: event.name,
       photo: event.photo,
       endDateTime: event.end_date?.substring(0, 16),

@@ -11,7 +11,7 @@ async function main() {
   await createUserTypes(prisma);
   await createEventCategories(prisma);
   await createUsers(prisma);
-  await createEvents(prisma);
+  /* await createEvents(prisma); */
   await createPaymentMethods(prisma);
 }
 

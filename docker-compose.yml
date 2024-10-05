@@ -5,7 +5,7 @@ services:
     image: mysql:5.7
     container_name: golden-events-db
     environment:
-      MYSQL_DATABASE: 'golden-events'
+      MYSQL_DATABASE: 'golden_events'
       MYSQL_USER: 'root'
       MYSQL_PASSWORD: 'password'
       MYSQL_ROOT_PASSWORD: 'password'
@@ -13,6 +13,17 @@ services:
       - "3308:3306"
     volumes:
       - mysql-db:/var/lib/mysql
+
+  db-test:
+    image: mysql:5.7
+    container_name: integration-test-db
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'golden_events'
+      MYSQL_PASSWORD: 'password'
+      MYSQL_ROOT_PASSWORD: 'password'
+    ports:
+      - "3307:3306"
 
   api:
     container_name: golden-events-api
@@ -22,6 +33,7 @@ services:
       - db
     ports:
       - "8080:8080"
+      - "5555:5555"
 
   web:
     container_name: golden-events-web
