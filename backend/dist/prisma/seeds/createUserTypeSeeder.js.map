@@ -1,0 +1,1 @@
+{"version":3,"file":"createUserTypeSeeder.js","sourceRoot":"","sources":["../../../prisma/seeds/createUserTypeSeeder.ts"],"names":[],"mappings":";;;AAEO,KAAK,UAAU,eAAe,CAAC,MAAoB;IACxD,MAAM,MAAM,CAAC,QAAQ,CAAC,UAAU,CAAC;QAC/B,IAAI,EAAE,CAAC,EAAE,IAAI,EAAE,OAAO,EAAE,EAAE,EAAE,IAAI,EAAE,SAAS,EAAE,CAAC;KAC/C,CAAC,CAAC;AACL,CAAC;AAJD,0CAIC"}
