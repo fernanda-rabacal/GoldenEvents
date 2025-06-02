@@ -15,11 +15,6 @@ This is a collaborative full stack project of a website where you can see the la
 ### Status: In progress 🚧
 
 #### Doing:
-- Creating the Profile Dashboard
-
-#### Needs to do:
-
-- User CRUD funcionality
 - Order history
 
 ### How to run:
