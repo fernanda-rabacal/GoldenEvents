@@ -73,6 +73,6 @@ export class UserService {
       query.take,
     );
 
-    return paginator.buildPage(tickets.splice(query.skip * query.take, query.take));
+    return paginator.paginate(tickets);
   }
 }

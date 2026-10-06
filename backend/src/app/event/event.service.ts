@@ -32,12 +32,12 @@ export class EventService {
 
     const paginator = new OffsetPagination(
       totalRecords,
-      events.length,
+      totalRecords,
       query.skip,
       query.take,
     );
 
-    return paginator.buildPage(events.splice(query.skip * query.take, query.take));
+    return paginator.paginate(events);
   }
 
   async findById(eventId: number) {

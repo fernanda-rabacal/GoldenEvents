@@ -20,6 +20,13 @@ export async function createUsers(prisma: PrismaClient) {
         password,
         document: '11122233344',
       },
+      {
+        name: 'Davi Lucciola',
+        user_type_id: 3,
+        email: 'davi@hotmail.com',
+        password,
+        document: '000938382818',
+      },
     ],
   });
 }
