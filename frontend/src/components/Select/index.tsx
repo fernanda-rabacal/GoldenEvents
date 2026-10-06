@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import styles from './styles.module.scss'
-import { CaretDown, CaretUp } from "phosphor-react";
+import { KeyboardArrowDownOutlined, KeyboardArrowUpOutlined } from "@mui/icons-material";
 import { ErrorMessage } from "../ErrorMessage";
 
 interface Option {
@@ -65,7 +65,7 @@ export function Select({
         }}>
         {selectPlaceholder}
 
-        {openList ? <CaretUp color="#4e4e4e" /> : <CaretDown color="#4e4e4e" /> }
+        {openList ? <KeyboardArrowUpOutlined fontSize="inherit" htmlColor="#4e4e4e" /> : <KeyboardArrowDownOutlined fontSize="inherit" htmlColor="#4e4e4e" /> }
       </button>
 
       {

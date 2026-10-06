@@ -1,4 +1,4 @@
-import { CaretDown, CaretUp, List, SignOut, House } from "phosphor-react";
+import { HomeOutlined, KeyboardArrowDownOutlined, LogoutOutlined, MenuOutlined } from "@mui/icons-material";
 import styles from './styles.module.scss'
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
@@ -27,23 +27,23 @@ export function AdminHeader({ onSidebarCollapse }: AdminHeaderProps) {
   return (
     <header className={styles.header}>
       <button className={styles.openSidebar} onClick={onSidebarCollapse}>
-        <List size={22}  weight="bold" />
+        <MenuOutlined sx={{ fontSize: 22 }} />
       </button>
 
       <button className={styles.userInfo} onClick={toggleMenu}>
         <span>{user?.name}</span>
 
-        <CaretDown size={22} />
+        <KeyboardArrowDownOutlined sx={{ fontSize: 22 }} />
 
         {openMenu && (
           <ul className={styles.menuList}>
             <li onClick={handleLogout}>
-              <SignOut size={16} weight="bold" />
+              <LogoutOutlined sx={{ fontSize: 16 }} />
               <span>Sair</span>
             </li>
             <li>
               <Link href="/">
-                <House size={16} weight="bold" />
+                <HomeOutlined sx={{ fontSize: 16 }} />
                 <span>Ir para início</span>
               </Link>
             </li>

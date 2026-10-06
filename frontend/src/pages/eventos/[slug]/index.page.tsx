@@ -5,7 +5,7 @@ import { Event } from '@/@types/interfaces'
 import { api } from '@/lib/axios'
 import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer/Footer'
-import { CaretLeft, Clock } from 'phosphor-react'
+import { AccessTimeOutlined, KeyboardArrowLeftOutlined } from '@mui/icons-material'
 import { formatDateExtensive } from '@/utils/format_date'
 import { useRouter } from 'next/router'
 import { formatMoney } from '@/utils/format_money'
@@ -65,7 +65,7 @@ export default function EventDetails({ event }: PageProps) {
       <main>
         <section className={styles.container}>
           <Link href="/" className={styles.goBackButton}>
-            <CaretLeft />
+            <KeyboardArrowLeftOutlined fontSize="inherit" />
             Voltar
           </Link>
            
@@ -77,7 +77,7 @@ export default function EventDetails({ event }: PageProps) {
 
               <div>
                 <time>
-                  <Clock />
+                  <AccessTimeOutlined fontSize="inherit" />
                   {startDate}
                 </time>
                 {
@@ -85,7 +85,7 @@ export default function EventDetails({ event }: PageProps) {
                     <span>
                         {' > '}
                       <time>
-                        <Clock />
+                        <AccessTimeOutlined fontSize="inherit" />
                         {formatDateExtensive(event.end_date)}
                       </time>
                     </span>
@@ -125,7 +125,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
 }
 
 export const getStaticProps: GetStaticProps = async ({ params }) => {
-  const { data: event } = await api.get(`/event/${params?.slug}`)
+  const { data: event } = await api.get(`/events/slug/${params?.slug}`)
 
   return {
     props: {

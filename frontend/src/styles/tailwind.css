@@ -5,7 +5,8 @@
  * o globals.scss já faz o reset e o preflight mudaria a aparência das telas ainda em Sass.
  * Ao terminar a migração, troque os imports abaixo por `@import 'tailwindcss';` e remova o globals.scss.
  */
-@layer theme, base, components, utilities;
+/* `mui` guarda os estilos dos ícones da MUI, abaixo das utilities para que as classes do Tailwind prevaleçam */
+@layer theme, base, mui, components, utilities;
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/utilities.css' layer(utilities);
 

@@ -1,7 +1,7 @@
 import { useAuth } from "@/hooks/useAuth";
 import styles from "./styles.module.scss"
 import { useRouter } from "next/router";
-import { ArrowLeft, ArrowRight, CalendarPlus, ClipboardText, House, ShoppingBag, User } from "phosphor-react";
+import { ArrowBackOutlined, ArrowForwardOutlined, AssignmentOutlined, EditCalendarOutlined, HomeOutlined, PersonOutlined, ShoppingBagOutlined } from "@mui/icons-material";
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -20,34 +20,34 @@ export function Sidebar({ isCollapsed, onCollapse } : SidebarProps) {
     {
       name: "Home",
       href: "/organizador",
-      icon: House,
+      icon: HomeOutlined,
     },
     {
       name: "Perfil",
       href: `/perfil/${user?.id}`,
-      icon: User,
+      icon: PersonOutlined,
     },
     {
       name: "Criar Evento",
       href: "/organizador/eventos/criar",
-      icon: CalendarPlus,
+      icon: EditCalendarOutlined,
     },
     {
       name: "Meus Eventos",
       href: "/organizador/meus-eventos",
-      icon: ClipboardText,
+      icon: AssignmentOutlined,
     },
     {
       name: "Minhas Compras",
       href: "/organizador/minhas-compras",
-      icon: ShoppingBag,
+      icon: ShoppingBagOutlined,
     },
   ];
 
   return (
     <div className={styles.sidebarWrapper} data-collapse={isCollapsed}>
       <button className={styles.openSidebarBtn} onClick={onCollapse}>
-        {isCollapsed ? <ArrowRight /> : <ArrowLeft />}
+        {isCollapsed ? <ArrowForwardOutlined fontSize="inherit" /> : <ArrowBackOutlined fontSize="inherit" />}
       </button>
       
       <aside className={styles.sidebar} id="sidebar">
@@ -66,7 +66,7 @@ export function Sidebar({ isCollapsed, onCollapse } : SidebarProps) {
                     onClick={() => handleNavigate(href)}
                   >
                     <span className={styles.sidebarIcon}>
-                      <Icon size={22} />
+                      <Icon sx={{ fontSize: 22 }} />
                     </span>
                     <span className={styles.sidebarName}>{name}</span>
                   </button>

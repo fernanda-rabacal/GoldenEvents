@@ -48,7 +48,7 @@ export default function RegisterPage() {
 
   const handleRegister = async (data: IRegister) => {
     try {
-      let response = await api.post("/user", data)
+      let response = await api.post("/users", data)
   
       if(response.status !== 200) {
         return toastNotify('error', response.data.message)

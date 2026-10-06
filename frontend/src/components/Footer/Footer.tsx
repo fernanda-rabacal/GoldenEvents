@@ -1,5 +1,5 @@
 'use client'
-import { InstagramLogo, LinkedinLogo, WhatsappLogo } from "phosphor-react";
+import { Instagram, LinkedIn, WhatsApp } from "@mui/icons-material";
 import styles from "./footer.module.scss"
 
 export function Footer() {
@@ -15,13 +15,13 @@ export function Footer() {
             <p>Golden is a Lorem ipsum dolor sit amet consectetur adipisicing elit. Ex ea mollitia quisquam commodi molestias sapiente corporis quasi ipsa iste, sequi officia officiis possimus hic beatae delectus rem accusamus quia! Impedit!</p>
             <div>
               <a href="">
-                <InstagramLogo size={32}/>
+                <Instagram sx={{ fontSize: 32 }} />
               </a>
               <a href="">
-                <WhatsappLogo size={32}/>
+                <WhatsApp sx={{ fontSize: 32 }} />
               </a>
               <a href="">
-                <LinkedinLogo size={32}/>
+                <LinkedIn sx={{ fontSize: 32 }} />
               </a>
             </div>
           </div>

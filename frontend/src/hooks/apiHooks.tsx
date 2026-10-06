@@ -15,7 +15,7 @@ export const useQueryData = (url: string, options?: Omit<UseQueryOptions<any, un
 
 export const useMutationData = (
   url: string,
-  method: 'post' | 'put',
+  method: 'post' | 'put' | 'patch',
   onSuccess: (data: any) => void,
   onError: (error: any) => void,
 ) => {

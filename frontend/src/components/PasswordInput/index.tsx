@@ -1,5 +1,5 @@
 import { InputHTMLAttributes, forwardRef, useState } from 'react'
-import { Eye, EyeSlash } from "phosphor-react";
+import { VisibilityOffOutlined, VisibilityOutlined } from "@mui/icons-material";
 import { Input } from '@/components/Input'; 
 import styles from "./styles.module.scss"
 import { ErrorMessage } from '../ErrorMessage';
@@ -25,9 +25,9 @@ export const PasswordInput = forwardRef<HTMLInputElement, InputProps>(
           <Input id={id} type={showPassword ? "text" : "password"}  {...props} ref={ref} />
             {
               showPassword ? 
-              <EyeSlash size={22} onClick={handleClickShowPassword} color='#eba417' /> 
+              <VisibilityOffOutlined sx={{ fontSize: 22 }} onClick={handleClickShowPassword} htmlColor='#eba417' /> 
               :
-              <Eye size={22} onClick={handleClickShowPassword} color='#484f56' />
+              <VisibilityOutlined sx={{ fontSize: 22 }} onClick={handleClickShowPassword} htmlColor='#484f56' />
             }
         </div>
         {error && <ErrorMessage>{error}</ErrorMessage>}

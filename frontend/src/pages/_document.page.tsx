@@ -1,6 +1,12 @@
-import { Html, Head, Main, NextScript } from 'next/document'
+import { Html, Head, Main, NextScript, DocumentContext, DocumentProps } from 'next/document'
 import { Metadata } from 'next'
 import { Suspense } from 'react'
+import {
+  DocumentHeadTags,
+  DocumentHeadTagsProps,
+  createEmotionCache,
+  documentGetInitialProps,
+} from '@mui/material-nextjs/v16-pagesRouter'
 import { Loading } from '@/layouts/Loading/loading'
 
 export const metadata: Metadata = {
@@ -10,15 +16,15 @@ export const metadata: Metadata = {
   }
 }
 
-export default function Document() {
+export default function Document(props: DocumentProps & DocumentHeadTagsProps) {
   return (
     <Html lang="en">
       <Head>
+        <DocumentHeadTags {...props} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&family=Roboto:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
         <link rel="icon" href="/images/star.png" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
       <body>
         <Suspense fallback={<Loading />}>
@@ -29,3 +35,9 @@ export default function Document() {
     </Html>
   )
 }
+
+// Renderiza no servidor os estilos da MUI (Emotion), usando a mesma layer `mui` do cliente
+Document.getInitialProps = async (ctx: DocumentContext) =>
+  documentGetInitialProps(ctx, {
+    emotionCache: createEmotionCache({ key: 'mui', enableCssLayer: true }),
+  })

@@ -1,7 +1,7 @@
 import styles from "./styles.module.scss"
 import Link from "next/link"
 import { useState } from "react"
-import { List } from "phosphor-react"
+import { MenuOutlined } from "@mui/icons-material"
 import { useAuth } from "@/hooks/useAuth"
 
 export function Header() {
@@ -26,7 +26,7 @@ export function Header() {
         </Link>
 
         <button className={styles.openMenuBtn} onClick={toggleMenu}>
-          <List size={32} color="#eba417" />
+          <MenuOutlined sx={{ fontSize: 32 }} htmlColor="#eba417" />
         </button>
 
         <div className={styles.linksWrapper}>

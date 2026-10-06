@@ -15,7 +15,7 @@ export default function MyTickets() {
   const [currentPage, setCurrentPage] = useState(1)
   const { user } = useAuth();
 
-  const url = `/user/tickets/${user?.id}?take=10&skip=${currentPage - 1}`
+  const url = `/users/tickets/${user?.id}?take=10&skip=${currentPage - 1}`
 
   const { data, isLoading, isError, refetch } = useQueryData(url);
 

@@ -51,8 +51,8 @@ export default function EditEvent({ categories, event }: CreateEventPageProps) {
   })
   
   const router = useRouter()
-  const { mutate: updateEvent, isPending: isLoadingUpdate } = useMutationData(`/event/${event.id}`, 
-      'put', 
+  const { mutate: updateEvent, isPending: isLoadingUpdate } = useMutationData(`/events/${event.id}`, 
+      'patch', 
       data => {
         toastNotify('success', 'Evento atualizado com sucesso!')
         router.push("/organizador/meus-eventos")
@@ -62,7 +62,7 @@ export default function EditEvent({ categories, event }: CreateEventPageProps) {
       }
     )
 
-  const { mutate: deleteEvent, isPending: isLoadingDelete } = useDeleteData(`/event/${event.id}`, 
+  const { mutate: deleteEvent, isPending: isLoadingDelete } = useDeleteData(`/events/${event.id}`, 
       'delete', 
       data => {
         toastNotify('success', 'Evento deletado com sucesso!')
@@ -206,8 +206,8 @@ export const getStaticPaths: GetStaticPaths = async () => {
 }
 
 export const getStaticProps: GetStaticProps = async ({ params }) => {
-  const { data: categoryData } = await api.get("/event/categories")
-  const { data: eventData } = await api.get(`/event/${params?.slug}`)
+  const { data: categoryData } = await api.get("/events/categories")
+  const { data: eventData } = await api.get(`/events/slug/${params?.slug}`)
 
   return {
     props: {

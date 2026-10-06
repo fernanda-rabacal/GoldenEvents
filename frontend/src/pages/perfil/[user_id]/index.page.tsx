@@ -59,8 +59,8 @@ export default function UserProfile({ user, userTypes } : PageProps) {
     value: userType.name
   }))
 
-  const { mutate: updateUser, isPending: isLoading } = useMutationData(`/user/${user.id}`, 
-    'put', 
+  const { mutate: updateUser, isPending: isLoading } = useMutationData(`/users/${user.id}`, 
+    'patch', 
     data => {
       toastNotify('success', 'Usuário atualizado com sucesso!')
       router.push("/organizador/meus-eventos")
@@ -147,8 +147,8 @@ export default function UserProfile({ user, userTypes } : PageProps) {
 
 export const getServerSideProps : GetServerSideProps = async ({ params }) => {
     const userId = String(params?.user_id)
-    const response = await api.get(`/user/${userId}`)
-    const userTypesResponse = await api.get("/user/types")
+    const response = await api.get(`/users/${userId}`)
+    const userTypesResponse = await api.get("/users/types")
 
     if (!response || !userTypesResponse) {
         return {

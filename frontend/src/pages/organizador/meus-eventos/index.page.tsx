@@ -2,7 +2,7 @@ import styles from './styles.module.scss';
 import Head from "next/head";
 import { GetStaticProps } from "next"
 
-import { Pencil } from 'phosphor-react';
+import { EditOutlined } from '@mui/icons-material';
 import { AdminLayout } from '@/layouts/AdminLayout';
 import { Select } from '@/components/Select';
 import { Input } from '@/components/Input';
@@ -34,7 +34,7 @@ export default function EventsList({ categories }: EventsListPageProps) {
   const debouncedQueryCategory = useDebounce(searchQuery.categoryId)
   const debouncedQueryStartDate = useDebounce(searchQuery.startDate)
   const debouncedQueryActive = useDebounce(searchQuery.active)
-  const url = `/event?take=10&skip=${currentPage - 1}&name=${debouncedQueryName}&category_id=${debouncedQueryCategory}&start_date=${debouncedQueryStartDate}&active=${debouncedQueryActive}`
+  const url = `/events?take=10&skip=${currentPage - 1}&name=${debouncedQueryName}&category_id=${debouncedQueryCategory}&start_date=${debouncedQueryStartDate}&active=${debouncedQueryActive}`
 
   const router = useRouter()
 
@@ -126,7 +126,7 @@ export default function EventsList({ categories }: EventsListPageProps) {
                     <td>{event.active ? "Sim" : "Não"}</td>
                     <td>
                       <button onClick={() => handleEditEvent(event)}>
-                        <Pencil size={22} />
+                        <EditOutlined sx={{ fontSize: 22 }} />
                       </button>
                     </td>
                   </tr>
@@ -151,8 +151,8 @@ export default function EventsList({ categories }: EventsListPageProps) {
 
 export const getStaticProps: GetStaticProps = async () => {
   try {
-    const eventData = await api.get('/event')
-    const categoryData = await api.get("/event/categories")
+    const eventData = await api.get('/events')
+    const categoryData = await api.get("/events/categories")
   
     return {
       props: {

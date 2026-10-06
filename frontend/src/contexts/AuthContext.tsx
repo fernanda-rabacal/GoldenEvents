@@ -65,7 +65,7 @@ export function AuthContextProvider({ children } : AuthProps) {
 
   async function getUserByToken(token: string) {
     try {
-      const response = await api.get("/user/token", {
+      const response = await api.get("/users/token", {
         headers: {
           'Authorization': `Bearer ${token}`,
         }

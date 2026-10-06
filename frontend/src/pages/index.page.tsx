@@ -1,6 +1,6 @@
 import styles from "./styles.module.scss"
 import Head from "next/head"
-import { Calendar, CheckCircle, ClipboardText, MagnifyingGlass } from "phosphor-react"
+import { AssignmentOutlined, CalendarMonthOutlined, CheckCircleOutlined, SearchOutlined } from "@mui/icons-material"
 import { Input } from "@/components/Input"
 import { EventCard } from "@/components/EventCard"
 import { Header } from "@/components/Header"
@@ -24,7 +24,7 @@ export default function Home({ categories } : PageProps) {
     const [events, setEvents] = useState<Event[]>([])
 
     const now = new Date().toISOString()
-    const url = `/event?take=6&skip=${currentPage - 1}&name=${search}`;
+    const url = `/events?take=6&skip=${currentPage - 1}&name=${search}`;
 
     const { data, isLoading } = useQueryData(url);
 
@@ -60,7 +60,7 @@ export default function Home({ categories } : PageProps) {
                         placeholder="Encontre o evento que deseja.." 
                         onChange={(e) => setSearch(e.target.value)}
                         />
-                    <MagnifyingGlass size={32} weight="bold" color="#fff" />
+                    <SearchOutlined sx={{ fontSize: 32 }} htmlColor="#fff" />
                 </div>
             </section>
 
@@ -119,15 +119,15 @@ export default function Home({ categories } : PageProps) {
 
                 <div>
                     <div>
-                        <Calendar />
+                        <CalendarMonthOutlined fontSize="inherit" />
                         <p>Encontre uma grande variedade de eventos</p>
                     </div>
                     <div>
-                        <ClipboardText />
+                        <AssignmentOutlined fontSize="inherit" />
                         <p>Organize seus eventos com  mais confiança</p>
                     </div>
                     <div>
-                        <CheckCircle />
+                        <CheckCircleOutlined fontSize="inherit" />
                         <p>Aproveite todas as vantagens do nosso site</p>
                     </div>
                 </div>
@@ -141,7 +141,7 @@ export default function Home({ categories } : PageProps) {
 
 export const getStaticProps: GetStaticProps = async () => {
     try {
-        const categoryData = await api.get("/event/categories")
+        const categoryData = await api.get("/events/categories")
       
         console.log("teste")
         return {

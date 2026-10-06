@@ -52,7 +52,7 @@ export default function CreateEvent({ categories }: CreateEventPageProps) {
     value: category.name
   }))
 
-  const { mutate: createEvent, isPending: isLoading } = useMutationData("/event", 
+  const { mutate: createEvent, isPending: isLoading } = useMutationData("/events", 
       'post', 
       data => {
         toastNotify('success', 'Evento criado com sucesso!')
@@ -172,7 +172,7 @@ export default function CreateEvent({ categories }: CreateEventPageProps) {
 
 export const getStaticProps: GetStaticProps = async () => {
   try {
-    const categoryData = await api.get("/event/categories")
+    const categoryData = await api.get("/events/categories")
   
     return {
       props: {
