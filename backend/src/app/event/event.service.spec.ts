@@ -1,10 +1,11 @@
 import { CategoryRepository } from './repositories/categories.repository.js';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaClient } from '@prisma/client';
-import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
+import { mockDeep } from 'jest-mock-extended';
 import { EventService } from './event.service.js';
 import { EventRepository } from './repositories/events.repository.js';
 import { PrismaService } from '../../db/prisma.service.js';
+import { PrismaClientMock } from '../../db/prisma.mock.js';
 import { CreateEventDto } from './dto/create-event.dto.js';
 import { NotFoundError } from '../common/errors/types/NotFoundError.js';
 import { NotAcceptableException } from '@nestjs/common';
@@ -14,7 +15,7 @@ import { CategoryService } from './category.service.js';
 describe('EventService', () => {
   let service: EventService;
   let categoryService: CategoryService;
-  let prisma: DeepMockProxy<PrismaClient>;
+  let prisma: PrismaClientMock;
   let expectedOutputEvent: any;
   let expectedOutputCategory: any;
   let updateEventData: any;
