@@ -5,14 +5,17 @@ const ADVANTAGES = [
   {
     icon: CalendarDays,
     text: 'Encontre uma grande variedade de eventos',
+    bg: 'bg-blue-300',
   },
   {
     icon: ClipboardList,
     text: 'Organize seus eventos com mais confiança',
+    bg: 'bg-red-200',
   },
   {
     icon: BadgeCheck,
     text: 'Aproveite todas as vantagens do nosso site',
+    bg: 'bg-green-300',
   },
 ];
 
@@ -27,12 +30,14 @@ export function AdvantagesSection() {
         />
       </div>
       <div className='grid gap-4 md:grid-cols-3'>
-        {ADVANTAGES.map(({ icon: Icon, text }) => (
+        {ADVANTAGES.map(({ icon: Icon, text, bg }) => (
           <div
             key={text}
             className='flex items-center gap-4 rounded-3xl border border-border bg-card p-6'
           >
-            <div className='flex size-12 shrink-0 items-center justify-center rounded-2xl bg-accent text-accent-foreground'>
+            <div
+              className={`flex size-12 shrink-0 items-center justify-center rounded-2xl text-accent-foreground ${bg}`}
+            >
               <Icon className='size-6' />
             </div>
             <p className='font-bold text-foreground'>{text}</p>
