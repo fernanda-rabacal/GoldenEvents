@@ -97,8 +97,8 @@ describe('UserService', () => {
 
     const mockUser: CreateUserDto = {
       name: 'Teste usuário',
-      email: 'emailteste@email.com',
-      password: await encryptData('123456789'),
+      email: '  EmailTeste@Email.com ',
+      password: '123456789',
       document: '12345678910',
     };
 
@@ -106,7 +106,13 @@ describe('UserService', () => {
 
     const newUser = await service.create(mockUser);
 
-    expect(newUser).toStrictEqual(createdUser);
+    expect(newUser).toStrictEqual(expectedOutputUser);
+    expect(newUser).not.toHaveProperty('password');
+    expect(prisma.user.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ email: 'emailteste@email.com' }),
+      }),
+    );
   });
 
   it.each([
@@ -180,12 +186,20 @@ describe('UserService', () => {
     expect(expectedOutputUser).toStrictEqual(user);
   });
 
-  it('should find an user by his e-mail', async () => {
-    prisma.user.findFirst.mockResolvedValueOnce(expectedOutputUser);
+  it('should find an user by his e-mail with the password hash for authentication', async () => {
+    const userWithPassword = {
+      ...expectedOutputUser,
+      password: await encryptData('123456789'),
+    };
 
-    const user = await service.findByEmail('emailteste@email.com');
+    prisma.user.findUnique.mockResolvedValueOnce(userWithPassword);
 
-    expect(expectedOutputUser).toStrictEqual(user);
+    const user = await service.findByEmail(' EmailTeste@Email.com');
+
+    expect(user).toStrictEqual(userWithPassword);
+    expect(prisma.user.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { email: 'emailteste@email.com' } }),
+    );
   });
 
   it('should update an user', async () => {
@@ -203,14 +217,20 @@ describe('UserService', () => {
 
     const user = await service.update(1, updateUserData);
 
-    expect(user).toStrictEqual(updatedUser);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...updatedUserWithoutPassword } = updatedUser;
+
+    expect(user).toStrictEqual(updatedUserWithoutPassword);
   });
 
   it('should deactivate an user', async () => {
     const deactivatedUser = { ...expectedOutputUser, active: false };
 
     prisma.user.findUnique.mockResolvedValueOnce(expectedOutputUser);
-    prisma.user.update.mockResolvedValueOnce(deactivatedUser);
+    prisma.user.update.mockResolvedValueOnce({
+      ...deactivatedUser,
+      password: await encryptData('123456789'),
+    });
 
     const user = await service.toggleActiveUser(1);
 
