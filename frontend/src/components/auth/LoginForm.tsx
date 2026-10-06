@@ -63,17 +63,17 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
       />
 
       <div className='flex items-center justify-between gap-4'>
-        <label className='flex cursor-pointer items-center gap-2 text-caption font-bold text-foreground/80'>
+        <label className='text-caption text-foreground/80 flex cursor-pointer items-center gap-2 font-bold'>
           <input
             type='checkbox'
-            className='size-4 accent-primary'
+            className='accent-primary size-4'
             {...register('keep_connected')}
           />
           Manter conectado
         </label>
         <a
           href='#recuperar'
-          className='text-caption font-bold text-accent-foreground hover:text-orange-500'
+          className='text-caption text-accent-foreground font-bold hover:text-orange-500'
         >
           Esqueci minha senha
         </a>
