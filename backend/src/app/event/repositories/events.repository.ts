@@ -131,8 +131,16 @@ export class EventRepository {
       data.name = updateEventDto.name;
     }
 
+    if (updateEventDto.description) {
+      data.description = updateEventDto.description;
+    }
+
     if (updateEventDto.startDateTime) {
       data.start_date = updateEventDto.startDateTime;
+    }
+
+    if (updateEventDto.endDateTime) {
+      data.end_date = updateEventDto.endDateTime;
     }
 
     if (updateEventDto.categoryId) {

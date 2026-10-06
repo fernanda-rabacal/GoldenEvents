@@ -9,8 +9,14 @@ import { UserRepository } from '../src/app/user/repositories/user.repository';
 import * as request from 'supertest';
 import { PrismaClient } from '@prisma/client';
 import { UserTypeEnum } from '../src/app/user/entities/user.entity';
+import {
+  PostgreSqlContainer,
+  StartedPostgreSqlContainer,
+} from '@testcontainers/postgresql';
+import { execSync } from 'child_process';
 
 describe('UserController', () => {
+  let container: StartedPostgreSqlContainer;
   let app: INestApplication;
   let module: TestingModule;
   let data: CreateUserDto;
@@ -18,6 +24,13 @@ describe('UserController', () => {
   let usersTypes: any;
 
   beforeAll(async () => {
+    // banco isolado por execução; os testes abaixo dependem do estado deixado pelos anteriores
+    container = await new PostgreSqlContainer('postgres:16-alpine').start();
+    process.env.DATABASE_URL = container.getConnectionUri();
+
+    execSync(`npx prisma migrate deploy`, { env: process.env });
+    execSync(`npx prisma db seed`, { env: process.env });
+
     module = await Test.createTestingModule({
       imports: [PrismaModule, AuthModule, UserModule],
       providers: [UserService, UserRepository],
@@ -33,7 +46,7 @@ describe('UserController', () => {
       document: '12345678910',
       password: '123456',
     };
-  });
+  }, 60000);
 
   beforeEach(async () => {
     const prisma = new PrismaClient();
@@ -46,6 +59,23 @@ describe('UserController', () => {
 
   afterAll(async () => {
     await module.close();
+    await container.stop();
+  });
+
+  // Cria o usuário usado pelos testes seguintes, que fazem login com ele
+  describe('POST /users', () => {
+    it('should create a user', async () => {
+      const res = await request(app.getHttpServer())
+        .post('/users')
+        .send(data)
+        .expect(201);
+      expect(res.body.id).toBeDefined();
+      expect(res.body.created_at).toBeDefined();
+      expect(res.body.user_type_id).toBeDefined();
+      expect(res.body.name).toEqual(data.name);
+      expect(res.body.email).toEqual(data.email);
+      expect(res.body.document).toEqual(data.document);
+    });
   });
 
   describe('POST /login', () => {
@@ -72,21 +102,6 @@ describe('UserController', () => {
         .expect(401);
 
       expect(res.body.message).toBe('Credenciais Inválidas.');
-    });
-  });
-
-  describe('POST /users', () => {
-    it('should create a user', async () => {
-      const res = await request(app.getHttpServer())
-        .post('/users')
-        .send(data)
-        .expect(201);
-      expect(res.body.id).toBeDefined();
-      expect(res.body.created_at).toBeDefined();
-      expect(res.body.user_type_id).toBeDefined();
-      expect(res.body.name).toEqual(data.name);
-      expect(res.body.email).toEqual(data.email);
-      expect(res.body.document).toEqual(data.document);
     });
   });
 

@@ -56,6 +56,8 @@ export class UserRepository {
       },
     });
 
+    if (!user) return null;
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...rest } = user;
 

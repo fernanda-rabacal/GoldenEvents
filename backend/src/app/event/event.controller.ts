@@ -89,7 +89,7 @@ export class EventController {
     @Req() req: Request,
   ) {
     const userId = req.user['id'];
-    const event = this.eventService.update(+id, userId, updateEventDto);
+    const event = await this.eventService.update(+id, userId, updateEventDto);
     return new MessageResponse('Evento atualizado com sucesso.', event);
   }
 

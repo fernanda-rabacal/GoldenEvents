@@ -25,7 +25,7 @@ export class UserService {
   }
 
   async findById(id: number) {
-    const user = this.repository.findById(id);
+    const user = await this.repository.findById(id);
 
     if (!user) {
       throw new NotFoundError('Usuário não encontrado.');
@@ -34,14 +34,9 @@ export class UserService {
     return user;
   }
 
+  // Retorna null quando não encontra: o login trata e responde com credenciais inválidas
   async findByEmail(email: string) {
-    const user = this.repository.findByEmail(email);
-
-    if (!user) {
-      throw new NotFoundError('Usuário não encontrado.');
-    }
-
-    return user;
+    return this.repository.findByEmail(email);
   }
 
   async getUserTypes() {
