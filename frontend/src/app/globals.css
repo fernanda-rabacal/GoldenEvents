@@ -92,4 +92,11 @@
   body {
     @apply bg-background font-sans text-foreground;
   }
+
+  /* O Tailwind v4 deixou de aplicar cursor: pointer nos botões */
+  a[href],
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']) {
+    @apply cursor-pointer;
+  }
 }

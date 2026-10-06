@@ -57,7 +57,10 @@ export function AuthContextProvider({ children } : AuthProps) {
 
       return true
     } catch (err: any) {
-      toastNotify('error', err.response.data.message)
+      toastNotify(
+        'error',
+        err.response?.data?.message ?? 'Não foi possível entrar. Tente novamente.',
+      )
 
       return false
     }

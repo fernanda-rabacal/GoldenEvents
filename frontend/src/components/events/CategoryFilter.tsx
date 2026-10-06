@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { EventCategory } from '@golden-events/shared';
 import { buttonVariants } from '@/ui/button';
+import { HorizontalScroller } from './HorizontalScroller';
 
 type CategoryFilterProps = {
   categories: EventCategory[];
@@ -21,7 +22,7 @@ export function CategoryFilter({
   ];
 
   return (
-    <div className='flex items-center gap-2 overflow-x-auto pb-1 text-muted-foreground'>
+    <HorizontalScroller className='text-muted-foreground'>
       {options.map((option) => {
         const isActive = option.id === activeCategoryId;
 
@@ -38,6 +39,6 @@ export function CategoryFilter({
           </Link>
         );
       })}
-    </div>
+    </HorizontalScroller>
   );
 }
