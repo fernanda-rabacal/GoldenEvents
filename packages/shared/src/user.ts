@@ -1,6 +1,7 @@
 export enum UserTypeEnum {
   ADMIN = 1,
   USER = 2,
+  ORGANIZER = 3,
 }
 
 export interface User {

@@ -109,6 +109,33 @@ describe('UserService', () => {
     expect(newUser).toStrictEqual(createdUser);
   });
 
+  it.each([
+    { isOrganizer: undefined, expectedType: UserTypeEnum.USER },
+    { isOrganizer: false, expectedType: UserTypeEnum.USER },
+    { isOrganizer: true, expectedType: UserTypeEnum.ORGANIZER },
+  ])(
+    'should create a user with type $expectedType when isOrganizer is $isOrganizer',
+    async ({ isOrganizer, expectedType }) => {
+      prisma.user.create.mockResolvedValueOnce(expectedOutputUser);
+
+      await service.create({
+        name: 'Teste usuário',
+        email: 'emailteste@email.com',
+        password: '123456789',
+        document: '12345678910',
+        isOrganizer,
+      });
+
+      expect(prisma.user.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            user_type: { connect: { id: expectedType } },
+          }),
+        }),
+      );
+    },
+  );
+
   it('should throw a conflict error on create with existent email', async () => {
     const mockUser: CreateUserDto = {
       name: 'Teste usuário',

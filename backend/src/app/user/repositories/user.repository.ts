@@ -19,7 +19,7 @@ export class UserRepository {
         document: createUserDto.document,
         user_type: {
           connect: {
-            id: UserTypeEnum.USER,
+            id: createUserDto.isOrganizer ? UserTypeEnum.ORGANIZER : UserTypeEnum.USER,
           },
         },
       },
