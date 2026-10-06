@@ -19,7 +19,7 @@ export class AuthService {
       return null;
     }
 
-    const validPassword = compareEncrypedData(user.password, password);
+    const validPassword = await compareEncrypedData(password, user.password);
 
     if (!validPassword) {
       return null;

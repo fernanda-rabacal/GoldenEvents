@@ -92,6 +92,28 @@ describe('UserController', () => {
       expect(res.body.type).toBeDefined();
     });
 
+    it('should throw an UnauthorizedError on login with wrong password', async () => {
+      const res = await request(app.getHttpServer())
+        .post('/login')
+        .send({
+          email: 'emailteste@email.com',
+          password: 'senha-errada',
+        })
+        .expect(401);
+
+      expect(res.body.message).toBe('Credenciais Inválidas.');
+    });
+
+    it('should login with a seeded user', async () => {
+      await request(app.getHttpServer())
+        .post('/login')
+        .send({
+          email: 'nandarabacal02@hotmail.com',
+          password: '123456',
+        })
+        .expect(200);
+    });
+
     it('should throw a NotFoundError on login', async () => {
       const res = await request(app.getHttpServer())
         .post('/login')
