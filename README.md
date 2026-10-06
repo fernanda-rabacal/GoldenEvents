@@ -1,6 +1,6 @@
 # Golden Events
 
-This is a collaborative full stack project of a website where you can see the latest events near to you, see the details of it, register or login in your account to buy a ticket and/or create an event. Besides, you can see and edit your profile, see the order history, edit or delete your created events and many more. This project is made with Next.js e Express.js, also using Sass and Prisma, using JWT authentication, data validation, MySQL database and Docker.
+This is a collaborative full stack project of a website where you can see the latest events near to you, see the details of it, register or login in your account to buy a ticket and/or create an event. Besides, you can see and edit your profile, see the order history, edit or delete your created events and many more. This project is made with Next.js e Express.js, also using Sass and Prisma, using JWT authentication, data validation, PostgreSQL database, Redis and Docker.
 
 <div>
   <img align="center" style="margin-bottom:50px;" src="https://github.com/fernanda-rabacal/GoldenEvents/assets/99514714/8d93fedd-8cb9-4cfb-9473-6155ec0ee3f8" />
@@ -20,11 +20,11 @@ This is a collaborative full stack project of a website where you can see the la
 ### How to run:
 
 This repository has the frontend and the backend of the application. Clone the repository on your machine and enter the respective folders to run the comands below if you wanna run locally or use Docker. 
-To use this code without Docker, you need to have Node.js and npm installed. Also, you need to have MySQL server. 
+To use this code without Docker, you need to have Node.js and npm installed. Also, you need to have a PostgreSQL server (or run only the database with `docker compose up -d db redis`). 
 
   - Backend
 
-  Make sure to make a connection to MySQL using the credentials on the .env file. 
+  Copy `backend/.env.example` to `backend/.env` and adjust the PostgreSQL credentials if needed. 
   Enter the backend folder and run:
 
   ##### `npm install` to install the dependencies.
@@ -37,7 +37,7 @@ To use this code without Docker, you need to have Node.js and npm installed. Als
 
   - Docker
 
-  On the root folder, run `docker compose build` to build the containers. After, just run `docker compose up` to start the containers. If you like, use the flag `-d` on this command to detach the docker log off the terminal.
+  On the root folder, run `docker compose build` to build the containers. After, just run `docker compose up` to start the containers (PostgreSQL, Redis, API and web). The API applies the Prisma migrations on startup. If you like, use the flag `-d` on this command to detach the docker log off the terminal.
 
   
 ### Technologies 🧰

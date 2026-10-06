@@ -39,6 +39,7 @@ export class EventRepository {
         ...where,
         name: {
           contains: query.name,
+          mode: 'insensitive',
         },
       };
     }
@@ -69,6 +70,7 @@ export class EventRepository {
 
     const events = await this.prisma.event.findMany({
       where,
+      orderBy: { id: 'asc' },
       include: {
         category: true,
       },

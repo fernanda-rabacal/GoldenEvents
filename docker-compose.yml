@@ -1,36 +1,67 @@
-version: '3.9'
-
 services:
   db:
-    image: mysql:5.7
+    image: postgres:16-alpine
     container_name: golden-events-db
     environment:
-      MYSQL_DATABASE: 'golden_events'
-      MYSQL_USER: 'root'
-      MYSQL_PASSWORD: 'password'
-      MYSQL_ROOT_PASSWORD: 'password'
+      POSTGRES_DB: 'golden_events'
+      POSTGRES_USER: 'postgres'
+      POSTGRES_PASSWORD: 'password'
     ports:
-      - "3308:3306"
+      - "5432:5432"
     volumes:
-      - mysql-db:/var/lib/mysql
+      - pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d golden_events"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   db-test:
-    image: mysql:5.7
+    image: postgres:16-alpine
     container_name: integration-test-db
     restart: always
     environment:
-      MYSQL_DATABASE: 'golden_events'
-      MYSQL_PASSWORD: 'password'
-      MYSQL_ROOT_PASSWORD: 'password'
+      POSTGRES_DB: 'golden_events'
+      POSTGRES_USER: 'postgres'
+      POSTGRES_PASSWORD: 'password'
     ports:
-      - "3307:3306"
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d golden_events"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Backend do BullMQ (fluxo de pagamentos). noeviction evita que o Redis descarte jobs ao encher a memória.
+  redis:
+    image: redis:7-alpine
+    container_name: golden-events-redis
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
   api:
     container_name: golden-events-api
-    build: 
+    build:
       context: ./backend
+    env_file:
+      - path: ./backend/.env
+        required: false
+    environment:
+      DATABASE_URL: 'postgresql://postgres:password@db:5432/golden_events?schema=public'
+      REDIS_URL: 'redis://redis:6379'
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     ports:
       - "8080:8080"
       - "5555:5555"
@@ -43,7 +74,8 @@ services:
       - api
       - db
     ports:
-      - "3000:3000" 
+      - "3000:3000"
 
 volumes:
-  mysql-db:
+  pg-data:
+  redis-data:

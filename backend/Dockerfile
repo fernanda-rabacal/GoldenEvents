@@ -1,4 +1,4 @@
-FROM node:latest
+FROM node:20
 
 WORKDIR /golden-eventos-api
 
@@ -8,8 +8,8 @@ RUN npm i
 
 COPY . /golden-eventos-api/
 
-RUN npm run build && npx prisma generate
+RUN npx prisma generate && npm run build
 
 EXPOSE 8080
 
-CMD ["npm", "run", "start:prod"]
+CMD ["sh", "-c", "npx prisma migrate deploy && npm run start:prod"]

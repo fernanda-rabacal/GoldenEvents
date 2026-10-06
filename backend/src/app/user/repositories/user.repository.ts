@@ -33,6 +33,7 @@ export class UserRepository {
       where: {
         active: true,
       },
+      orderBy: { id: 'asc' },
     });
 
     const removePassword = users.map(user => {
@@ -122,6 +123,7 @@ export class UserRepository {
       where: {
         user_id: userId,
       },
+      orderBy: { id: 'asc' },
       include: {
         event: {
           select: {

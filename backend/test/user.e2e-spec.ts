@@ -38,8 +38,8 @@ describe('UserController', () => {
   beforeEach(async () => {
     const prisma = new PrismaClient();
 
-    users = await prisma.user.findMany();
-    usersTypes = await prisma.userType.findMany();
+    users = await prisma.user.findMany({ orderBy: { id: 'asc' } });
+    usersTypes = await prisma.userType.findMany({ orderBy: { id: 'asc' } });
 
     await prisma.$disconnect();
   });

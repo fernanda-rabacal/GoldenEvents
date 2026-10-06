@@ -11,14 +11,12 @@ import { EventRepository } from '../src/app/event/repositories/events.repository
 import { UserModule } from '../src/app/user/user.module';
 import { PrismaModule } from '../src/db/prisma.module';
 import * as request from 'supertest';
-import { MySqlContainer } from '@testcontainers/mysql';
+import { PostgreSqlContainer } from '@testcontainers/postgresql';
 import { execSync } from 'child_process';
-import { createConnection } from 'mysql2/promise';
 
 describe('UserController', () => {
   let container: any;
   let urlConnection: string;
-  let client: any;
   let app: INestApplication;
   let module: TestingModule;
   let data: any;
@@ -26,15 +24,7 @@ describe('UserController', () => {
   const currentDate: Date = new Date();
 
   beforeAll(async () => {
-    container = await new MySqlContainer().start();
-
-    client = await createConnection({
-      host: container.getHost(),
-      port: container.getPort(),
-      database: container.getDatabase(),
-      user: container.getUsername(),
-      password: container.getUserPassword(),
-    });
+    container = await new PostgreSqlContainer('postgres:16-alpine').start();
 
     process.env.DATABASE_URL = container.getConnectionUri();
     urlConnection = container.getConnectionUri();
@@ -106,7 +96,6 @@ describe('UserController', () => {
 
   afterAll(async () => {
     await prisma.$disconnect();
-    await client.end();
     await container.stop();
     await module.close();
   });
