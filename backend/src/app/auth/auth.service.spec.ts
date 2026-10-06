@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
-import { AuthService } from './auth.service';
-import { UserService } from '../user/user.service';
-import { encryptData } from '../../util/crypt';
+import { AuthService } from './auth.service.js';
+import { UserService } from '../user/user.service.js';
+import { encryptData } from '../../util/crypt.js';
 
 describe('AuthService', () => {
   let service: AuthService;

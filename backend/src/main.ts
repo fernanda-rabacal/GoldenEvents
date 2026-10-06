@@ -1,11 +1,11 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app/app.module';
+import { AppModule } from './app/app.module.js';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ConflictInterceptor } from './app/common/errors/interceptors/conflict.interceptor';
-import { DatabaseInterceptor } from './app/common/errors/interceptors/database.interceptor';
-import { UnauthorizedInterceptor } from './app/common/errors/interceptors/unauthorized.interceptor';
-import { NotFoundInterceptor } from './app/common/errors/interceptors/not-found.interceptor';
+import { ConflictInterceptor } from './app/common/errors/interceptors/conflict.interceptor.js';
+import { DatabaseInterceptor } from './app/common/errors/interceptors/database.interceptor.js';
+import { UnauthorizedInterceptor } from './app/common/errors/interceptors/unauthorized.interceptor.js';
+import { NotFoundInterceptor } from './app/common/errors/interceptors/not-found.interceptor.js';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

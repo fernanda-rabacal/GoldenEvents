@@ -51,7 +51,7 @@ export default function EditEvent({ categories, event }: CreateEventPageProps) {
   })
   
   const router = useRouter()
-  const { mutate: updateEvent, isLoading: isLoadingUpdate } = useMutationData(`/event/${event.id}`, 
+  const { mutate: updateEvent, isPending: isLoadingUpdate } = useMutationData(`/event/${event.id}`, 
       'put', 
       data => {
         toastNotify('success', 'Evento atualizado com sucesso!')
@@ -62,7 +62,7 @@ export default function EditEvent({ categories, event }: CreateEventPageProps) {
       }
     )
 
-  const { mutate: deleteEvent, isLoading: isLoadingDelete } = useDeleteData(`/event/${event.id}`, 
+  const { mutate: deleteEvent, isPending: isLoadingDelete } = useDeleteData(`/event/${event.id}`, 
       'delete', 
       data => {
         toastNotify('success', 'Evento deletado com sucesso!')

@@ -1,6 +1,6 @@
 import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { UserTypeEnum } from '../entities/user.entity';
+import { UserTypeEnum } from '../entities/user.entity.js';
 
 export class UpdateUserDto {
   @IsString()

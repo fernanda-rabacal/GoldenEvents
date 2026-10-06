@@ -1,16 +1,16 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaClient } from '@prisma/client';
-import { AuthModule } from '../src/app/auth/auth.module';
-import { CategoryService } from '../src/app/event/category.service';
-import { UpdateEventDto } from '../src/app/event/dto/update-event.dto';
-import { EventModule } from '../src/app/event/event.module';
-import { EventService } from '../src/app/event/event.service';
-import { CategoryRepository } from '../src/app/event/repositories/categories.repository';
-import { EventRepository } from '../src/app/event/repositories/events.repository';
-import { UserModule } from '../src/app/user/user.module';
-import { PrismaModule } from '../src/db/prisma.module';
-import * as request from 'supertest';
+import { AuthModule } from '../src/app/auth/auth.module.js';
+import { CategoryService } from '../src/app/event/category.service.js';
+import { UpdateEventDto } from '../src/app/event/dto/update-event.dto.js';
+import { EventModule } from '../src/app/event/event.module.js';
+import { EventService } from '../src/app/event/event.service.js';
+import { CategoryRepository } from '../src/app/event/repositories/categories.repository.js';
+import { EventRepository } from '../src/app/event/repositories/events.repository.js';
+import { UserModule } from '../src/app/user/user.module.js';
+import { PrismaModule } from '../src/db/prisma.module.js';
+import request from 'supertest';
 import { PostgreSqlContainer } from '@testcontainers/postgresql';
 import { execSync } from 'child_process';
 

@@ -1,9 +1,9 @@
 import { PrismaClient } from '@prisma/client';
-import { createUserTypes } from './createUserTypeSeeder';
-import { createEventCategories } from './createEventCategoriesSeeder';
-import { createUsers } from './createUsersSeeder';
-import { createEvents } from './createEventsSeeder';
-import { createPaymentMethods } from './createPaymentMethodsSeeder';
+import { createUserTypes } from './createUserTypeSeeder.js';
+import { createEventCategories } from './createEventCategoriesSeeder.js';
+import { createUsers } from './createUsersSeeder.js';
+import { createEvents } from './createEventsSeeder.js';
+import { createPaymentMethods } from './createPaymentMethodsSeeder.js';
 
 const prisma = new PrismaClient();
 

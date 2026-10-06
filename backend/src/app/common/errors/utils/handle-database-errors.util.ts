@@ -1,6 +1,6 @@
-import { DatabaseError } from '../types/DatabaseError';
-import { PrismaClientError } from '../types/PrismaClientError';
-import { UniqueConstraintError } from '../types/UniqueConstraintError';
+import { DatabaseError } from '../types/DatabaseError.js';
+import { PrismaClientError } from '../types/PrismaClientError.js';
+import { UniqueConstraintError } from '../types/UniqueConstraintError.js';
 
 export enum PrismaErrors {
   UniqueConstraintFail = 'P2002',

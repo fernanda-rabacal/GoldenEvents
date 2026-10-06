@@ -10,16 +10,16 @@ import {
   Req,
   Patch,
 } from '@nestjs/common';
-import { EventService } from './event.service';
-import { CreateEventDto } from './dto/create-event.dto';
-import { UpdateEventDto } from './dto/update-event.dto';
-import { QueryEventDto } from './dto/query-event.dto';
+import { EventService } from './event.service.js';
+import { CreateEventDto } from './dto/create-event.dto.js';
+import { UpdateEventDto } from './dto/update-event.dto.js';
+import { QueryEventDto } from './dto/query-event.dto.js';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guard/jwt.guard';
+import { JwtAuthGuard } from '../auth/guard/jwt.guard.js';
 import { Request } from 'express';
-import { MessageResponse } from '../../response/message.response';
-import { CategoryService } from './category.service';
-import { BuyEventTicketDto } from './dto/buy-ticket.dto';
+import { MessageResponse } from '../../response/message.response.js';
+import { CategoryService } from './category.service.js';
+import { BuyEventTicketDto } from './dto/buy-ticket.dto.js';
 
 @ApiTags('Event')
 @Controller('/events')

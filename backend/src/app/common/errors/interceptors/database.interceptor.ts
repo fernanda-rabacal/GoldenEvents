@@ -6,9 +6,9 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { catchError, Observable } from 'rxjs';
-import { isPrismaError } from '../utils/is-prisma-error.util';
-import { handleDatabaseErrors } from '../utils/handle-database-errors.util';
-import { DatabaseError } from '../types/DatabaseError';
+import { isPrismaError } from '../utils/is-prisma-error.util.js';
+import { handleDatabaseErrors } from '../utils/handle-database-errors.util.js';
+import { DatabaseError } from '../types/DatabaseError.js';
 
 @Injectable()
 export class DatabaseInterceptor implements NestInterceptor {

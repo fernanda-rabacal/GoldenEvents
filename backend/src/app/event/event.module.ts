@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { EventService } from './event.service';
-import { EventController } from './event.controller';
-import { PrismaService } from '../../db/prisma.service';
-import { CategoryService } from './category.service';
-import { EventRepository } from './repositories/events.repository';
-import { CategoryRepository } from './repositories/categories.repository';
+import { EventService } from './event.service.js';
+import { EventController } from './event.controller.js';
+import { PrismaService } from '../../db/prisma.service.js';
+import { CategoryService } from './category.service.js';
+import { EventRepository } from './repositories/events.repository.js';
+import { CategoryRepository } from './repositories/categories.repository.js';
 
 @Module({
   controllers: [EventController],

@@ -1,15 +1,15 @@
-import { CategoryRepository } from './repositories/categories.repository';
+import { CategoryRepository } from './repositories/categories.repository.js';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaClient } from '@prisma/client';
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
-import { EventService } from './event.service';
-import { EventRepository } from './repositories/events.repository';
-import { PrismaService } from '../../db/prisma.service';
-import { CreateEventDto } from './dto/create-event.dto';
-import { NotFoundError } from '../common/errors/types/NotFoundError';
+import { EventService } from './event.service.js';
+import { EventRepository } from './repositories/events.repository.js';
+import { PrismaService } from '../../db/prisma.service.js';
+import { CreateEventDto } from './dto/create-event.dto.js';
+import { NotFoundError } from '../common/errors/types/NotFoundError.js';
 import { NotAcceptableException } from '@nestjs/common';
-import { BuyEventTicketDto } from './dto/buy-ticket.dto';
-import { CategoryService } from './category.service';
+import { BuyEventTicketDto } from './dto/buy-ticket.dto.js';
+import { CategoryService } from './category.service.js';
 
 describe('EventService', () => {
   let service: EventService;

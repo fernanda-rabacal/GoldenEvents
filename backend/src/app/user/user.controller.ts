@@ -9,14 +9,14 @@ import {
   Req,
   Query,
 } from '@nestjs/common';
-import { UserService } from './user.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { MessageResponse } from '../../response/message.response';
+import { UserService } from './user.service.js';
+import { CreateUserDto } from './dto/create-user.dto.js';
+import { UpdateUserDto } from './dto/update-user.dto.js';
+import { MessageResponse } from '../../response/message.response.js';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guard/jwt.guard';
+import { JwtAuthGuard } from '../auth/guard/jwt.guard.js';
 import { Request } from 'express';
-import { QueryUserTicketsDto } from './dto/query-user-ticket.dto';
+import { QueryUserTicketsDto } from './dto/query-user-ticket.dto.js';
 
 @ApiTags('User')
 @Controller('/users')

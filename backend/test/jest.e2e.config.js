@@ -1,10 +1,12 @@
 export default {
   moduleFileExtensions: ['js', 'json', 'ts'],
   testRegex: '.*\\.e2e-spec\\.ts$',
-  transform: {
-    '^.+\\.(t|j)s$': 'ts-jest',
+  extensionsToTreatAsEsm: ['.ts'],
+  moduleNameMapper: {
+    '^(\\.{1,2}/.*)\\.js$': '$1',
   },
-  collectCoverageFrom: ['**/*.(t|j)s$'],
-  coverageDirectory: '../coverage',
+  transform: {
+    '^.+\\.ts$': ['ts-jest', { useESM: true }],
+  },
   testEnvironment: 'node',
 };

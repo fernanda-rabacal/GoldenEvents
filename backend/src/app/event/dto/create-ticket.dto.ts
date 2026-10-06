@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { BuyEventTicketDto } from './buy-ticket.dto';
+import { BuyEventTicketDto } from './buy-ticket.dto.js';
 import { IsNumber } from 'class-validator';
 
 export class CreateTicketDto extends BuyEventTicketDto {

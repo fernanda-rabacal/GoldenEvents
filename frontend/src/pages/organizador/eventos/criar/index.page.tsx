@@ -52,7 +52,7 @@ export default function CreateEvent({ categories }: CreateEventPageProps) {
     value: category.name
   }))
 
-  const { mutate: createEvent, isLoading } = useMutationData("/event", 
+  const { mutate: createEvent, isPending: isLoading } = useMutationData("/event", 
       'post', 
       data => {
         toastNotify('success', 'Evento criado com sucesso!')

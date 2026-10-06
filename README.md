@@ -20,20 +20,20 @@ This is a collaborative full stack project of a website where you can see the la
 ### How to run:
 
 This repository has the frontend and the backend of the application. Clone the repository on your machine and enter the respective folders to run the comands below if you wanna run locally or use Docker. 
-To use this code without Docker, you need to have Node.js and npm installed. Also, you need to have a PostgreSQL server (or run only the database with `docker compose up -d db redis`). 
+To use this code without Docker, you need to have Node.js 22+, npm (frontend) and Bun (backend package manager) installed. Also, you need to have a PostgreSQL server (or run only the database with `docker compose up -d db redis`). 
 
   - Backend
 
-  Copy `backend/.env.example` to `backend/.env` and adjust the PostgreSQL credentials if needed. 
+  Copy `backend/.env.example` to `backend/.env`, set a value for `SECRET` and adjust the PostgreSQL credentials if needed. 
   Enter the backend folder and run:
 
-  ##### `npm install` to install the dependencies.
+  ##### `bun install` to install the dependencies.
   ##### `npx prisma migrate dev` to make the database.
-  ##### `npm start` to start the server on http://localhost:8080
+  ##### `bun run start` to start the server on http://localhost:8080
 
   - Frontend
 
-  Enter the frontend folder e just run `npm run dev`.
+  Enter the frontend folder, run `npm install` and then `npm run dev`.
 
   - Docker
 

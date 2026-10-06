@@ -1,10 +1,10 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { QueryUserTicketsDto } from './dto/query-user-ticket.dto';
-import { UserRepository } from './repositories/user.repository';
-import { NotFoundError } from '../common/errors/types/NotFoundError';
-import { OffsetPagination } from '../../response/pagination.response';
+import { CreateUserDto } from './dto/create-user.dto.js';
+import { UpdateUserDto } from './dto/update-user.dto.js';
+import { QueryUserTicketsDto } from './dto/query-user-ticket.dto.js';
+import { UserRepository } from './repositories/user.repository.js';
+import { NotFoundError } from '../common/errors/types/NotFoundError.js';
+import { OffsetPagination } from '../../response/pagination.response.js';
 
 @Injectable()
 export class UserService {

@@ -1,14 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { UserService } from '../src/app/user/user.service';
-import { PrismaModule } from '../src/db/prisma.module';
-import { AuthModule } from '../src/app/auth/auth.module';
-import { UserModule } from '../src/app/user/user.module';
+import { UserService } from '../src/app/user/user.service.js';
+import { PrismaModule } from '../src/db/prisma.module.js';
+import { AuthModule } from '../src/app/auth/auth.module.js';
+import { UserModule } from '../src/app/user/user.module.js';
 import { INestApplication } from '@nestjs/common';
-import { CreateUserDto } from '../src/app/user/dto/create-user.dto';
-import { UserRepository } from '../src/app/user/repositories/user.repository';
-import * as request from 'supertest';
+import { CreateUserDto } from '../src/app/user/dto/create-user.dto.js';
+import { UserRepository } from '../src/app/user/repositories/user.repository.js';
+import request from 'supertest';
 import { PrismaClient } from '@prisma/client';
-import { UserTypeEnum } from '../src/app/user/entities/user.entity';
+import { UserTypeEnum } from '../src/app/user/entities/user.entity.js';
 import {
   PostgreSqlContainer,
   StartedPostgreSqlContainer,

@@ -59,7 +59,7 @@ export default function UserProfile({ user, userTypes } : PageProps) {
     value: userType.name
   }))
 
-  const { mutate: updateUser, isLoading } = useMutationData(`/user/${user.id}`, 
+  const { mutate: updateUser, isPending: isLoading } = useMutationData(`/user/${user.id}`, 
     'put', 
     data => {
       toastNotify('success', 'Usuário atualizado com sucesso!')

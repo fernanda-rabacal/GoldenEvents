@@ -1,16 +1,16 @@
-import { UniqueConstraintError } from './../common/errors/types/UniqueConstraintError';
+import { UniqueConstraintError } from './../common/errors/types/UniqueConstraintError.js';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaClient } from '@prisma/client';
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
-import { UserService } from './user.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { encryptData } from '../../util/crypt';
-import { UserTypeEnum } from './entities/user.entity';
-import { UserRepository } from './repositories/user.repository';
-import { PrismaService } from '../../db/prisma.service';
-import { PrismaClientError } from '../common/errors/types/PrismaClientError';
-import { PrismaErrors } from '../common/errors/utils/handle-database-errors.util';
-import { NotFoundError } from '../common/errors/types/NotFoundError';
+import { UserService } from './user.service.js';
+import { CreateUserDto } from './dto/create-user.dto.js';
+import { encryptData } from '../../util/crypt.js';
+import { UserTypeEnum } from './entities/user.entity.js';
+import { UserRepository } from './repositories/user.repository.js';
+import { PrismaService } from '../../db/prisma.service.js';
+import { PrismaClientError } from '../common/errors/types/PrismaClientError.js';
+import { PrismaErrors } from '../common/errors/utils/handle-database-errors.util.js';
+import { NotFoundError } from '../common/errors/types/NotFoundError.js';
 import { HttpException, HttpStatus } from '@nestjs/common';
 
 describe('UserService', () => {

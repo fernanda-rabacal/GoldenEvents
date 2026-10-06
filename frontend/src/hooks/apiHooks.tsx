@@ -1,16 +1,16 @@
-import { UseQueryOptions, useMutation, useQuery } from 'react-query';
+import { UseQueryOptions, useMutation, useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/axios';
 
-export const useQueryData = (url: string, options?: Omit<UseQueryOptions<any, unknown, any, string>, "queryKey" | "queryFn">) => {
-  return useQuery(
-    url,
-    async () => {
+export const useQueryData = (url: string, options?: Omit<UseQueryOptions<any, unknown, any, string[]>, "queryKey" | "queryFn">) => {
+  return useQuery({
+    queryKey: [url],
+    queryFn: async () => {
       const { data } = await api.get(url);
 
       return data;
     },
-    options,
-  );
+    ...options,
+  });
 };
 
 export const useMutationData = (
@@ -19,17 +19,15 @@ export const useMutationData = (
   onSuccess: (data: any) => void,
   onError: (error: any) => void,
 ) => {
-  return useMutation(
-    async (data?: object) => {
+  return useMutation({
+    mutationFn: async (data?: object) => {
       const response = await api[method](url, data);
 
       return response.data;
     },
-    {
-      onSuccess,
-      onError,
-    },
-  );
+    onSuccess,
+    onError,
+  });
 };
 
 export const useDeleteData = (
@@ -38,15 +36,13 @@ export const useDeleteData = (
   onSuccess: (data: any) => void,
   onError: (error: any) => void,
 ) => {
-  return useMutation(
-    async () => {
+  return useMutation({
+    mutationFn: async () => {
       const response = await api.delete(url);
 
       return response.data;
     },
-    {
-      onSuccess,
-      onError,
-    },
-  );
+    onSuccess,
+    onError,
+  });
 };

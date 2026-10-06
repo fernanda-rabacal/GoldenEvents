@@ -1,5 +1,5 @@
-import { ConflictError } from './ConflictError';
-import { PrismaClientError } from './PrismaClientError';
+import { ConflictError } from './ConflictError.js';
+import { PrismaClientError } from './PrismaClientError.js';
 
 export class UniqueConstraintError extends ConflictError {
   constructor(e: PrismaClientError) {

@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../../db/prisma.service';
-import { CreateEventDto } from '../dto/create-event.dto';
-import { generateSlug } from '../../../util/slug';
-import { QueryEventDto } from '../dto/query-event.dto';
-import { BuyEventTicketDto } from '../dto/buy-ticket.dto';
-import { UpdateEventDto } from '../dto/update-event.dto';
+import { PrismaService } from '../../../db/prisma.service.js';
+import { CreateEventDto } from '../dto/create-event.dto.js';
+import { generateSlug } from '../../../util/slug.js';
+import { QueryEventDto } from '../dto/query-event.dto.js';
+import { BuyEventTicketDto } from '../dto/buy-ticket.dto.js';
+import { UpdateEventDto } from '../dto/update-event.dto.js';
 import { Prisma } from '@prisma/client';
 
 @Injectable()

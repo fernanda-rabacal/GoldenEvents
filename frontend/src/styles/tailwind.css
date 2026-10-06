@@ -1,0 +1,41 @@
+/*
+ * Tailwind CSS v4 — configuração inicial.
+ *
+ * Enquanto os estilos migram aos poucos do Sass, o preflight (reset do Tailwind) fica desligado:
+ * o globals.scss já faz o reset e o preflight mudaria a aparência das telas ainda em Sass.
+ * Ao terminar a migração, troque os imports abaixo por `@import 'tailwindcss';` e remova o globals.scss.
+ */
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+
+/* Paleta e fontes do projeto (as mesmas variáveis do globals.scss), disponíveis como classes: bg-orange-500, text-gray-850, font-sans... */
+@theme {
+  --font-sans: 'DM Sans', sans-serif;
+  --font-roboto: 'Roboto', sans-serif;
+
+  --color-white: #fff;
+  --color-gray-100: #f0f0f0;
+  --color-gray-200: #d3d3d3;
+  --color-gray-300: #a8a8b3;
+  --color-gray-400: #8d8686;
+  --color-gray-500: #585656;
+  --color-gray-600: #383e44;
+  --color-gray-700: #29292e;
+  --color-gray-800: #1f2729;
+  --color-gray-850: #272221;
+  --color-gray-900: #121214;
+
+  --color-cyan-500: #61bafb;
+  --color-yellow-300: #e6cd00;
+  --color-orange-400: #f6b638;
+  --color-orange-500: #eba417;
+  --color-orange-700: #c78500;
+
+  --color-red-200: #bf7960;
+  --color-red-300: #f84747;
+  --color-red-500: #b90000;
+  --color-red-800: #590202;
+  --color-beige-100: #fffaf0;
+}

@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../../db/prisma.service';
-import { CreateUserDto } from '../dto/create-user.dto';
-import { encryptData } from '../../../util/crypt';
-import { UserTypeEnum } from '../entities/user.entity';
-import { UpdateUserDto } from '../dto/update-user.dto';
+import { PrismaService } from '../../../db/prisma.service.js';
+import { CreateUserDto } from '../dto/create-user.dto.js';
+import { encryptData } from '../../../util/crypt.js';
+import { UserTypeEnum } from '../entities/user.entity.js';
+import { UpdateUserDto } from '../dto/update-user.dto.js';
 import { Prisma } from '@prisma/client';
 
 @Injectable()

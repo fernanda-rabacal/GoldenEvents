@@ -1,12 +1,12 @@
 import { Injectable, NotAcceptableException } from '@nestjs/common';
-import { CreateEventDto } from './dto/create-event.dto';
-import { UpdateEventDto } from './dto/update-event.dto';
-import { QueryEventDto } from './dto/query-event.dto';
-import { BuyEventTicketDto } from './dto/buy-ticket.dto';
-import { CategoryRepository } from './repositories/categories.repository';
-import { EventRepository } from './repositories/events.repository';
-import { NotFoundError } from '../common/errors/types/NotFoundError';
-import { OffsetPagination } from '../../response/pagination.response';
+import { CreateEventDto } from './dto/create-event.dto.js';
+import { UpdateEventDto } from './dto/update-event.dto.js';
+import { QueryEventDto } from './dto/query-event.dto.js';
+import { BuyEventTicketDto } from './dto/buy-ticket.dto.js';
+import { CategoryRepository } from './repositories/categories.repository.js';
+import { EventRepository } from './repositories/events.repository.js';
+import { NotFoundError } from '../common/errors/types/NotFoundError.js';
+import { OffsetPagination } from '../../response/pagination.response.js';
 
 @Injectable()
 export class EventService {

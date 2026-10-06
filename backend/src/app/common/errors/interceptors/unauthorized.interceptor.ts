@@ -6,7 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { catchError, Observable } from 'rxjs';
-import { UnauthorizedError } from '../types/UnauthorizedError';
+import { UnauthorizedError } from '../types/UnauthorizedError.js';
 
 @Injectable()
 export class UnauthorizedInterceptor implements NestInterceptor {

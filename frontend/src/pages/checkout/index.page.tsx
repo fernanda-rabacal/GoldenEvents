@@ -20,7 +20,7 @@ export default function Checkout() {
     const router = useRouter()
     const { event, changeEventQuantity } = useCart()
     
-    const { mutate: buyTicket, isLoading } = useMutationData(`/event/${event?.id}/buy-ticket`,
+    const { mutate: buyTicket, isPending: isLoading } = useMutationData(`/event/${event?.id}/buy-ticket`,
         'post',
         data => {
             toastNotify("success", data.message || "Compra realizada com sucesso!")
