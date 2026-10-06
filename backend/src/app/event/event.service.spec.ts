@@ -11,10 +11,13 @@ import { NotFoundError } from '../common/errors/types/NotFoundError.js';
 import { NotAcceptableException } from '@nestjs/common';
 import { BuyEventTicketDto } from './dto/buy-ticket.dto.js';
 import { CategoryService } from './category.service.js';
+import { PaymentMethodService } from './payment-method.service.js';
+import { PaymentMethodRepository } from './repositories/payment-methods.repository.js';
 
 describe('EventService', () => {
   let service: EventService;
   let categoryService: CategoryService;
+  let paymentMethodService: PaymentMethodService;
   let prisma: PrismaClientMock;
   let expectedOutputEvent: any;
   let expectedOutputCategory: any;
@@ -27,6 +30,8 @@ describe('EventService', () => {
         CategoryService,
         EventRepository,
         CategoryRepository,
+        PaymentMethodService,
+        PaymentMethodRepository,
         PrismaService,
       ],
     })
@@ -36,6 +41,7 @@ describe('EventService', () => {
 
     service = module.get<EventService>(EventService);
     categoryService = module.get<CategoryService>(CategoryService);
+    paymentMethodService = module.get<PaymentMethodService>(PaymentMethodService);
     prisma = module.get(PrismaService);
 
     const currentDate = new Date();
@@ -97,6 +103,53 @@ describe('EventService', () => {
     const event = await service.create(newEvent);
 
     expect(event).toStrictEqual(expectedOutputEvent);
+  });
+
+  it.each([
+    ['Uma noite para celebrar a música', 'Uma noite para celebrar a música'],
+    [undefined, null],
+    ['', null],
+  ])('should create an event with subtitle "%s" saved as %p', async (subtitle, saved) => {
+    prisma.event.create.mockResolvedValueOnce(expectedOutputEvent);
+
+    await service.create({
+      name: 'Teste evento',
+      subtitle,
+      description: 'teste unitário',
+      startDateTime: new Date().toISOString(),
+      userId: 1,
+      categoryId: 1,
+      capacity: 300,
+      location: 'Rua do limoeiro, 12',
+      price: 10,
+    });
+
+    expect(prisma.event.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ subtitle: saved }),
+    });
+  });
+
+  it.each([
+    ['Novo subtítulo', 'Novo subtítulo'],
+    [null, null],
+  ])('should update the subtitle to %p', async (subtitle, saved) => {
+    prisma.event.findFirst.mockResolvedValueOnce(expectedOutputEvent);
+    prisma.event.update.mockResolvedValueOnce(expectedOutputEvent);
+
+    await service.update(1, 1, { subtitle });
+
+    expect(prisma.event.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ subtitle: saved }) }),
+    );
+  });
+
+  it('should keep the subtitle when it is not sent on update', async () => {
+    prisma.event.findFirst.mockResolvedValueOnce(expectedOutputEvent);
+    prisma.event.update.mockResolvedValueOnce(expectedOutputEvent);
+
+    await service.update(1, 1, { name: 'Outro nome' });
+
+    expect(prisma.event.update.mock.calls[0][0].data).not.toHaveProperty('subtitle');
   });
 
   it('should update an event', async () => {
@@ -196,6 +249,41 @@ describe('EventService', () => {
     expect(events.content).toStrictEqual([returnedEventsData]);
   });
 
+  it('should find only the events created by the user', async () => {
+    prisma.event.findMany.mockResolvedValueOnce([]);
+
+    await service.findAll({ skip: 0, take: 10, name: 'festival' }, 3);
+
+    expect(prisma.event.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ user_id: 3, name: expect.anything() }),
+      }),
+    );
+  });
+
+  it('should not filter by user on the public listing', async () => {
+    prisma.event.findMany.mockResolvedValueOnce([]);
+
+    await service.findAll({ skip: 0, take: 10 });
+
+    expect(prisma.event.findMany.mock.calls[0][0].where).not.toHaveProperty('user_id');
+  });
+
+  it.each([
+    [undefined, [{ start_date: 'asc' }, { id: 'asc' }]],
+    ['start_date', [{ start_date: 'asc' }, { id: 'asc' }]],
+    ['created_at', [{ created_at: 'desc' }, { id: 'desc' }]],
+    ['price', [{ price: 'asc' }, { start_date: 'asc' }, { id: 'asc' }]],
+  ] as const)('should sort the events by %s', async (sort, orderBy) => {
+    prisma.event.findMany.mockResolvedValueOnce([]);
+
+    await service.findAll({ skip: 0, take: 10, sort });
+
+    expect(prisma.event.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ orderBy }),
+    );
+  });
+
   it('should find an event by id', async () => {
     prisma.event.findFirst.mockResolvedValueOnce(expectedOutputEvent);
 
@@ -224,6 +312,14 @@ describe('EventService', () => {
     const event = await service.findBySlug('teste-evento');
 
     expect(event).toStrictEqual(expectedOutputEvent);
+    expect(prisma.event.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        include: {
+          category: true,
+          user: { select: { id: true, name: true } },
+        },
+      }),
+    );
   });
 
   it('should throw an NotFound error on find event by slug', async () => {
@@ -268,6 +364,38 @@ describe('EventService', () => {
     const purchasedTickets = await service.buyTicket(ticket);
 
     expect(purchasedTickets).toStrictEqual(newUpdatedEvent);
+    expect(prisma.event.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: {
+          quantity_left: { decrement: 3 },
+          tickets: {
+            createMany: {
+              data: Array.from({ length: 3 }, () => ({
+                user_id: 1,
+                payment_method_id: 1,
+                price: 10,
+              })),
+            },
+          },
+        },
+      }),
+    );
+  });
+
+  it('should not buy more tickets than are left', async () => {
+    prisma.event.findFirst.mockResolvedValue({
+      ...expectedOutputEvent,
+      quantity_left: 2,
+    });
+
+    await expect(
+      service.buyTicket({ eventId: 1, paymentMethodId: 1, quantity: 3, userId: 1 }),
+    ).rejects.toThrow(
+      new NotAcceptableException(
+        'Não há ingressos suficientes disponíveis para esta compra.',
+      ),
+    );
+    expect(prisma.event.update).not.toHaveBeenCalled();
   });
 
   it('should throw an NotFoundError on wrong eventId at buyTicket', async () => {
@@ -303,5 +431,15 @@ describe('EventService', () => {
     const category = await categoryService.findById(1);
 
     expect(category).toStrictEqual(expectedOutputCategory);
+  });
+
+  it('should find all payment methods', async () => {
+    const paymentMethods = [
+      { id: 1, name: 'Boleto' },
+      { id: 2, name: 'Pix' },
+    ];
+    prisma.paymentMethod.findMany.mockResolvedValue(paymentMethods);
+
+    expect(await paymentMethodService.findAll()).toStrictEqual(paymentMethods);
   });
 });

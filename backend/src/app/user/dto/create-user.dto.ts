@@ -1,5 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsEmail, Length, IsString } from 'class-validator';
+import { Transform } from 'class-transformer';
+import {
+  IsNotEmpty,
+  IsEmail,
+  IsString,
+  IsBoolean,
+  IsOptional,
+  Matches,
+} from 'class-validator';
 
 export class CreateUserDto {
   @IsString()
@@ -18,8 +26,17 @@ export class CreateUserDto {
   @ApiProperty()
   password: string;
 
+  // Aceita o CPF com ou sem máscara e guarda só os dígitos
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.replace(/\D/g, '') : value,
+  )
   @IsString()
-  @Length(11, 11)
-  @ApiProperty()
+  @Matches(/^\d{11}$/, { message: 'O CPF deve ter 11 números.' })
+  @ApiProperty({ example: '12345678901' })
   document: string;
+
+  @IsOptional()
+  @IsBoolean()
+  @ApiProperty({ required: false })
+  isOrganizer?: boolean;
 }

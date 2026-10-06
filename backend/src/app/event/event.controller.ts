@@ -20,6 +20,7 @@ import { Request } from 'express';
 import { MessageResponse } from '../../response/message.response.js';
 import { CategoryService } from './category.service.js';
 import { BuyEventTicketDto } from './dto/buy-ticket.dto.js';
+import { PaymentMethodService } from './payment-method.service.js';
 
 @ApiTags('Event')
 @Controller('/events')
@@ -27,6 +28,7 @@ export class EventController {
   constructor(
     private readonly eventService: EventService,
     private readonly categoryService: CategoryService,
+    private readonly paymentMethodService: PaymentMethodService,
   ) {}
 
   @Get()
@@ -42,6 +44,18 @@ export class EventController {
   @Get('/categories/:id')
   async findCategoryById(@Param('id') id: string) {
     return this.categoryService.findById(+id);
+  }
+
+  @Get('/me')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  async findMine(@Query() query: QueryEventDto, @Req() req: Request) {
+    return await this.eventService.findAll(query, req.user['id']);
+  }
+
+  @Get('/payment-methods')
+  async findAllPaymentMethods() {
+    return this.paymentMethodService.findAll();
   }
 
   @Get('/slug/:slug')

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import { buttonVariants } from '@/ui/button';
 import { SectionHeading } from './SectionHeading';
 
 export function CreateEventCta() {
@@ -17,9 +18,9 @@ export function CreateEventCta() {
         />
         <Link
           href='/organizador/eventos/criar'
-          className='inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3.5 text-body-sm font-bold text-primary-foreground transition hover:bg-primary/90'
+          className={buttonVariants({ size: 'lg' })}
         >
-          Começar agora <ArrowRight className='size-4' />
+          Começar agora <ArrowRight data-icon='inline-end' />
         </Link>
       </div>
     </section>

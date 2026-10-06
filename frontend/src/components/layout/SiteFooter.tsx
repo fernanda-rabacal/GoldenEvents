@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Check } from 'lucide-react';
+import { Button } from '@/ui/button';
 import { Logo } from './Logo';
 
 const FOOTER_COLUMNS = [
@@ -68,20 +69,21 @@ function NewsletterForm() {
       <p className='mt-4 text-body-sm leading-6 text-white/60'>
         Eventos e experiências direto no seu e-mail.
       </p>
-      <div className='mt-4 flex rounded-full bg-white p-1'>
+      <div className='mt-4 flex rounded-lg bg-white p-1'>
         <input
           type='email'
           aria-label='Seu e-mail'
           placeholder='seu@email.com'
           className='min-w-0 flex-1 bg-transparent px-3 text-body-sm text-foreground outline-none'
         />
-        <button
+        <Button
           type='button'
+          variant='secondary'
+          size='icon'
           aria-label='Inscrever-se'
-          className='rounded-full bg-orange-500 px-4 py-2 text-caption font-bold text-white'
         >
-          <Check className='size-4' />
-        </button>
+          <Check />
+        </Button>
       </div>
     </div>
   );

@@ -25,19 +25,19 @@ export class EventService {
     return this.repository.create(createEventDto);
   }
 
-  async findAll(query: QueryEventDto) {
-    const events = await this.repository.findAll(query);
+  async findAll(query: QueryEventDto, userId?: number) {
+    const events = await this.repository.findAll(query, userId);
 
     const totalRecords = events.length;
 
     const paginator = new OffsetPagination(
       totalRecords,
-      events.length,
+      totalRecords,
       query.skip,
       query.take,
     );
 
-    return paginator.buildPage(events.splice(query.skip * query.take, query.take));
+    return paginator.paginate(events);
   }
 
   async findById(eventId: number) {
@@ -61,7 +61,13 @@ export class EventService {
   }
 
   async buyTicket(buyEventTicket: BuyEventTicketDto) {
-    await this.findById(buyEventTicket.eventId);
+    const { quantity_left } = await this.findById(buyEventTicket.eventId);
+
+    if (buyEventTicket.quantity > quantity_left) {
+      throw new NotAcceptableException(
+        'Não há ingressos suficientes disponíveis para esta compra.',
+      );
+    }
 
     return this.repository.buyTicket(buyEventTicket);
   }

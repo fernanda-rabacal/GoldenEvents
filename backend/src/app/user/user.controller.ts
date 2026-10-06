@@ -9,7 +9,7 @@ import {
   Req,
   Query,
 } from '@nestjs/common';
-import { UserService } from './user.service.js';
+import { UserService, type Requester } from './user.service.js';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
 import { MessageResponse } from '../../response/message.response.js';
@@ -48,8 +48,10 @@ export class UserController {
   }
 
   @Get('/:id')
-  async findById(@Param('id') id: string) {
-    return await this.userService.findById(+id);
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  async findById(@Param('id') id: string, @Req() req: Request) {
+    return await this.userService.findProfile(req.user as Requester, +id);
   }
 
   @Post()
@@ -60,8 +62,12 @@ export class UserController {
   @Patch('/:id')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return await this.userService.update(+id, updateUserDto);
+  async update(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+    @Req() req: Request,
+  ) {
+    return await this.userService.update(req.user as Requester, +id, updateUserDto);
   }
 
   @Patch('/:id/active')

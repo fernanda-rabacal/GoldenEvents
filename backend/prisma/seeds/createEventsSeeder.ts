@@ -1,5 +1,21 @@
 import { PrismaClient } from '@prisma/client';
 
+// Datas relativas ao dia do seed, para estes eventos sempre aparecerem como próximos
+function daysFromNow(days: number, time: string) {
+  const [hours, minutes] = time.split(':').map(Number);
+  const date = new Date();
+
+  date.setDate(date.getDate() + days);
+  date.setHours(hours, minutes, 0, 0);
+
+  return date;
+}
+
+// A descrição é markdown: a indentação do template string viraria bloco de código
+function removeIndentation(text: string) {
+  return text.replace(/^[ \t]+/gm, '');
+}
+
 export async function createEvents(prisma: PrismaClient) {
   await prisma.event.createMany({
     data: [
@@ -134,6 +150,116 @@ export async function createEvents(prisma: PrismaClient) {
         price: 85.0,
         location: 'Av. Pinto de Aguiar, Salvador - BA',
       },
-    ],
+      {
+        name: 'Festival de Verão',
+        subtitle:
+          'Uma noite para celebrar a música, encontrar pessoas e viver Salvador de um jeito inesquecível.',
+        slug: 'festival-de-verao',
+        photo:
+          'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=900&q=85',
+        description: `Uma tarde e noite inteiras de música ao ar livre no Parque da Cidade. O Festival de Verão reúne bandas locais e atrações nacionais em dois palcos, com área de alimentação, espaço kids e pôr do sol garantido.
+
+        Traga sua canga, chame os amigos e venha celebrar a estação mais quente do ano com muito som, dança e boas energias.`,
+        start_date: daysFromNow(7, '18:00'),
+        user_id: 1,
+        category_id: 1,
+        capacity: 2000,
+        quantity_left: 2000,
+        price: 45.0,
+        location: 'Parque da Cidade, Salvador - BA',
+      },
+      {
+        name: 'Design & Coffee',
+        subtitle:
+          'Uma manhã de criatividade, prototipação e cafés especiais com designers convidados.',
+        slug: 'design-e-coffee',
+        photo:
+          'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=900&q=85',
+        description: `Um workshop prático para quem quer tirar ideias do papel. Durante a manhã, designers convidados conduzem exercícios de criatividade, prototipação e apresentação de projetos, tudo acompanhado de cafés especiais.
+
+        As vagas são limitadas para garantir a troca entre os participantes. Leve seu notebook ou caderno de anotações.`,
+        start_date: daysFromNow(13, '09:00'),
+        user_id: 1,
+        category_id: 6,
+        capacity: 40,
+        quantity_left: 40,
+        price: 30.0,
+        location: 'Casa Criativa, Salvador - BA',
+      },
+      {
+        name: 'Noite de Stand-up',
+        subtitle:
+          'Quatro comediantes da nova geração do stand-up baiano em uma noite de muitas risadas.',
+        slug: 'noite-de-stand-up',
+        photo:
+          'https://images.unsplash.com/photo-1585699324551-f6c309eedeca?auto=format&fit=crop&w=900&q=85',
+        description: `Uma noite de humor com quatro comediantes da nova geração do stand-up baiano. Cada artista apresenta seu melhor material, com piadas sobre o cotidiano, a vida na cidade e situações que todo mundo já viveu.
+
+        Classificação indicativa: 16 anos. Chegue cedo para garantir os melhores lugares.`,
+        start_date: daysFromNow(22, '20:00'),
+        user_id: 1,
+        category_id: 10,
+        capacity: 500,
+        quantity_left: 500,
+        price: 25.0,
+        location: 'Teatro Castro Alves, Salvador - BA',
+      },
+      {
+        name: 'Festival Sabores da Bahia',
+        subtitle:
+          'O melhor da culinária baiana reunido no Mercado Modelo, com entrada gratuita.',
+        slug: 'festival-sabores-da-bahia',
+        photo:
+          'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=900&q=85',
+        description: `O Mercado Modelo recebe chefs, quituteiras e produtores locais para um festival dedicado à culinária baiana. Acarajé, moqueca, cocadas e muito mais, com aulas abertas e apresentações culturais ao longo do dia.
+
+        A entrada é gratuita e os pratos são vendidos diretamente pelos expositores.`,
+        start_date: daysFromNow(28, '12:00'),
+        user_id: 1,
+        category_id: 8,
+        capacity: 1500,
+        quantity_left: 1500,
+        price: 0,
+        location: 'Mercado Modelo, Salvador - BA',
+      },
+      {
+        name: 'Feira de Arte Independente',
+        subtitle:
+          'Exposições, ilustrações e arte autoral de artistas independentes no Solar do Unhão.',
+        slug: 'feira-de-arte-independente',
+        photo:
+          'https://images.unsplash.com/photo-1561214115-f2f134cc4912?auto=format&fit=crop&w=900&q=85',
+        description: `Artistas independentes ocupam o Solar do Unhão com exposições, ilustrações, cerâmica, fotografia e gravuras à venda. Uma ótima oportunidade para conhecer novos talentos e levar arte autoral para casa.
+
+        A programação também conta com rodas de conversa e apresentações musicais ao fim da tarde.`,
+        start_date: daysFromNow(34, '10:00'),
+        user_id: 1,
+        category_id: 2,
+        capacity: 800,
+        quantity_left: 800,
+        price: 0,
+        location: 'Solar do Unhão, Salvador - BA',
+      },
+      {
+        name: 'Corrida Golden 5K',
+        subtitle: 'Cinco quilômetros pela Orla da Barra com largada ao nascer do sol.',
+        slug: 'corrida-golden-5k',
+        photo:
+          'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=900&q=85',
+        description: `Cinco quilômetros pela Orla da Barra com largada ao nascer do sol. A corrida é aberta a todos os níveis, de iniciantes a atletas experientes, e conta com cronometragem, pontos de hidratação e medalha para quem completar o percurso.
+
+        O kit do participante inclui camiseta, número de peito e chip de cronometragem.`,
+        start_date: daysFromNow(41, '06:30'),
+        user_id: 1,
+        category_id: 7,
+        capacity: 600,
+        quantity_left: 600,
+        price: 65.0,
+        location: 'Orla da Barra, Salvador - BA',
+      },
+    ].map(event => ({
+      ...event,
+      description: removeIndentation(event.description),
+    })),
   });
 }

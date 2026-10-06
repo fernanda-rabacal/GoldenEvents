@@ -12,7 +12,7 @@ import { PrismaClientMock } from '../../db/prisma.mock.js';
 import { PrismaClientError } from '../common/errors/types/PrismaClientError.js';
 import { PrismaErrors } from '../common/errors/utils/handle-database-errors.util.js';
 import { NotFoundError } from '../common/errors/types/NotFoundError.js';
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { ForbiddenException, HttpException, HttpStatus } from '@nestjs/common';
 
 describe('UserService', () => {
   let service: UserService;
@@ -97,8 +97,8 @@ describe('UserService', () => {
 
     const mockUser: CreateUserDto = {
       name: 'Teste usuário',
-      email: 'emailteste@email.com',
-      password: await encryptData('123456789'),
+      email: '  EmailTeste@Email.com ',
+      password: '123456789',
       document: '12345678910',
     };
 
@@ -106,8 +106,41 @@ describe('UserService', () => {
 
     const newUser = await service.create(mockUser);
 
-    expect(newUser).toStrictEqual(createdUser);
+    expect(newUser).toStrictEqual(expectedOutputUser);
+    expect(newUser).not.toHaveProperty('password');
+    expect(prisma.user.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ email: 'emailteste@email.com' }),
+      }),
+    );
   });
+
+  it.each([
+    { isOrganizer: undefined, expectedType: UserTypeEnum.USER },
+    { isOrganizer: false, expectedType: UserTypeEnum.USER },
+    { isOrganizer: true, expectedType: UserTypeEnum.ORGANIZER },
+  ])(
+    'should create a user with type $expectedType when isOrganizer is $isOrganizer',
+    async ({ isOrganizer, expectedType }) => {
+      prisma.user.create.mockResolvedValueOnce(expectedOutputUser);
+
+      await service.create({
+        name: 'Teste usuário',
+        email: 'emailteste@email.com',
+        password: '123456789',
+        document: '12345678910',
+        isOrganizer,
+      });
+
+      expect(prisma.user.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            user_type: { connect: { id: expectedType } },
+          }),
+        }),
+      );
+    },
+  );
 
   it('should throw a conflict error on create with existent email', async () => {
     const mockUser: CreateUserDto = {
@@ -153,19 +186,27 @@ describe('UserService', () => {
     expect(expectedOutputUser).toStrictEqual(user);
   });
 
-  it('should find an user by his e-mail', async () => {
-    prisma.user.findFirst.mockResolvedValueOnce(expectedOutputUser);
+  it('should find an user by his e-mail with the password hash for authentication', async () => {
+    const userWithPassword = {
+      ...expectedOutputUser,
+      password: await encryptData('123456789'),
+    };
 
-    const user = await service.findByEmail('emailteste@email.com');
+    prisma.user.findUnique.mockResolvedValueOnce(userWithPassword);
 
-    expect(expectedOutputUser).toStrictEqual(user);
+    const user = await service.findByEmail(' EmailTeste@Email.com');
+
+    expect(user).toStrictEqual(userWithPassword);
+    expect(prisma.user.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { email: 'emailteste@email.com' } }),
+    );
   });
 
   it('should update an user', async () => {
     const updateUserData = {
       password: '987654321',
       name: 'Teste 2',
-      userTypeId: UserTypeEnum.ADMIN,
+      userTypeId: UserTypeEnum.ORGANIZER,
     };
     const updatedUser = {
       ...expectedOutputUser,
@@ -174,16 +215,75 @@ describe('UserService', () => {
 
     prisma.user.update.mockResolvedValueOnce(updatedUser);
 
-    const user = await service.update(1, updateUserData);
+    const user = await service.update(
+      { id: 1, user_type_id: UserTypeEnum.USER },
+      1,
+      updateUserData,
+    );
 
-    expect(user).toStrictEqual(updatedUser);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...updatedUserWithoutPassword } = updatedUser;
+
+    expect(user).toStrictEqual(updatedUserWithoutPassword);
+  });
+
+  it('should not let an user update another user', async () => {
+    await expect(
+      service.update({ id: 2, user_type_id: UserTypeEnum.USER }, 1, { name: 'Outro' }),
+    ).rejects.toThrow(
+      new ForbiddenException('Você só pode acessar o seu próprio perfil.'),
+    );
+    expect(prisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it('should not let an user promote himself to admin', async () => {
+    await expect(
+      service.update({ id: 1, user_type_id: UserTypeEnum.USER }, 1, {
+        userTypeId: UserTypeEnum.ADMIN,
+      }),
+    ).rejects.toThrow(
+      new ForbiddenException(
+        'Somente administradores podem conceder o perfil de administrador.',
+      ),
+    );
+    expect(prisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it('should let an admin update another user to admin', async () => {
+    prisma.user.update.mockResolvedValueOnce(expectedOutputUser);
+
+    await service.update({ id: 2, user_type_id: UserTypeEnum.ADMIN }, 1, {
+      userTypeId: UserTypeEnum.ADMIN,
+    });
+
+    expect(prisma.user.update).toHaveBeenCalled();
+  });
+
+  it('should find the own profile', async () => {
+    prisma.user.findUnique.mockResolvedValueOnce(expectedOutputUser);
+
+    const user = await service.findProfile({ id: 1, user_type_id: UserTypeEnum.USER }, 1);
+
+    expect(user).toStrictEqual(expectedOutputUser);
+  });
+
+  it('should not find the profile of another user', async () => {
+    await expect(
+      service.findProfile({ id: 2, user_type_id: UserTypeEnum.ORGANIZER }, 1),
+    ).rejects.toThrow(
+      new ForbiddenException('Você só pode acessar o seu próprio perfil.'),
+    );
+    expect(prisma.user.findUnique).not.toHaveBeenCalled();
   });
 
   it('should deactivate an user', async () => {
     const deactivatedUser = { ...expectedOutputUser, active: false };
 
     prisma.user.findUnique.mockResolvedValueOnce(expectedOutputUser);
-    prisma.user.update.mockResolvedValueOnce(deactivatedUser);
+    prisma.user.update.mockResolvedValueOnce({
+      ...deactivatedUser,
+      password: await encryptData('123456789'),
+    });
 
     const user = await service.toggleActiveUser(1);
 

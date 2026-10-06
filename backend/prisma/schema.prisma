@@ -10,6 +10,7 @@ datasource db {
 model Event {
   id            Int       @id @default(autoincrement())
   name          String
+  subtitle      String?
   slug          String
   photo         String?
   description   String    @db.Text
@@ -71,9 +72,9 @@ model User {
   id           Int      @id @default(autoincrement())
   name         String
   user_type_id Int
-  email        String
+  email        String   @unique
   password     String
-  document     String
+  document     String   @unique
   active       Boolean  @default(true)
   created_at   DateTime @default(now())
   updated_at   DateTime @default(now()) @updatedAt

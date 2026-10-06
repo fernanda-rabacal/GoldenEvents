@@ -6,26 +6,37 @@ import { UserTypeEnum } from '../entities/user.entity.js';
 import { UpdateUserDto } from '../dto/update-user.dto.js';
 import { Prisma } from '@prisma/client';
 
+function normalizeEmail(email: string) {
+  return email.trim().toLowerCase();
+}
+
+function removePassword<T extends { password: string }>(user: T): Omit<T, 'password'> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { password, ...rest } = user;
+
+  return rest;
+}
+
 @Injectable()
 export class UserRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createUserDto: CreateUserDto) {
-    const user = this.prisma.user.create({
+    const user = await this.prisma.user.create({
       data: {
         name: createUserDto.name,
-        email: createUserDto.email,
+        email: normalizeEmail(createUserDto.email),
         password: await encryptData(createUserDto.password),
         document: createUserDto.document,
         user_type: {
           connect: {
-            id: UserTypeEnum.USER,
+            id: createUserDto.isOrganizer ? UserTypeEnum.ORGANIZER : UserTypeEnum.USER,
           },
         },
       },
     });
 
-    return user;
+    return removePassword(user);
   }
 
   async findAll() {
@@ -36,14 +47,7 @@ export class UserRepository {
       orderBy: { id: 'asc' },
     });
 
-    const removePassword = users.map(user => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { password, ...rest } = user;
-
-      return rest;
-    });
-
-    return removePassword;
+    return users.map(removePassword);
   }
 
   async findById(id: number) {
@@ -58,16 +62,14 @@ export class UserRepository {
 
     if (!user) return null;
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...rest } = user;
-
-    return rest;
+    return removePassword(user);
   }
 
+  // Único método que devolve a senha: usado só pela autenticação para comparar o hash
   async findByEmail(email: string) {
-    const user = await this.prisma.user.findFirst({
+    const user = await this.prisma.user.findUnique({
       where: {
-        email: email,
+        email: normalizeEmail(email),
       },
       include: {
         user_type: true,
@@ -103,11 +105,11 @@ export class UserRepository {
       },
     });
 
-    return user;
+    return removePassword(user);
   }
 
   async toggleActiveUser(id: number, active: boolean) {
-    return this.prisma.user.update({
+    const user = await this.prisma.user.update({
       data: {
         active,
       },
@@ -115,6 +117,8 @@ export class UserRepository {
         id,
       },
     });
+
+    return removePassword(user);
   }
 
   async getUserTickets(userId: number) {

@@ -20,24 +20,24 @@
 
 import type { Page } from '@golden-events/shared';
 
-export type { Page };
-
+// `skip` é o índice da página, começando em 0 (skip=0 → primeira página)
 export class OffsetPagination {
-  protected _skip = 1;
+  protected _skip = 0;
   protected _take = 10;
   protected _total: number;
   protected _totalFiltered: number;
   private maxTakes = 100;
 
   constructor(total?: number, totalFiltered?: number, skip?: number, take?: number) {
-    this.take = take || this.take;
-    this.skip = skip || this.skip;
+    this.take = take ?? this.take;
+    this.skip = skip ?? this.skip;
     this._total = total || 0;
     this._totalFiltered = totalFiltered || 0;
   }
 
   set skip(value: number) {
-    this._skip = Math.max(value, 1);
+    const skip = Math.trunc(Number(value));
+    this._skip = Number.isFinite(skip) ? Math.max(skip, 0) : 0;
   }
 
   get skip(): number {
@@ -45,7 +45,8 @@ export class OffsetPagination {
   }
 
   set take(value: number) {
-    this._take = value <= this.maxTakes ? value : this.maxTakes;
+    const take = Math.trunc(Number(value));
+    this._take = Number.isFinite(take) ? Math.min(Math.max(take, 1), this.maxTakes) : 10;
   }
 
   get take(): number {
@@ -65,7 +66,7 @@ export class OffsetPagination {
   }
 
   protected hasNextPage(): boolean {
-    return this.skip * this.take + this.take < this.total;
+    return (this.skip + 1) * this.take < this.totalFiltered;
   }
 
   protected hasPreviousPage(): boolean {
@@ -82,12 +83,12 @@ export class OffsetPagination {
 
   public buildPage<T>(content: T[]): Page<T> {
     const page = {
-      page: (this.skip * this.take) / this.take,
+      page: this.skip + 1,
       skip: this.skip,
       take: this.take,
       totalRecords: this.total,
       totalFiltered: this.totalFiltered,
-      totalPages: Math.ceil(this.totalFiltered / this._take) || 0,
+      totalPages: Math.ceil(this.totalFiltered / this.take) || 0,
       totalPageRecords: content.length,
       hasNextPage: this.hasNextPage(),
       hasPreviousPage: this.hasPreviousPage(),
@@ -99,9 +100,15 @@ export class OffsetPagination {
     return page;
   }
 
+  public paginate<T>(items: T[]): Page<T> {
+    const { skip, take } = this.filterProps();
+
+    return this.buildPage(items.slice(skip, skip + take));
+  }
+
   public filterProps() {
     return {
-      skip: (this.skip - 1) * this.take,
+      skip: this.skip * this.take,
       take: this.take,
     };
   }

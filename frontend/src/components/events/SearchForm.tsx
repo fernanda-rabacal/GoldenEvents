@@ -3,6 +3,8 @@
 import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Search } from 'lucide-react';
+import { Button } from '@/ui/button';
+import { EVENTS_PAGE_PATH, HOME_EVENTS_PATH } from '@/utils/events_href';
 
 type SearchFormProps = {
   variant: 'compact' | 'hero';
@@ -32,7 +34,7 @@ function SearchFormFields({ variant, defaultValue }: SearchFormFieldsProps) {
   if (variant === 'compact') {
     return (
       <form
-        action='/#eventos'
+        action={EVENTS_PAGE_PATH}
         method='get'
         role='search'
         className='relative w-full'
@@ -52,7 +54,7 @@ function SearchFormFields({ variant, defaultValue }: SearchFormFieldsProps) {
 
   return (
     <form
-      action='/#eventos'
+      action={HOME_EVENTS_PATH}
       method='get'
       role='search'
       className='relative mt-7 max-w-xl'
@@ -66,12 +68,9 @@ function SearchFormFields({ variant, defaultValue }: SearchFormFieldsProps) {
         placeholder='O que você quer viver hoje?'
         className='w-full rounded-2xl border border-input bg-card py-4 pr-28 pl-12 text-body-sm text-foreground shadow-lg shadow-accent-foreground/10 transition outline-none placeholder:text-muted-foreground/70 focus:border-ring focus:ring-2 focus:ring-ring/40'
       />
-      <button
-        type='submit'
-        className='absolute top-2 right-2 rounded-xl bg-primary px-4 py-2.5 text-caption font-bold text-primary-foreground transition hover:bg-primary/90'
-      >
+      <Button type='submit' className='absolute top-2.5 right-2.5'>
         Buscar
-      </button>
+      </Button>
     </form>
   );
 }

@@ -11,7 +11,10 @@ async function main() {
   await createUserTypes(prisma);
   await createEventCategories(prisma);
   await createUsers(prisma);
-  /* await createEvents(prisma); */
+  // Os testes E2E esperam o banco sem eventos
+  if (process.env.NODE_ENV !== 'test') {
+    await createEvents(prisma);
+  }
   await createPaymentMethods(prisma);
 }
 

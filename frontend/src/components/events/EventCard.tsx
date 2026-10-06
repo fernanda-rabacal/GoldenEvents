@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { ArrowRight, MapPin } from 'lucide-react';
 import type { Event } from '@golden-events/shared';
 import { formatDayMonth } from '@/utils/format_date';
+import { formatTicketPrice } from '@/utils/format_money';
 
 type EventCardProps = {
   event: Event;
@@ -31,13 +32,18 @@ export function EventCard({ event }: EventCardProps) {
         <p className='mt-2 flex items-center gap-1.5 text-body-sm text-muted-foreground'>
           <MapPin className='size-4 text-orange-500' /> {event.location}
         </p>
-        <Link
-          href={`/eventos/${event.slug}`}
-          className='mt-5 flex items-center gap-2 text-body-sm font-bold text-accent-foreground'
-        >
-          Ver detalhes{' '}
-          <ArrowRight className='size-4 transition group-hover:translate-x-1' />
-        </Link>
+        <div className='mt-5 flex items-center justify-between gap-3'>
+          <p className='text-body-sm font-bold text-foreground'>
+            {formatTicketPrice(event.price)}
+          </p>
+          <Link
+            href={`/eventos/${event.slug}`}
+            className='flex items-center gap-2 text-body-sm font-bold text-accent-foreground'
+          >
+            Ver detalhes{' '}
+            <ArrowRight className='size-4 transition group-hover:translate-x-1' />
+          </Link>
+        </div>
       </div>
     </article>
   );
