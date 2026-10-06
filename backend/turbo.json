@@ -1,0 +1,24 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "db:generate": {
+      "cache": false
+    },
+    "build": {
+      "dependsOn": ["$TURBO_EXTENDS$", "db:generate"]
+    },
+    "dev": {
+      "dependsOn": ["$TURBO_EXTENDS$", "db:generate"]
+    },
+    "typecheck": {
+      "dependsOn": ["$TURBO_EXTENDS$", "db:generate"]
+    },
+    "test": {
+      "dependsOn": ["$TURBO_EXTENDS$", "db:generate"]
+    },
+    "test:e2e": {
+      "dependsOn": ["$TURBO_EXTENDS$", "db:generate"]
+    }
+  }
+}

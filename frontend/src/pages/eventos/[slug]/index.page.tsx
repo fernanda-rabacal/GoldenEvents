@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import Head from 'next/head'
 import { GetStaticPaths, GetStaticProps } from 'next'
-import { Event } from '@/@types/interfaces'
+import { Event } from '@golden-events/shared'
 import { api } from '@/lib/axios'
 import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer/Footer'

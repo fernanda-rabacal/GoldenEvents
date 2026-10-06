@@ -6,9 +6,7 @@ import { DeepMockProxy } from 'jest-mock-extended';
 // nos tipos de `having` (AND/OR/NOT) do Prisma. Como os testes não usam
 // `groupBy`, removemos ele do tipo do mock.
 type WithoutGroupBy<T> = {
-  [K in keyof T]: T[K] extends { groupBy: unknown }
-    ? Omit<T[K], 'groupBy'>
-    : T[K];
+  [K in keyof T]: T[K] extends { groupBy: unknown } ? Omit<T[K], 'groupBy'> : T[K];
 };
 
 export type PrismaClientMock = DeepMockProxy<WithoutGroupBy<PrismaClient>>;

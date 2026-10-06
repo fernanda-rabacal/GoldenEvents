@@ -7,7 +7,7 @@ import { AdminLayout } from '@/layouts/AdminLayout';
 import { Select } from '@/components/Select';
 import { Input } from '@/components/Input';
 
-import { Event, EventCategory } from "@/@types/interfaces";
+import { Event, EventCategory } from "@golden-events/shared";
 import { formatDate } from '@/utils/format_date';
 import { api } from "@/lib/axios"
 import { useQueryData } from '@/hooks/apiHooks';

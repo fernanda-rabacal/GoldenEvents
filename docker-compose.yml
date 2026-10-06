@@ -50,7 +50,8 @@ services:
   api:
     container_name: golden-events-api
     build:
-      context: ./backend
+      context: .
+      dockerfile: backend/Dockerfile
     env_file:
       - path: ./backend/.env
         required: false
@@ -69,7 +70,8 @@ services:
   web:
     container_name: golden-events-web
     build:
-      context: ./frontend
+      context: .
+      dockerfile: frontend/Dockerfile
     depends_on:
       - api
       - db

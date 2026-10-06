@@ -8,13 +8,15 @@
     "start": "next start",
     "lint": "eslint .",
     "format": "prettier --check --ignore-path .gitignore .",
-    "format:fix": "prettier --write --ignore-path .gitignore ."
+    "format:fix": "prettier --write --ignore-path .gitignore .",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@emotion/cache": "^11.14.0",
     "@emotion/react": "^11.14.0",
     "@emotion/server": "^11.11.0",
     "@emotion/styled": "^11.14.1",
+    "@golden-events/shared": "workspace:*",
     "@hookform/resolvers": "^3.1.1",
     "@mdxeditor/editor": "^4.3.2",
     "@mui/icons-material": "^9.4.0",
@@ -22,9 +24,6 @@
     "@mui/material-nextjs": "^9.4.0",
     "@tanstack/react-query": "^5.104.1",
     "@tanstack/react-query-devtools": "^5.104.1",
-    "@types/node": "20.3.2",
-    "@types/react": "^19.3.0",
-    "@types/react-dom": "^19.3.0",
     "axios": "^1.4.0",
     "dayjs": "^1.11.9",
     "next": "^16.3.8",
@@ -39,11 +38,13 @@
     "sass": "^1.64.1",
     "suneditor": "^2.45.1",
     "suneditor-react": "^3.6.1",
-    "typescript": "5.1.6",
     "zod": "^3.21.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "eslint": "^9.39.5",
     "eslint-config-next": "^16.3.8",
     "eslint-config-prettier": "^9.1.0",
@@ -51,6 +52,7 @@
     "postcss": "^8.5.29",
     "prettier": "^3.9.9",
     "prettier-plugin-tailwindcss": "^0.8.1",
-    "tailwindcss": "^4.3.3"
+    "tailwindcss": "^4.3.3",
+    "typescript": "~6.0.3"
   }
 }

@@ -1,14 +1,25 @@
-FROM node:latest
+FROM node:22
 
-WORKDIR /golden-eventos-web
+# Bun é usado só como gerenciador de pacotes; o Next roda no Node
+COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
 
-COPY package.json package-lock.json /golden-eventos-web/
+# O contexto de build é a raiz do monorepo
+WORKDIR /golden-events
 
-RUN npm i 
+COPY package.json bun.lock ./
+COPY backend/package.json backend/
+COPY frontend/package.json frontend/
+COPY packages/shared/package.json packages/shared/
 
-COPY . /golden-eventos-web/
+RUN bun install --frozen-lockfile
 
-RUN npm run build
+COPY turbo.json ./
+COPY packages/shared packages/shared
+COPY frontend frontend
+
+RUN bun x turbo run build --filter=golden-events
+
+WORKDIR /golden-events/frontend
 
 EXPOSE 3000
 

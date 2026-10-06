@@ -14,7 +14,7 @@ import { useForm } from 'react-hook-form';
 import { api } from "@/lib/axios";
 import z  from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Event, EventCategory } from '@/@types/interfaces';
+import { Event, EventCategory } from '@golden-events/shared';
 import { eventValidationSchema } from '@/utils/schemaValidations';
 import { useDeleteData, useMutationData } from '@/hooks/apiHooks';
 

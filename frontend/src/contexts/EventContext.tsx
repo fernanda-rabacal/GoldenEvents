@@ -1,4 +1,4 @@
-import { CreateEventProps } from "@/@types/interfaces";
+import { CreateEventProps } from "@golden-events/shared";
 import { api } from "@/lib/axios";
 import { toastNotify } from "@/lib/toastify";
 import { parseCookies } from "nookies";

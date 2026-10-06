@@ -1,4 +1,4 @@
-import { Event } from "@/@types/interfaces";
+import { Event } from "@golden-events/shared";
 import { ReactNode, createContext, useEffect, useState } from "react";
 
 interface CartContextProviderProps {

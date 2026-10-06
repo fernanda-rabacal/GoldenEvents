@@ -19,21 +19,22 @@ This is a collaborative full stack project of a website where you can see the la
 
 ### How to run:
 
-This repository has the frontend and the backend of the application. Clone the repository on your machine and enter the respective folders to run the comands below if you wanna run locally or use Docker. 
-To use this code without Docker, you need to have Node.js 22+, npm (frontend) and Bun (backend package manager) installed. Also, you need to have a PostgreSQL server (or run only the database with `docker compose up -d db redis`). 
+This repository is a monorepo managed with [Bun workspaces](https://bun.sh/docs/install/workspaces) and [Turborepo](https://turborepo.com):
 
-  - Backend
+  - `backend/` – NestJS API (`golden-events-api`)
+  - `frontend/` – Next.js web app (`golden-events`)
+  - `packages/shared/` – types and enums shared by both (`@golden-events/shared`)
+
+To use this code without Docker, you need to have Node.js 22+ and Bun installed. Also, you need to have a PostgreSQL server (or run only the database with `docker compose up -d db redis`). 
 
   Copy `backend/.env.example` to `backend/.env`, set a value for `SECRET` and adjust the PostgreSQL credentials if needed. 
-  Enter the backend folder and run:
+  On the root folder, run:
 
-  ##### `bun install` to install the dependencies.
-  ##### `npx prisma migrate dev` to make the database.
-  ##### `bun run start` to start the server on http://localhost:8080
+  ##### `bun install` to install the dependencies of all packages.
+  ##### `cd backend && bunx prisma migrate dev` to make the database.
+  ##### `bun run dev` to start the API on http://localhost:8080 and the web app on http://localhost:3000
 
-  - Frontend
-
-  Enter the frontend folder, run `npm install` and then `npm run dev`.
+  Other commands available on the root folder: `bun run build`, `bun run lint`, `bun run typecheck`, `bun run test` and `bun run test:e2e`. To run a task in a single package, use `bunx turbo run <task> --filter=<package>`.
 
   - Docker
 
