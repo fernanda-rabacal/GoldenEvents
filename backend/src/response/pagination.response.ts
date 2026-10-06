@@ -18,20 +18,9 @@
  * Due to these shortcomings, offset pagination use-case is ideal for small result sets. Also, it helps if the writes are not very frequent. Ideal example would be a blogging platform where we can filter posts by author and also paginate those results for easy consumption.
  */
 
-export type Page<T> = {
-  page: number;
-  skip: number;
-  take: number;
-  totalRecords: number;
-  totalFiltered: number;
-  totalPages: number;
-  totalPageRecords: number;
-  hasNextPage: boolean;
-  hasPreviousPage: boolean;
-  nextPage: number;
-  previousPage: number;
-  content: T[];
-};
+import type { Page } from '@golden-events/shared';
+
+export type { Page };
 
 export class OffsetPagination {
   protected _skip = 1;

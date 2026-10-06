@@ -44,7 +44,7 @@ body {
 }
 
 body, input, textarea, select, button {
-  font: 400 1rem "DM Sans", sans-serif;
+  font: 400 1rem var(--font-sans);
 }
 
 ul {
@@ -96,10 +96,6 @@ section {
   main {
     max-width: 110rem;
     padding: 0 5rem;
-  }
-
-  html {
-    font-size: 87.5%;
   }
 }
 

@@ -70,7 +70,7 @@ export class EventRepository {
 
     const events = await this.prisma.event.findMany({
       where,
-      orderBy: { id: 'asc' },
+      orderBy: [{ start_date: 'asc' }, { id: 'asc' }],
       include: {
         category: true,
       },
