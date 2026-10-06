@@ -4,28 +4,20 @@ import { CreateEventCta } from '@/components/home/CreateEventCta';
 import { EventsSection } from '@/components/home/EventsSection';
 import { HeroSection } from '@/components/home/HeroSection';
 import { getEventCategories, getUpcomingEvents } from '@/services/events';
+import {
+  type EventsSearchParams,
+  parseEventsSearchParams,
+} from '@/utils/events_search_params';
 
 const EVENTS_PER_PAGE = 6;
 
-type SearchParamValue = string | string[] | undefined;
-
 type HomePageProps = {
-  searchParams: Promise<{
-    q?: SearchParamValue;
-    categoria?: SearchParamValue;
-    pagina?: SearchParamValue;
-  }>;
+  searchParams: EventsSearchParams;
 };
 
-function firstValue(value: SearchParamValue) {
-  return Array.isArray(value) ? value[0] : value;
-}
-
 export default async function HomePage({ searchParams }: HomePageProps) {
-  const params = await searchParams;
-  const query = firstValue(params.q)?.trim() || undefined;
-  const categoryId = Number(firstValue(params.categoria)) || undefined;
-  const page = Math.max(1, Number(firstValue(params.pagina)) || 1);
+  const { query, categoryId, page } =
+    await parseEventsSearchParams(searchParams);
   const hasFilters = Boolean(query || categoryId);
 
   const [listed, featured, categories] = await Promise.all([

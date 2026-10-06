@@ -158,6 +158,7 @@ describe('UserController', () => {
         expect(item).toEqual({
           id: item.id,
           name: item.name,
+          subtitle: null,
           description: item.description,
           location: item.location,
           capacity: item.capacity,

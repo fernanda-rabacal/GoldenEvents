@@ -74,6 +74,8 @@ services:
       dockerfile: frontend/Dockerfile
     environment:
       API_URL: 'http://api:8080'
+      # As datas dos eventos são formatadas no servidor (SSR)
+      TZ: 'America/Sao_Paulo'
     depends_on:
       - api
       - db

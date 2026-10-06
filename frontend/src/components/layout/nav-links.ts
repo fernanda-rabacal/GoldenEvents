@@ -1,7 +1,11 @@
+import { EVENTS_PAGE_PATH } from '@/utils/events_href';
+
+export const MY_TICKETS_PATH = '/organizador/minhas-compras';
+
 export const NAV_LINKS = [
-  { label: 'Eventos', href: '/#eventos' },
+  { label: 'Eventos', href: EVENTS_PAGE_PATH },
   { label: 'Categorias', href: '/#categorias' },
-  { label: 'Meus ingressos', href: '/organizador/minhas-compras' },
+  { label: 'Meus ingressos', href: MY_TICKETS_PATH },
 ];
 
 export const CREATE_EVENT_LINK = {

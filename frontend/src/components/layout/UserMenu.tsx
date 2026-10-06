@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ChevronDown, LogOut } from 'lucide-react';
 import type { User } from '@golden-events/shared';
 import { signOut } from '@/services/auth-actions';
+import { Button } from '@/ui/button';
 import { getUserMenuLinks } from './nav-links';
 
 type UserMenuProps = {
@@ -33,18 +34,18 @@ export function UserMenu({ user }: UserMenuProps) {
 
   return (
     <div ref={containerRef} className='relative shrink-0'>
-      <button
-        type='button'
+      <Button
+        variant='outline'
         onClick={() => setIsOpen((open) => !open)}
         aria-expanded={isOpen}
         aria-haspopup='menu'
-        className='flex items-center gap-1.5 rounded-full border border-secondary px-5 py-2 text-body-sm font-bold text-accent-foreground transition hover:bg-accent'
       >
         {firstName}
         <ChevronDown
-          className={`size-4 transition ${isOpen ? 'rotate-180' : ''}`}
+          data-icon='inline-end'
+          className={`transition ${isOpen ? 'rotate-180' : ''}`}
         />
-      </button>
+      </Button>
 
       {isOpen && (
         <div

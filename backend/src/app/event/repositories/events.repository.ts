@@ -6,6 +6,13 @@ import { QueryEventDto } from '../dto/query-event.dto.js';
 import { BuyEventTicketDto } from '../dto/buy-ticket.dto.js';
 import { UpdateEventDto } from '../dto/update-event.dto.js';
 import { Prisma } from '@prisma/client';
+import type { EventSort } from '@golden-events/shared';
+
+const EVENT_ORDER_BY: Record<EventSort, Prisma.EventOrderByWithRelationInput[]> = {
+  start_date: [{ start_date: 'asc' }, { id: 'asc' }],
+  created_at: [{ created_at: 'desc' }, { id: 'desc' }],
+  price: [{ price: 'asc' }, { start_date: 'asc' }, { id: 'asc' }],
+};
 
 @Injectable()
 export class EventRepository {
@@ -15,6 +22,7 @@ export class EventRepository {
     const event = await this.prisma.event.create({
       data: {
         name: createEventDto.name,
+        subtitle: createEventDto.subtitle || null,
         start_date: createEventDto.startDateTime,
         end_date: createEventDto.endDateTime,
         description: createEventDto.description,
@@ -70,7 +78,7 @@ export class EventRepository {
 
     const events = await this.prisma.event.findMany({
       where,
-      orderBy: [{ start_date: 'asc' }, { id: 'asc' }],
+      orderBy: EVENT_ORDER_BY[query.sort ?? 'start_date'],
       include: {
         category: true,
       },
@@ -92,13 +100,17 @@ export class EventRepository {
       where: {
         slug,
       },
+      include: {
+        category: true,
+        user: { select: { id: true, name: true } },
+      },
     });
   }
 
   async buyTicket(buyEventTicket: BuyEventTicketDto) {
     const event = await this.findById(buyEventTicket.eventId);
+    // Criados pela relação event.tickets: o Prisma preenche o event_id
     const tickets = Array.from({ length: buyEventTicket.quantity }, () => ({
-      event_id: buyEventTicket.eventId,
       user_id: buyEventTicket.userId,
       payment_method_id: buyEventTicket.paymentMethodId,
       price: event.price,
@@ -109,7 +121,7 @@ export class EventRepository {
         id: event.id,
       },
       data: {
-        quantity_left: event.quantity_left - buyEventTicket.quantity,
+        quantity_left: { decrement: buyEventTicket.quantity },
         tickets: {
           createMany: {
             data: tickets,
@@ -129,6 +141,11 @@ export class EventRepository {
 
     if (updateEventDto.name) {
       data.name = updateEventDto.name;
+    }
+
+    // null (ou texto vazio) remove o subtítulo; ausente mantém o atual
+    if (updateEventDto.subtitle !== undefined) {
+      data.subtitle = updateEventDto.subtitle || null;
     }
 
     if (updateEventDto.description) {

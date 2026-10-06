@@ -33,3 +33,26 @@ export function formatDayMonth(date: Date | string) {
 export function formatMonthYear(date: Date | string) {
   return dayjs(date).format('MMMM · YYYY');
 }
+
+// "18 de maio de 2026"
+export function formatLongDate(date: Date | string) {
+  return dayjs(date).format('D [de] MMMM [de] YYYY');
+}
+
+// "18:00"
+export function formatTime(date: Date | string) {
+  return dayjs(date).format('HH:mm');
+}
+
+// "4 horas"
+export function formatDuration(start: Date | string, end: Date | string) {
+  const minutes = dayjs(end).diff(start, 'minute');
+
+  if (minutes < 60) {
+    return `${minutes} minutos`;
+  }
+
+  const hours = Math.round(minutes / 60);
+
+  return `${hours} ${hours === 1 ? 'hora' : 'horas'}`;
+}

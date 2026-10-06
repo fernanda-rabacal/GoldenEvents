@@ -1,8 +1,9 @@
-import Link from 'next/link';
 import type { Event, EventCategory } from '@golden-events/shared';
 import { CategoryFilter } from '@/components/events/CategoryFilter';
 import { EventCard } from '@/components/events/EventCard';
-import { buildEventsHref } from '@/utils/events_href';
+import { EventsEmptyState } from '@/components/events/EventsEmptyState';
+import { LoadMoreLink } from '@/components/events/LoadMoreLink';
+import { HOME_EVENTS_PATH, buildEventsHref } from '@/utils/events_href';
 import { SectionHeading } from './SectionHeading';
 
 type EventsSectionProps = {
@@ -35,7 +36,7 @@ export function EventsSection({
           <CategoryFilter
             categories={categories}
             activeCategoryId={activeCategoryId}
-            query={query}
+            getHref={(categoryId) => buildEventsHref({ query, categoryId })}
           />
         </div>
 
@@ -46,33 +47,19 @@ export function EventsSection({
             ))}
           </div>
         ) : (
-          <div className='rounded-3xl border border-dashed border-border p-10 text-center text-body text-muted-foreground'>
-            <p>Nenhum evento encontrado.</p>
-            {hasFilters && (
-              <Link
-                href='/#eventos'
-                className='mt-3 inline-block text-body-sm font-bold text-accent-foreground'
-              >
-                Limpar filtros
-              </Link>
-            )}
-          </div>
+          <EventsEmptyState
+            clearFiltersHref={hasFilters ? HOME_EVENTS_PATH : undefined}
+          />
         )}
 
         {hasMore && (
-          <div className='mt-10 text-center'>
-            <Link
-              href={buildEventsHref({
-                query,
-                categoryId: activeCategoryId,
-                page: page + 1,
-              })}
-              scroll={false}
-              className='inline-flex rounded-full border border-input px-6 py-3.5 text-body-sm font-bold text-accent-foreground transition hover:bg-accent'
-            >
-              Carregar mais
-            </Link>
-          </div>
+          <LoadMoreLink
+            href={buildEventsHref({
+              query,
+              categoryId: activeCategoryId,
+              page: page + 1,
+            })}
+          />
         )}
       </div>
     </section>

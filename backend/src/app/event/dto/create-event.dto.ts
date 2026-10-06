@@ -17,6 +17,11 @@ export class CreateEventDto {
   @ApiProperty()
   name: string;
 
+  @IsOptional()
+  @IsString()
+  @ApiProperty({ required: false, nullable: true })
+  subtitle?: string | null;
+
   @IsString()
   @Length(100)
   @ApiProperty()

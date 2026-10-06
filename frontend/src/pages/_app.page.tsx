@@ -7,7 +7,6 @@ import type { EmotionCache } from '@emotion/react'
 import { AppCacheProvider, createEmotionCache } from '@mui/material-nextjs/v16-pagesRouter'
 import { AuthContextProvider } from '@/contexts/AuthContext'
 import { EventContextProvider } from '@/contexts/EventContext'
-import { CartContextProvider } from '@/contexts/CartContext'
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
@@ -27,10 +26,8 @@ export default function App({ Component, emotionCache = clientSideEmotionCache, 
       <QueryClientProvider client={queryClient}>
         <EventContextProvider>
           <AuthContextProvider>
-            <CartContextProvider>
-              <Component {...pageProps} />
-              <ReactQueryDevtools initialIsOpen={false} />
-            </CartContextProvider>
+            <Component {...pageProps} />
+            <ReactQueryDevtools initialIsOpen={false} />
           </AuthContextProvider>
         </EventContextProvider>
       </QueryClientProvider>

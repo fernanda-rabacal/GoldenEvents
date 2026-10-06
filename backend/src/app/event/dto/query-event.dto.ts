@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsInt, IsOptional, Min } from 'class-validator';
+import { IsIn, IsInt, IsOptional, Min } from 'class-validator';
+import { EVENT_SORT_OPTIONS, type EventSort } from '@golden-events/shared';
 
 export class QueryEventDto {
   @IsOptional()
@@ -32,4 +33,9 @@ export class QueryEventDto {
   @IsOptional()
   @ApiProperty()
   start_date?: Date;
+
+  @IsOptional()
+  @IsIn(EVENT_SORT_OPTIONS)
+  @ApiProperty({ required: false, enum: EVENT_SORT_OPTIONS, default: 'start_date' })
+  sort?: EventSort = 'start_date';
 }

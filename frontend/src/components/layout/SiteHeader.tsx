@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { SearchForm } from '@/components/events/SearchForm';
 import { getCurrentUser } from '@/services/auth';
+import { buttonVariants } from '@/ui/button';
 import { Logo } from './Logo';
 import { MobileMenu } from './MobileMenu';
 import { CREATE_EVENT_LINK, NAV_LINKS } from './nav-links';
@@ -41,7 +42,7 @@ export async function SiteHeader() {
         ) : (
           <Link
             href='/login'
-            className='shrink-0 rounded-full border border-secondary px-5 py-2 text-body-sm font-bold text-accent-foreground transition hover:bg-secondary hover:text-white'
+            className={buttonVariants({ variant: 'outline' })}
           >
             Entrar
           </Link>

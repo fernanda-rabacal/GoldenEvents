@@ -13,7 +13,11 @@ import { SubmitButton } from './SubmitButton';
 
 type LoginFormData = z.infer<typeof loginFormSchema>;
 
-export function LoginForm() {
+type LoginFormProps = {
+  redirectTo: string;
+};
+
+export function LoginForm({ redirectTo }: LoginFormProps) {
   const router = useRouter();
   const { signIn } = useAuth();
   const {
@@ -29,7 +33,7 @@ export function LoginForm() {
     const hasLogged = await signIn(data);
 
     if (hasLogged) {
-      router.replace('/');
+      router.replace(redirectTo);
       // Atualiza o header (server component) com o usuário recém-logado
       router.refresh();
     }

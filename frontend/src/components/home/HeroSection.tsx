@@ -3,6 +3,7 @@ import { ArrowRight, Sparkles, Users } from 'lucide-react';
 import type { Event } from '@golden-events/shared';
 import { FeaturedEventCard } from './FeaturedEventCard';
 import { SearchForm } from '@/components/events/SearchForm';
+import { buttonVariants } from '@/ui/button';
 
 type HeroSectionProps = {
   featuredEvent?: Event;
@@ -33,15 +34,12 @@ export function HeroSection({ featuredEvent }: HeroSectionProps) {
           <SearchForm variant='hero' />
 
           <div className='mt-9 flex flex-wrap gap-4'>
-            <Link
-              href='#eventos'
-              className='inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3.5 text-body-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition hover:-translate-y-0.5 hover:bg-primary/90'
-            >
-              Explorar eventos <ArrowRight className='size-4' />
+            <Link href='#eventos' className={buttonVariants({ size: 'lg' })}>
+              Explorar eventos <ArrowRight data-icon='inline-end' />
             </Link>
             <Link
               href='/organizador/eventos/criar'
-              className='inline-flex items-center gap-2 rounded-full border border-input px-6 py-3.5 text-body-sm font-bold text-accent-foreground transition hover:bg-accent'
+              className={buttonVariants({ variant: 'outline', size: 'lg' })}
             >
               Criar um evento
             </Link>

@@ -6,6 +6,7 @@ import { LogOut, Menu, X } from 'lucide-react';
 import type { User } from '@golden-events/shared';
 import { SearchForm } from '@/components/events/SearchForm';
 import { signOut } from '@/services/auth-actions';
+import { Button } from '@/ui/button';
 import { CREATE_EVENT_LINK, NAV_LINKS, getUserMenuLinks } from './nav-links';
 
 type MobileMenuProps = {
@@ -24,16 +25,16 @@ export function MobileMenu({ user }: MobileMenuProps) {
 
   return (
     <div className='lg:hidden'>
-      <button
-        type='button'
+      <Button
+        variant='ghost'
+        size='icon-lg'
         onClick={() => setIsOpen((open) => !open)}
         aria-expanded={isOpen}
         aria-controls='mobile-menu'
         aria-label={isOpen ? 'Fechar menu' : 'Abrir menu'}
-        className='flex size-10 items-center justify-center rounded-full text-accent-foreground transition hover:bg-accent'
       >
-        {isOpen ? <X className='size-6' /> : <Menu className='size-6' />}
-      </button>
+        {isOpen ? <X /> : <Menu />}
+      </Button>
 
       {isOpen && (
         <div
