@@ -150,13 +150,36 @@ describe('UserController', () => {
   });
 
   describe('GET /users/:id', () => {
-    it('should get an user by id', async () => {
+    it('should get the own profile', async () => {
+      const testUser = users.find(user => user.email === data.email);
+      const loginResponse = await request(app.getHttpServer()).post('/login').send({
+        email: data.email,
+        password: data.password,
+      });
+
       const res = await request(app.getHttpServer())
-        .get(`/users/${users[0].id}`)
+        .get(`/users/${testUser.id}`)
+        .auth(loginResponse.body.token, { type: loginResponse.body.type })
         .expect(200);
-      expect(res.body.id).toEqual(users[0].id);
-      expect(res.body.name).toEqual(users[0].name);
-      expect(res.body.document).toEqual(users[0].document);
+      expect(res.body.id).toEqual(testUser.id);
+      expect(res.body.name).toEqual(testUser.name);
+      expect(res.body.document).toEqual(testUser.document);
+    });
+
+    it('should not get the profile of another user', async () => {
+      const loginResponse = await request(app.getHttpServer()).post('/login').send({
+        email: data.email,
+        password: data.password,
+      });
+
+      await request(app.getHttpServer())
+        .get(`/users/${users[0].id}`)
+        .auth(loginResponse.body.token, { type: loginResponse.body.type })
+        .expect(403);
+    });
+
+    it('should throw an UnauthorizedError', async () => {
+      await request(app.getHttpServer()).get(`/users/${users[0].id}`).expect(401);
     });
   });
 
@@ -187,25 +210,53 @@ describe('UserController', () => {
   describe('PATCH /users/:id', () => {
     const updateData = {
       name: 'New name',
-      userTypeId: UserTypeEnum.ADMIN,
+      userTypeId: UserTypeEnum.ORGANIZER,
     };
 
-    it('should update an user by id', async () => {
+    it('should update the own profile', async () => {
+      const testUser = users.find(user => user.email === data.email);
       const loginResponse = await request(app.getHttpServer()).post('/login').send({
-        email: 'emailteste@email.com',
-        password: '123456',
+        email: data.email,
+        password: data.password,
       });
 
       const res = await request(app.getHttpServer())
-        .patch(`/users/${users[0].id}`)
+        .patch(`/users/${testUser.id}`)
         .auth(loginResponse.body.token, { type: loginResponse.body.type })
         .send(updateData)
         .expect(200);
-      expect(res.body.id).toEqual(users[0].id);
+      expect(res.body.id).toEqual(testUser.id);
       expect(res.body.name).toEqual(updateData.name);
       expect(res.body.user_type_id).toEqual(updateData.userTypeId);
-      expect(res.body.document).toEqual(users[0].document);
+      expect(res.body.document).toEqual(testUser.document);
       expect(res.body.active).toEqual(true);
+    });
+
+    it('should not update another user', async () => {
+      const loginResponse = await request(app.getHttpServer()).post('/login').send({
+        email: data.email,
+        password: data.password,
+      });
+
+      await request(app.getHttpServer())
+        .patch(`/users/${users[0].id}`)
+        .auth(loginResponse.body.token, { type: loginResponse.body.type })
+        .send(updateData)
+        .expect(403);
+    });
+
+    it('should not let an user promote himself to admin', async () => {
+      const testUser = users.find(user => user.email === data.email);
+      const loginResponse = await request(app.getHttpServer()).post('/login').send({
+        email: data.email,
+        password: data.password,
+      });
+
+      await request(app.getHttpServer())
+        .patch(`/users/${testUser.id}`)
+        .auth(loginResponse.body.token, { type: loginResponse.body.type })
+        .send({ userTypeId: UserTypeEnum.ADMIN })
+        .expect(403);
     });
 
     it('should throw an UnauthorizedError', async () => {

@@ -46,6 +46,13 @@ export class EventController {
     return this.categoryService.findById(+id);
   }
 
+  @Get('/me')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  async findMine(@Query() query: QueryEventDto, @Req() req: Request) {
+    return await this.eventService.findAll(query, req.user['id']);
+  }
+
   @Get('/payment-methods')
   async findAllPaymentMethods() {
     return this.paymentMethodService.findAll();

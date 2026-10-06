@@ -1,4 +1,4 @@
-export const LOGIN_PATH = '/login';
+const LOGIN_PATH = '/login';
 
 export function buildLoginHref(redirectTo: string) {
   return `${LOGIN_PATH}?redirect=${encodeURIComponent(redirectTo)}`;

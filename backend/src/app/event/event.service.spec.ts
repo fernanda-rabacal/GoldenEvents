@@ -249,6 +249,26 @@ describe('EventService', () => {
     expect(events.content).toStrictEqual([returnedEventsData]);
   });
 
+  it('should find only the events created by the user', async () => {
+    prisma.event.findMany.mockResolvedValueOnce([]);
+
+    await service.findAll({ skip: 0, take: 10, name: 'festival' }, 3);
+
+    expect(prisma.event.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ user_id: 3, name: expect.anything() }),
+      }),
+    );
+  });
+
+  it('should not filter by user on the public listing', async () => {
+    prisma.event.findMany.mockResolvedValueOnce([]);
+
+    await service.findAll({ skip: 0, take: 10 });
+
+    expect(prisma.event.findMany.mock.calls[0][0].where).not.toHaveProperty('user_id');
+  });
+
   it.each([
     [undefined, [{ start_date: 'asc' }, { id: 'asc' }]],
     ['start_date', [{ start_date: 'asc' }, { id: 'asc' }]],

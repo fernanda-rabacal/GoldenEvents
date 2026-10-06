@@ -6,16 +6,16 @@ export class UpdateUserDto {
   @IsString()
   @IsOptional()
   @ApiProperty()
-  name: string;
+  name?: string;
 
   @IsNumber()
   @IsOptional()
   @IsEnum(UserTypeEnum)
   @ApiProperty()
-  userTypeId: number;
+  userTypeId?: number;
 
   @IsString()
   @IsOptional()
   @ApiProperty()
-  password: string;
+  password?: string;
 }

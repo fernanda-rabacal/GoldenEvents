@@ -3,9 +3,8 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { CheckoutForm } from '@/components/checkout/CheckoutForm';
-import { getCurrentUser } from '@/services/auth';
+import { requireUser } from '@/services/auth';
 import { getEventBySlug, getPaymentMethods } from '@/services/events';
-import { buildLoginHref } from '@/utils/auth_redirect';
 import {
   getMaxTicketQuantity,
   getUnavailableReason,
@@ -44,11 +43,7 @@ export default async function CheckoutPage({
     redirect(EVENTS_PAGE_PATH);
   }
 
-  const user = await getCurrentUser();
-
-  if (!user) {
-    redirect(buildLoginHref(buildCheckoutHref(slug, requestedQuantity)));
-  }
+  await requireUser(buildCheckoutHref(slug, requestedQuantity));
 
   // Sem cache: preço e ingressos disponíveis precisam estar atualizados na compra
   const [event, paymentMethods] = await Promise.all([

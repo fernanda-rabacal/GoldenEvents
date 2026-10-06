@@ -25,8 +25,8 @@ export class EventService {
     return this.repository.create(createEventDto);
   }
 
-  async findAll(query: QueryEventDto) {
-    const events = await this.repository.findAll(query);
+  async findAll(query: QueryEventDto, userId?: number) {
+    const events = await this.repository.findAll(query, userId);
 
     const totalRecords = events.length;
 

@@ -7,6 +7,7 @@ import type {
   PaymentMethod,
 } from '@golden-events/shared';
 import { fetchFromApi } from './api';
+import { fetchWithAuth } from './authenticated-api';
 
 const REVALIDATE_SECONDS = 60;
 
@@ -79,4 +80,45 @@ export function getPaymentMethods() {
   return fetchFromApi<PaymentMethod[]>('/events/payment-methods', [], {
     next: { revalidate: REVALIDATE_SECONDS },
   });
+}
+
+type MyEventsFilters = {
+  name?: string;
+  categoryId?: number;
+  active?: '0' | '1';
+  startDate?: string;
+  page: number;
+  take: number;
+};
+
+export function getMyEvents({
+  name,
+  categoryId,
+  active,
+  startDate,
+  page,
+  take,
+}: MyEventsFilters) {
+  const params = new URLSearchParams({
+    skip: String(page - 1),
+    take: String(take),
+  });
+
+  if (name) {
+    params.set('name', name);
+  }
+
+  if (categoryId) {
+    params.set('category_id', String(categoryId));
+  }
+
+  if (active) {
+    params.set('active', active);
+  }
+
+  if (startDate) {
+    params.set('start_date', startDate);
+  }
+
+  return fetchWithAuth<Page<Event> | null>(`/events/me?${params}`, null);
 }

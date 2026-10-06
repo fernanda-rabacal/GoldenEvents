@@ -17,6 +17,7 @@ export interface Event {
   photo: string;
   price: number;
   category_id: number;
+  user_id: number;
   location: string;
   capacity: number;
   active: boolean;

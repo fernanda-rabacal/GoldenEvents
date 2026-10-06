@@ -2,10 +2,10 @@ import type { EventSort } from '@golden-events/shared';
 
 export const HOME_EVENTS_PATH = '/#eventos';
 export const EVENTS_PAGE_PATH = '/eventos';
-export const CHECKOUT_PATH = '/checkout';
+const CHECKOUT_PATH = '/checkout';
 export const DEFAULT_EVENT_SORT: EventSort = 'start_date';
 
-export type EventsFilters = {
+type EventsFilters = {
   query?: string;
   categoryId?: number;
   page?: number;

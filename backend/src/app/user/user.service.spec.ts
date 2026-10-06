@@ -12,7 +12,7 @@ import { PrismaClientMock } from '../../db/prisma.mock.js';
 import { PrismaClientError } from '../common/errors/types/PrismaClientError.js';
 import { PrismaErrors } from '../common/errors/utils/handle-database-errors.util.js';
 import { NotFoundError } from '../common/errors/types/NotFoundError.js';
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { ForbiddenException, HttpException, HttpStatus } from '@nestjs/common';
 
 describe('UserService', () => {
   let service: UserService;
@@ -206,7 +206,7 @@ describe('UserService', () => {
     const updateUserData = {
       password: '987654321',
       name: 'Teste 2',
-      userTypeId: UserTypeEnum.ADMIN,
+      userTypeId: UserTypeEnum.ORGANIZER,
     };
     const updatedUser = {
       ...expectedOutputUser,
@@ -215,12 +215,65 @@ describe('UserService', () => {
 
     prisma.user.update.mockResolvedValueOnce(updatedUser);
 
-    const user = await service.update(1, updateUserData);
+    const user = await service.update(
+      { id: 1, user_type_id: UserTypeEnum.USER },
+      1,
+      updateUserData,
+    );
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...updatedUserWithoutPassword } = updatedUser;
 
     expect(user).toStrictEqual(updatedUserWithoutPassword);
+  });
+
+  it('should not let an user update another user', async () => {
+    await expect(
+      service.update({ id: 2, user_type_id: UserTypeEnum.USER }, 1, { name: 'Outro' }),
+    ).rejects.toThrow(
+      new ForbiddenException('Você só pode acessar o seu próprio perfil.'),
+    );
+    expect(prisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it('should not let an user promote himself to admin', async () => {
+    await expect(
+      service.update({ id: 1, user_type_id: UserTypeEnum.USER }, 1, {
+        userTypeId: UserTypeEnum.ADMIN,
+      }),
+    ).rejects.toThrow(
+      new ForbiddenException(
+        'Somente administradores podem conceder o perfil de administrador.',
+      ),
+    );
+    expect(prisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it('should let an admin update another user to admin', async () => {
+    prisma.user.update.mockResolvedValueOnce(expectedOutputUser);
+
+    await service.update({ id: 2, user_type_id: UserTypeEnum.ADMIN }, 1, {
+      userTypeId: UserTypeEnum.ADMIN,
+    });
+
+    expect(prisma.user.update).toHaveBeenCalled();
+  });
+
+  it('should find the own profile', async () => {
+    prisma.user.findUnique.mockResolvedValueOnce(expectedOutputUser);
+
+    const user = await service.findProfile({ id: 1, user_type_id: UserTypeEnum.USER }, 1);
+
+    expect(user).toStrictEqual(expectedOutputUser);
+  });
+
+  it('should not find the profile of another user', async () => {
+    await expect(
+      service.findProfile({ id: 2, user_type_id: UserTypeEnum.ORGANIZER }, 1),
+    ).rejects.toThrow(
+      new ForbiddenException('Você só pode acessar o seu próprio perfil.'),
+    );
+    expect(prisma.user.findUnique).not.toHaveBeenCalled();
   });
 
   it('should deactivate an user', async () => {

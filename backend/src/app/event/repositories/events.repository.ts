@@ -39,8 +39,12 @@ export class EventRepository {
     return event;
   }
 
-  async findAll(query: QueryEventDto) {
+  async findAll(query: QueryEventDto, userId?: number) {
     let where = {};
+
+    if (userId) {
+      where = { ...where, user_id: userId };
+    }
 
     if (query.name) {
       where = {

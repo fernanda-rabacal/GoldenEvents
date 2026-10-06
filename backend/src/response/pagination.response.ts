@@ -20,8 +20,6 @@
 
 import type { Page } from '@golden-events/shared';
 
-export type { Page };
-
 // `skip` é o índice da página, começando em 0 (skip=0 → primeira página)
 export class OffsetPagination {
   protected _skip = 0;

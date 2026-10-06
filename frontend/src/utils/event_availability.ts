@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import type { Event } from '@golden-events/shared';
 
-export const MAX_TICKETS_PER_ORDER = 10;
+const MAX_TICKETS_PER_ORDER = 10;
 
 export function getUnavailableReason(event: Event) {
   if (!event.active) {

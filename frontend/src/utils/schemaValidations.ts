@@ -5,6 +5,7 @@ export const eventValidationSchema = z
   .object({
     photo: z.string().optional().nullable(),
     name: z.string().min(5, 'O nome é obrigatório'),
+    subtitle: z.string().trim().optional(),
     location: z.string().min(5, 'O local do evento é obrigatório'),
     categoryId: z.coerce.number().min(1, 'A categoria do evento é obrigatória'),
     capacity: z.coerce
@@ -12,16 +13,8 @@ export const eventValidationSchema = z
       .min(1, 'A capacidade do evento é obrigatória')
       .int('Precisa ser um número inteiro')
       .positive('A capacidade não pode ser negativa'),
-    price: z
-      .string()
-      .transform((value) => {
-        const formattedValue = value.replace('R$ ', '').replace(',', '.');
-
-        return formattedValue;
-      })
-      .refine((data) => Number(data) >= 0, {
-        message: 'O preço não pode ser negativo',
-      }),
+    // Valor com máscara ("R$ 45,00"); vira número com parseCurrency ao enviar
+    price: z.string().min(1, 'O preço é obrigatório'),
     description: z
       .string()
       .min(100, 'A descrição é obrigatória')

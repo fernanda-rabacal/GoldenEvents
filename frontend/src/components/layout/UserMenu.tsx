@@ -6,7 +6,7 @@ import { ChevronDown, LogOut } from 'lucide-react';
 import type { User } from '@golden-events/shared';
 import { signOut } from '@/services/auth-actions';
 import { Button } from '@/ui/button';
-import { getUserMenuLinks } from './nav-links';
+import { USER_MENU_LINKS } from './nav-links';
 
 type UserMenuProps = {
   user: User;
@@ -52,7 +52,7 @@ export function UserMenu({ user }: UserMenuProps) {
           role='menu'
           className='absolute right-0 z-20 mt-2 w-48 overflow-hidden rounded-2xl border border-border bg-popover py-2 text-body-sm text-popover-foreground shadow-lg'
         >
-          {getUserMenuLinks(user.id).map((link) => (
+          {USER_MENU_LINKS.map((link) => (
             <Link
               key={link.href}
               href={link.href}
