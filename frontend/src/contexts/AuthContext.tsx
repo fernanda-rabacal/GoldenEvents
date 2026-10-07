@@ -1,10 +1,11 @@
-import { api } from "@/lib/axios";
-import { ReactNode, createContext, useEffect, useState } from "react"
-import { setCookie, destroyCookie, parseCookies } from 'nookies'
-import { toastNotify } from "@/lib/toastify";
+import { api } from '@/lib/axios';
+import { AxiosError } from 'axios';
+import { ReactNode, createContext, useEffect, useState } from 'react';
+import { setCookie, destroyCookie, parseCookies } from 'nookies';
+import { toastNotify } from '@/lib/toastify';
 
 interface AuthProps {
-  children: ReactNode
+  children: ReactNode;
 }
 
 type User = {
@@ -12,94 +13,97 @@ type User = {
   name: string;
   email: string;
   password: string;
-}
+};
 
 type SignInData = {
   email: string;
   password: string;
-  keep_connected: boolean
-}
+  keep_connected: boolean;
+};
 
 type AuthContextType = {
   isAuthenticated: boolean;
   user: User | null;
   signIn: (data: SignInData) => Promise<boolean>;
-  signOut: () => void
-}
+  signOut: () => void;
+};
 
-export const AuthContext = createContext({} as AuthContextType)
+export const AuthContext = createContext({} as AuthContextType);
 
-export function AuthContextProvider({ children } : AuthProps) {
-  const { golden_token } = parseCookies()
-  const [user, setUser] = useState<User | null>(null)
+export function AuthContextProvider({ children }: AuthProps) {
+  const { golden_token } = parseCookies();
+  const [user, setUser] = useState<User | null>(null);
 
   const isAuthenticated = !!user;
 
   function signOut() {
-    destroyCookie(undefined, 'golden_token')
-    setUser(null)
+    destroyCookie(undefined, 'golden_token');
+    setUser(null);
   }
 
   async function signIn({ email, password, keep_connected }: SignInData) {
     try {
       const response = await api.post('/login', {
         email,
-        password
-      })
+        password,
+      });
 
-      const { token } = response.data
+      const { token } = response.data;
 
-      const maxAge = keep_connected ? 60 * 60 * 24 * 30 : 60 * 60 //7 days or 30 days
-      
-      setCookie(undefined, 'golden_token', token, { maxAge })
-      
-      await getUserByToken(token)
+      const maxAge = keep_connected ? 60 * 60 * 24 * 30 : 60 * 60; //7 days or 30 days
 
-      return true
-    } catch (err: any) {
+      setCookie(undefined, 'golden_token', token, { maxAge });
+
+      await getUserByToken(token);
+
+      return true;
+    } catch (err) {
       toastNotify(
         'error',
-        err.response?.data?.message ?? 'Não foi possível entrar. Tente novamente.',
-      )
+        (err instanceof AxiosError ? err.response?.data?.message : undefined) ??
+          'Não foi possível entrar. Tente novamente.',
+      );
 
-      return false
+      return false;
     }
   }
 
   async function getUserByToken(token: string) {
     try {
-      const response = await api.get("/users/token", {
+      const response = await api.get('/users/token', {
         headers: {
-          'Authorization': `Bearer ${token}`,
-        }
-      })
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-      if(response.status !== 200) {
-        throw new Error(response.data.message) 
+      if (response.status !== 200) {
+        throw new Error(response.data.message);
       }
 
-      const user = response.data
+      const user = response.data;
 
-      setUser(user)
-    } catch(err: any) {
-      if (err.status === 401) {
-        return destroyCookie(undefined, 'golden_token')
+      setUser(user);
+    } catch (err) {
+      if (err instanceof AxiosError && err.status === 401) {
+        return destroyCookie(undefined, 'golden_token');
       }
 
-      toastNotify('error', err.response?.data?.message)
+      toastNotify(
+        'error',
+        err instanceof AxiosError ? err.response?.data?.message : undefined,
+      );
     }
   }
 
   useEffect(() => {
     if (golden_token) {
-      getUserByToken(golden_token)
+      getUserByToken(golden_token);
     }
-  }, [golden_token])
-  
+  }, [golden_token]);
 
   return (
     <AuthContext.Provider value={{ user, isAuthenticated, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
-  )
+  );
 }

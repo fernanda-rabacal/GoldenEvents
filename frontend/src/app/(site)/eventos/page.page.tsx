@@ -51,11 +51,11 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
     <main className='mx-auto max-w-6xl px-5 py-8 lg:px-8'>
       <nav
         aria-label='Navegação estrutural'
-        className='text-body-sm text-muted-foreground mb-8 flex items-center gap-2'
+        className='mb-8 flex items-center gap-2 text-body-sm text-muted-foreground'
       >
         <Link
           href='/'
-          className='hover:text-accent-foreground inline-flex items-center gap-2 transition'
+          className='inline-flex items-center gap-2 transition hover:text-accent-foreground'
         >
           <ArrowLeft className='size-4' /> Página inicial
         </Link>
@@ -64,18 +64,18 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
       </nav>
 
       <div className='max-w-3xl'>
-        <p className='text-body-sm tracking-eyebrow mb-3 font-bold text-orange-500 uppercase'>
+        <p className='mb-3 text-body-sm font-bold tracking-eyebrow text-orange-500 uppercase'>
           Descubra algo novo
         </p>
         <h1 className='text-h2 text-foreground sm:text-h1'>{title}</h1>
-        <p className='text-body text-muted-foreground mt-4'>
+        <p className='mt-4 text-body text-muted-foreground'>
           Encontre experiências para viver, compartilhar e guardar na memória.
         </p>
       </div>
 
-      <div className='border-border mt-10 flex flex-col gap-5 border-b pb-5 lg:flex-row lg:items-end lg:justify-between'>
+      <div className='mt-10 flex flex-col gap-5 border-b border-border pb-5 lg:flex-row lg:items-end lg:justify-between'>
         <div className='min-w-0'>
-          <p className='text-body-sm text-foreground/80 mb-3 font-bold'>
+          <p className='mb-3 text-body-sm font-bold text-foreground/80'>
             Filtrar por
           </p>
           <CategoryFilter
@@ -93,7 +93,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
         <EventSortSelect value={sort} />
       </div>
 
-      <p className='text-foreground/80 mt-8 text-lg font-bold'>
+      <p className='mt-8 text-lg font-bold text-foreground/80'>
         {total} {total === 1 ? 'evento encontrado' : 'eventos encontrados'}
       </p>
 

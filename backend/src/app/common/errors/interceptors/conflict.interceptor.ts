@@ -4,9 +4,9 @@ import {
   ExecutionContext,
   CallHandler,
   ConflictException,
-} from "@nestjs/common";
-import { catchError, Observable } from "rxjs";
-import { ConflictError } from "../types/ConflictError.js";
+} from '@nestjs/common';
+import { catchError, Observable } from 'rxjs';
+import { ConflictError } from '../types/ConflictError.js';
 
 @Injectable()
 export class ConflictInterceptor implements NestInterceptor {

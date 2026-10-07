@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { hash, compare } from 'bcryptjs';
 
 export const encryptData = async (data: string) => hash(data, 10);
