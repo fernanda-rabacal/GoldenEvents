@@ -2,10 +2,9 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { canManageEvents, type User } from '@golden-events/shared';
 import { BECOME_ORGANIZER_PATH } from '@/components/layout/nav-links';
+import { AUTH_COOKIE } from '@/utils/auth_cookie';
 import { buildLoginHref } from '@/utils/auth_redirect';
 import { fetchFromApi } from './api';
-
-export const AUTH_COOKIE = 'golden_token';
 
 export async function getAuthToken() {
   return (await cookies()).get(AUTH_COOKIE)?.value;

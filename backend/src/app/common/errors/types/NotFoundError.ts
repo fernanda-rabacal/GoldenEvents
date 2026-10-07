@@ -1,1 +1,3 @@
-export class NotFoundError extends Error {}
+import { DomainError } from './DomainError.js';
+
+export class NotFoundError extends DomainError {}

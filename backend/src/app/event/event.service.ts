@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotAcceptableException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   canManageEvents,
   type MetricsPeriod,
@@ -10,6 +10,8 @@ import { QueryEventDto } from './dto/query-event.dto.js';
 import { BuyEventTicketDto } from './dto/buy-ticket.dto.js';
 import { CategoryRepository } from './repositories/categories.repository.js';
 import { EventRepository } from './repositories/events.repository.js';
+import { BusinessRuleError } from '../common/errors/types/BusinessRuleError.js';
+import { ForbiddenError } from '../common/errors/types/ForbiddenError.js';
 import { NotFoundError } from '../common/errors/types/NotFoundError.js';
 import { OffsetPagination } from '../../response/pagination.response.js';
 import type { Requester } from '../user/user.service.js';
@@ -51,7 +53,7 @@ export class EventService {
 
   async create(requester: Requester, createEventDto: CreateEventDto) {
     if (!canManageEvents(requester.user_type_id)) {
-      throw new ForbiddenException('Apenas organizadores podem criar eventos.');
+      throw new ForbiddenError('Apenas organizadores podem criar eventos.');
     }
 
     const category = await this.categoryRepository.findById(createEventDto.categoryId);
@@ -104,17 +106,17 @@ export class EventService {
     );
 
     if (!active) {
-      throw new NotAcceptableException('As vendas deste evento estão encerradas.');
+      throw new BusinessRuleError('As vendas deste evento estão encerradas.');
     }
 
     if (start_date <= new Date()) {
-      throw new NotAcceptableException(
+      throw new BusinessRuleError(
         'Não é possível comprar ingressos para um evento que já começou.',
       );
     }
 
     if (buyEventTicket.quantity > quantity_left) {
-      throw new NotAcceptableException(
+      throw new BusinessRuleError(
         'Não há ingressos suficientes disponíveis para esta compra.',
       );
     }
@@ -128,11 +130,11 @@ export class EventService {
     const ticketsPurchased = capacity - quantity_left;
 
     if (userId !== user_id) {
-      throw new NotAcceptableException('Você não pode editar um evento que não é seu.');
+      throw new ForbiddenError('Você não pode editar um evento que não é seu.');
     }
 
     if (ticketsPurchased > updateEventDto.capacity) {
-      throw new NotAcceptableException(
+      throw new BusinessRuleError(
         'A capacidade do evento não pode ser menor do que a quantidade de ingressos já comprados.',
       );
     }
@@ -142,7 +144,7 @@ export class EventService {
       updateEventDto.endDateTime &&
       +updateEventDto.startDateTime > +updateEventDto.endDateTime
     ) {
-      throw new NotAcceptableException(
+      throw new BusinessRuleError(
         'A data final do evento não pode ser antes da data de início.',
       );
     }
@@ -154,7 +156,7 @@ export class EventService {
     const { user_id } = await this.findById(id);
 
     if (userId !== user_id) {
-      throw new NotAcceptableException('Você não pode deletar um evento que não é seu.');
+      throw new ForbiddenError('Você não pode deletar um evento que não é seu.');
     }
 
     return this.repository.delete(id);
@@ -165,7 +167,7 @@ export class EventService {
     days: MetricsPeriod,
   ): Promise<OrganizerMetrics> {
     if (!canManageEvents(requester.user_type_id)) {
-      throw new ForbiddenException('Apenas organizadores têm acesso às métricas.');
+      throw new ForbiddenError('Apenas organizadores têm acesso às métricas.');
     }
 
     const userId = requester.id;

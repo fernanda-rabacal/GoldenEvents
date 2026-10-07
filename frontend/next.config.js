@@ -1,9 +1,9 @@
 // next.config.js é CommonJS, então o require é necessário aqui
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const path = require('path')
+const path = require('path');
 
 // Raiz do monorepo, onde ficam o bun.lock e o node_modules compartilhado
-const monorepoRoot = path.join(__dirname, '..')
+const monorepoRoot = path.join(__dirname, '..');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -14,6 +14,6 @@ const nextConfig = {
   outputFileTracingRoot: monorepoRoot,
   pageExtensions: ['page.tsx', 'api.ts', 'api.tsx', 'page.ts'],
   transpilePackages: ['@mdxeditor/editor'],
-}
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;
