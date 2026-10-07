@@ -1,12 +1,8 @@
-import {
-  ForbiddenException,
-  HttpException,
-  HttpStatus,
-  Injectable,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
 import { UserRepository } from './repositories/user.repository.js';
+import { ForbiddenError } from '../common/errors/types/ForbiddenError.js';
 import { NotFoundError } from '../common/errors/types/NotFoundError.js';
 import { UserTypeEnum } from './entities/user.entity.js';
 
@@ -26,13 +22,7 @@ export class UserService {
   }
 
   async findAll() {
-    const users = await this.repository.findAll();
-
-    if (users.length == 0) {
-      throw new HttpException([], HttpStatus.NO_CONTENT);
-    }
-
-    return users;
+    return this.repository.findAll();
   }
 
   async findById(id: number) {
@@ -51,18 +41,12 @@ export class UserService {
   }
 
   async getUserTypes() {
-    const userTypes = await this.repository.getUserTypes();
-
-    if (userTypes.length == 0) {
-      throw new HttpException([], HttpStatus.NO_CONTENT);
-    }
-
-    return userTypes;
+    return this.repository.getUserTypes();
   }
 
   assertCanAccessUser(requester: Requester, userId: number) {
     if (requester.id !== userId && !isAdmin(requester)) {
-      throw new ForbiddenException('Você só pode acessar o seu próprio perfil.');
+      throw new ForbiddenError('Você só pode acessar o seu próprio perfil.');
     }
   }
 
@@ -76,7 +60,7 @@ export class UserService {
     this.assertCanAccessUser(requester, userId);
 
     if (updateUserDto.userTypeId === UserTypeEnum.ADMIN && !isAdmin(requester)) {
-      throw new ForbiddenException(
+      throw new ForbiddenError(
         'Somente administradores podem conceder o perfil de administrador.',
       );
     }
