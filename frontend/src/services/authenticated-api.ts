@@ -1,4 +1,4 @@
-import { API_URL, fetchFromApi } from './api';
+import { fetchFromApi, SERVER_UNREACHABLE_MESSAGE, sendToApi } from './api';
 import { getAuthToken } from './auth';
 
 export type ActionResult = {
@@ -35,35 +35,21 @@ export async function sendWithAuth(
     return { success: false, message: SESSION_EXPIRED_MESSAGE };
   }
 
-  try {
-    const response = await fetch(`${API_URL}${path}`, {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: body ? JSON.stringify(body) : undefined,
-    });
-    const data = await response.json().catch(() => ({}));
-    const message = Array.isArray(data.message)
-      ? data.message.join(' ')
-      : data.message;
+  const response = await sendToApi(path, method, body, token);
 
-    if (!response.ok) {
-      return {
-        success: false,
-        message:
-          response.status === 401
-            ? SESSION_EXPIRED_MESSAGE
-            : (message ?? fallbackMessage),
-      };
-    }
+  if (!response) {
+    return { success: false, message: SERVER_UNREACHABLE_MESSAGE };
+  }
 
-    return { success: true, message: message ?? fallbackMessage };
-  } catch {
+  if (!response.ok) {
     return {
       success: false,
-      message: 'Não foi possível falar com o servidor. Tente novamente.',
+      message:
+        response.status === 401
+          ? SESSION_EXPIRED_MESSAGE
+          : (response.message ?? fallbackMessage),
     };
   }
+
+  return { success: true, message: response.message ?? fallbackMessage };
 }

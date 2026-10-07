@@ -1,13 +1,13 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { z } from 'zod';
 import { ArrowRight, Mail } from 'lucide-react';
 import { PasswordField } from '@/components/form/PasswordField';
 import { TextField } from '@/components/form/TextField';
-import { useAuth } from '@/hooks/useAuth';
+import { toastNotify } from '@/lib/toastify';
+import { signIn } from '@/services/auth-actions';
 import { loginFormSchema } from '@/utils/schemaValidations';
 import { SubmitButton } from './SubmitButton';
 
@@ -18,8 +18,6 @@ type LoginFormProps = {
 };
 
 export function LoginForm({ redirectTo }: LoginFormProps) {
-  const router = useRouter();
-  const { signIn } = useAuth();
   const {
     register,
     handleSubmit,
@@ -30,12 +28,10 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
   });
 
   async function handleSignIn(data: LoginFormData) {
-    const hasLogged = await signIn(data);
+    const result = await signIn(data, redirectTo);
 
-    if (hasLogged) {
-      router.replace(redirectTo);
-      // Atualiza o header (server component) com o usuário recém-logado
-      router.refresh();
+    if (!result.success) {
+      toastNotify('error', result.message);
     }
   }
 

@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserService } from '../src/app/user/user.service.js';
 import { PrismaModule } from '../src/db/prisma.module.js';
+import { setupApp } from '../src/setup-app.js';
 import { AuthModule } from '../src/app/auth/auth.module.js';
 import { UserModule } from '../src/app/user/user.module.js';
 import { INestApplication } from '@nestjs/common';
@@ -37,6 +38,7 @@ describe('UserController', () => {
     }).compile();
 
     app = module.createNestApplication();
+    setupApp(app);
 
     await app.init();
 

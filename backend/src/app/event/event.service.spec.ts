@@ -8,7 +8,8 @@ import { PrismaService } from '../../db/prisma.service.js';
 import { PrismaClientMock } from '../../db/prisma.mock.js';
 import { CreateEventDto } from './dto/create-event.dto.js';
 import { NotFoundError } from '../common/errors/types/NotFoundError.js';
-import { ForbiddenException, NotAcceptableException } from '@nestjs/common';
+import { BusinessRuleError } from '../common/errors/types/BusinessRuleError.js';
+import { ForbiddenError } from '../common/errors/types/ForbiddenError.js';
 import { UserTypeEnum } from '@golden-events/shared';
 import { BuyEventTicketDto } from './dto/buy-ticket.dto.js';
 import { CategoryService } from './category.service.js';
@@ -112,10 +113,10 @@ describe('EventService', () => {
     expect(event).toStrictEqual(expectedOutputEvent);
   });
 
-  it('should throw a ForbiddenException when a non-organizer creates an event', async () => {
+  it('should throw a ForbiddenError when a non-organizer creates an event', async () => {
     await expect(
       service.create({ id: 1, user_type_id: UserTypeEnum.USER }, createEventData),
-    ).rejects.toThrow(ForbiddenException);
+    ).rejects.toThrow(ForbiddenError);
     expect(prisma.event.create).not.toHaveBeenCalled();
   });
 
@@ -180,15 +181,15 @@ describe('EventService', () => {
     expect(updatedEvent).toStrictEqual(newUpdatedEvent);
   });
 
-  it('should throw an NotAcceptableException on different user_id for update event', async () => {
+  it('should throw a ForbiddenError on different user_id for update event', async () => {
     prisma.event.findFirst.mockResolvedValueOnce(expectedOutputEvent);
 
     await expect(service.update(1, 2, updateEventData)).rejects.toThrow(
-      new NotAcceptableException('Você não pode editar um evento que não é seu.'),
+      new ForbiddenError('Você não pode editar um evento que não é seu.'),
     );
   });
 
-  it('should throw an NotAcceptableException on lower capacity than quantity_left for update event', async () => {
+  it('should throw a BusinessRuleError on lower capacity than quantity_left for update event', async () => {
     const wrongCapacityData = {
       ...updateEventData,
       capacity: 100,
@@ -200,13 +201,13 @@ describe('EventService', () => {
     });
 
     await expect(service.update(1, 1, wrongCapacityData)).rejects.toThrow(
-      new NotAcceptableException(
+      new BusinessRuleError(
         'A capacidade do evento não pode ser menor do que a quantidade de ingressos já comprados.',
       ),
     );
   });
 
-  it('should throw an NotAcceptableException on earlier end date than start date at update event', async () => {
+  it('should throw a BusinessRuleError on earlier end date than start date at update event', async () => {
     const currentDate = new Date();
     const startDate = new Date().setMonth(currentDate.getMonth() + 2);
     const wrongEndDate = new Date().setMonth(currentDate.getMonth() + 1);
@@ -223,7 +224,7 @@ describe('EventService', () => {
     });
 
     await expect(service.update(1, 1, wrongEndDatePayload)).rejects.toThrow(
-      new NotAcceptableException(
+      new BusinessRuleError(
         'A data final do evento não pode ser antes da data de início.',
       ),
     );
@@ -238,11 +239,11 @@ describe('EventService', () => {
     expect(event).toHaveProperty('active', false);
   });
 
-  it('should throw a NotAcceptableException on delete an event', async () => {
+  it('should throw a ForbiddenError on delete an event', async () => {
     prisma.event.findFirst.mockResolvedValueOnce(expectedOutputEvent);
 
     await expect(service.delete(1, 2)).rejects.toThrow(
-      new NotAcceptableException('Você não pode deletar um evento que não é seu.'),
+      new ForbiddenError('Você não pode deletar um evento que não é seu.'),
     );
   });
 
@@ -445,7 +446,7 @@ describe('EventService', () => {
 
     await expect(
       service.buyTicket({ eventId: 1, paymentMethodId: 1, quantity: 1, userId: 1 }),
-    ).rejects.toThrow(new NotAcceptableException(message));
+    ).rejects.toThrow(new BusinessRuleError(message));
     expect(prisma.event.update).not.toHaveBeenCalled();
   });
 
@@ -458,9 +459,7 @@ describe('EventService', () => {
     await expect(
       service.buyTicket({ eventId: 1, paymentMethodId: 1, quantity: 3, userId: 1 }),
     ).rejects.toThrow(
-      new NotAcceptableException(
-        'Não há ingressos suficientes disponíveis para esta compra.',
-      ),
+      new BusinessRuleError('Não há ingressos suficientes disponíveis para esta compra.'),
     );
     expect(prisma.event.update).not.toHaveBeenCalled();
   });
@@ -510,10 +509,10 @@ describe('EventService', () => {
     expect(await paymentMethodService.findAll()).toStrictEqual(paymentMethods);
   });
 
-  it('should throw a ForbiddenException when a non-organizer asks for metrics', async () => {
+  it('should throw a ForbiddenError when a non-organizer asks for metrics', async () => {
     await expect(
       service.getOrganizerMetrics({ id: 1, user_type_id: UserTypeEnum.USER }, 7),
-    ).rejects.toThrow(ForbiddenException);
+    ).rejects.toThrow(ForbiddenError);
   });
 
   it('should compute the organizer metrics', async () => {

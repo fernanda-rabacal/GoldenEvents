@@ -1,4 +1,4 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaClient } from '@prisma/client';
 import { AuthModule } from '../src/app/auth/auth.module.js';
@@ -10,6 +10,7 @@ import { CategoryRepository } from '../src/app/event/repositories/categories.rep
 import { EventRepository } from '../src/app/event/repositories/events.repository.js';
 import { UserModule } from '../src/app/user/user.module.js';
 import { PrismaModule } from '../src/db/prisma.module.js';
+import { setupApp } from '../src/setup-app.js';
 import request from 'supertest';
 import { PostgreSqlContainer } from '@testcontainers/postgresql';
 import { execSync } from 'child_process';
@@ -43,13 +44,7 @@ describe('UserController', () => {
     }).compile();
 
     app = module.createNestApplication();
-    app.useGlobalPipes(
-      new ValidationPipe({
-        transform: true,
-        whitelist: true,
-        forbidNonWhitelisted: true,
-      }),
-    );
+    setupApp(app);
 
     await app.init();
 
@@ -73,7 +68,7 @@ describe('UserController', () => {
   }, 30000);
 
   beforeEach(async () => {
-    // reset already applies the migrations and runs the seed
+    // o reset já aplica as migrations e roda o seed
     execSync(`npx prisma migrate reset --force`, {
       env: {
         ...process.env,
@@ -196,6 +191,12 @@ describe('UserController', () => {
       expect(res.body.id).toEqual(eventDB.id);
       expect(res.body.name).toEqual(eventDB.name);
       expect(res.body.description).toEqual(eventDB.description);
+    });
+
+    it('should return 404 for an event that does not exist', async () => {
+      const res = await request(app.getHttpServer()).get('/events/999999').expect(404);
+
+      expect(res.body.message).toEqual('Evento não encontrado');
     });
   });
 

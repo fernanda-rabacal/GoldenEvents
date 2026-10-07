@@ -18,8 +18,7 @@ Browser
    ▼
 Next.js (frontend, :3000)
    ├─ Server Components ──fetch──┐
-   ├─ Server Actions ────fetch──┤
-   └─ Client (axios) ───────────┤
+   └─ Server Actions ────fetch──┤
                                 ▼
                      NestJS API (backend, :8080)
                      Controller → Service → Repository
@@ -73,7 +72,7 @@ Routes live in `src/app/`, split into three route groups:
 | `(auth)` | Split-screen auth layout | `/login`, `/cadastro` |
 | `(admin)` | `AdminShell` (sidebar); the layout loads the current user | `/organizador`, `/organizador/meus-eventos`, `/organizador/eventos/criar`, `/organizador/eventos/editar/[slug]`, `/organizador/ingressos-e-vendas`, `/organizador/publico` |
 
-The root `layout.page.tsx` sets the font and the `pt-BR` locale, and wraps the app in `providers.tsx` (`AuthContextProvider` and `ToastContainer`).
+The root `layout.page.tsx` sets the font and the `pt-BR` locale, and wraps the app in `providers.tsx` (`ToastContainer`).
 
 ### Source layout (`frontend/src`)
 
@@ -82,28 +81,28 @@ The root `layout.page.tsx` sets the font and the `pt-BR` locale, and wraps the a
 | `app/` | Routes (see above) and `globals.css` |
 | `components/` | Components grouped by feature: `admin/`, `auth/`, `checkout/`, `event-details/`, `events/`, `form/`, `home/`, `layout/`, `organizer/`, `profile/`, `tickets/` |
 | `ui/` | Base UI primitives such as `button.tsx` (shadcn style) |
-| `contexts/`, `hooks/` | `AuthContext` and `useAuth`. This is the only global client state. |
 | `services/` | API access and Server Actions (see below) |
-| `lib/` | `axios.ts`, `toastify.ts`, `utils.ts` (`cn`) |
-| `utils/` | Formatting, masks, zod schemas (`schemaValidations.ts`), redirect helpers |
+| `lib/` | `toastify.ts`, `utils.ts` (`cn`) |
+| `utils/` | Formatting, masks, zod schemas (`schemaValidations.ts`), auth cookie name and redirect helpers |
 | `styles/theme.css` | Tailwind `@theme` design tokens |
 
 **Styling** uses Tailwind CSS 4 with shadcn conventions on top of `@base-ui/react`, plus `class-variance-authority`, `clsx` and `tailwind-merge`. **Forms** use `react-hook-form` with zod resolvers.
 
 ### Talking to the API
 
-Most data flows through the Next.js server:
+The browser never calls the API directly. Every request goes through the Next.js server, so only `API_URL` (server-side) needs to know where the API lives:
 
-- `services/api.ts`: `fetchFromApi(path, fallback, init)` calls `API_URL` (defaults to `http://localhost:8080`). If the request fails it returns the fallback, so a page still renders when the API is down. Public reads use `next: { revalidate }`.
+- `services/api.ts`:
+  - `fetchFromApi(path, fallback, init)` is for reads. It calls `API_URL` (defaults to `http://localhost:8080`). If the request fails it returns the fallback, so a page still renders when the API is down. Public reads use `next: { revalidate }`.
+  - `sendToApi(path, method, body, token?)` is for writes. It returns `{ ok, status, data, message }`, or `null` when the API is unreachable.
 - `services/authenticated-api.ts`:
   - `fetchWithAuth` is for Server Components. It reads the auth cookie, sends a `Bearer` header and uses `cache: 'no-store'`.
-  - `sendWithAuth` is for Server Actions. It returns an `ActionResult` (`{ success, message }`).
-- `services/*-actions.ts` are Server Actions (`'use server'`). They call `sendWithAuth` and then `revalidatePath` after a write.
-- `lib/axios.ts` is the client-side HTTP client. It adds the token from the cookie in an interceptor. Only login (`AuthContext`) and signup (`RegisterForm`) use it.
+  - `sendWithAuth` is for Server Actions. It wraps `sendToApi` with the auth cookie and returns an `ActionResult` (`{ success, message }`).
+- `services/*-actions.ts` are Server Actions (`'use server'`). Client components call them and show `result.message` in a toast. They call `revalidatePath` or `redirect` after a write.
 
 ### Authentication
 
-1. `LoginForm` calls `useAuth().signIn`, which posts to `/login`. On success the token is stored in the `golden_token` cookie (1 hour, or 30 days with "keep connected"), and the user is loaded from `GET /users/token`.
+1. `LoginForm` calls the `signIn` Server Action (`services/auth-actions.ts`), which posts to `/login`. On success it sets the auth cookie on the server and redirects to the requested page. The cookie name is `AUTH_COOKIE` from `utils/auth_cookie.ts`. The cookie is `httpOnly` and `sameSite=lax` (`secure` in production), and lasts 1 hour, or 30 days with "keep connected". Client-side JavaScript cannot read the token. `RegisterForm` uses the `signUp` Server Action the same way.
 2. `src/proxy.page.ts` is the Next.js 16 proxy (formerly middleware). It only checks that the cookie exists, and redirects to `/login?redirect=...` when it is missing. It covers `/organizador/*`, `/meus-ingressos`, `/perfil` and `/checkout`.
 3. Pages validate the token against the API through `services/auth.ts`:
    - `getCurrentUser()` calls `GET /users/token`.
@@ -115,10 +114,13 @@ Most data flows through the Next.js server:
 
 ### Bootstrap
 
-`backend/src/main.ts` sets up:
+`backend/src/setup-app.ts` (`setupApp`) holds the global configuration. Both `main.ts` and the e2e tests call it, so tests run with the same rules as the real API:
 
 - A global `ValidationPipe` with `transform`, `whitelist` and `forbidNonWhitelisted`. Every request body must match a `class-validator` DTO.
-- Global error interceptors (Conflict, Database, Unauthorized, NotFound). They translate domain errors from `app/common/errors/types/` into HTTP responses.
+- The global `DomainErrorFilter` (see [Errors](#errors)).
+
+`backend/src/main.ts` also sets up:
+
 - Swagger UI at `/docs`, with bearer auth.
 - CORS, and the port from `PORT` (default 8080).
 
@@ -134,8 +136,9 @@ backend/src/
 │   ├── auth/            controller, service, dto, guard/ (jwt, local), strategy/ (jwt, local)
 │   ├── user/            controller, service, dto, entities, repositories
 │   ├── event/           controller, event/category/payment-method services, dto, repositories
-│   └── common/errors/   error types, interceptors, Prisma error helpers
-├── db/                  PrismaService, PrismaModule, Prisma mock type for tests
+│   └── common/errors/   domain error types, DomainErrorFilter, Prisma error helpers
+├── db/                  PrismaService, global PrismaModule, Prisma mock type for tests
+├── setup-app.ts         global pipe and filter, shared by main.ts and e2e tests
 ├── response/            message, pagination and token response classes
 └── util/                bcrypt helpers, slug generator
 ```
@@ -145,6 +148,26 @@ Each feature module follows **Controller → Service → Repository → PrismaSe
 - Controllers handle HTTP concerns only.
 - Services hold business rules and permission checks.
 - Repositories are the only layer that touches Prisma.
+
+Each provider is declared in exactly one module. Declaring it again in another module's `providers` creates a second instance:
+
+- `PrismaModule` is `@Global()` and is imported once in `AppModule`. Feature modules must **not** list `PrismaService` in their `providers`, because that creates another client with its own connection pool.
+- `UserModule` exports `UserService`. `AuthModule` imports `UserModule` and owns the passport strategies (`LocalStrategy`, `JwtStrategy`). Other modules only need `JwtAuthGuard` to protect routes.
+
+### Errors
+
+Services throw **domain errors** from `app/common/errors/types/`, never Nest HTTP exceptions. This keeps services usable outside HTTP, for example in the queue workers planned in `MODELAGEM.md`. The global `DomainErrorFilter` (`app/common/errors/filters/`) turns them into HTTP responses:
+
+| Error | Status | Use it when |
+|---|---|---|
+| `NotFoundError` | 404 | A resource does not exist |
+| `ConflictError` / `UniqueConstraintError` | 409 | The data clashes with existing data (for example a duplicated email) |
+| `UnauthorizedError` | 401 | The caller is not authenticated |
+| `ForbiddenError` | 403 | The caller is authenticated but not allowed |
+| `BusinessRuleError` | 422 | The request is valid but breaks a business rule (sold out, event already started) |
+| `DatabaseError` | 400 | Any other Prisma error |
+
+Prisma errors are converted first (`handleDatabaseErrors`, for example P2002 becomes `UniqueConstraintError`). Anything else falls through to Nest's default handling. The passport strategies in `auth/strategy/` are the only exception: they belong to the HTTP layer and throw `UnauthorizedException` directly.
 
 ### Auth and permissions
 
@@ -212,7 +235,6 @@ E2E tests run in band, and tests inside a file depend on the order they run in.
 
 ## Known gaps
 
-- `frontend/src/lib/axios.ts` hardcodes `http://localhost:8080` instead of reading an env var.
 - The backend `tsconfig.json` has `strictNullChecks` and `noImplicitAny` turned off. The frontend and shared package are strict.
 - `backend/.env.test` is committed and contains a `SECRET`. That is fine for tests, but it must never be reused in other environments.
 - The frontend has no automated tests.

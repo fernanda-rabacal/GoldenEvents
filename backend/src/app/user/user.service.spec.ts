@@ -12,7 +12,7 @@ import { PrismaClientMock } from '../../db/prisma.mock.js';
 import { PrismaClientError } from '../common/errors/types/PrismaClientError.js';
 import { PrismaErrors } from '../common/errors/utils/handle-database-errors.util.js';
 import { NotFoundError } from '../common/errors/types/NotFoundError.js';
-import { ForbiddenException, HttpException, HttpStatus } from '@nestjs/common';
+import { ForbiddenError } from '../common/errors/types/ForbiddenError.js';
 
 describe('UserService', () => {
   let service: UserService;
@@ -83,12 +83,10 @@ describe('UserService', () => {
     expect(userTypes).toStrictEqual(expectedOutputUserTypes);
   });
 
-  it('should throw a HTTPException error on no content types', async () => {
+  it('should return an empty list when there are no user types', async () => {
     prisma.userType.findMany.mockResolvedValueOnce([]);
 
-    await expect(service.getUserTypes()).rejects.toThrow(
-      new HttpException([], HttpStatus.NO_CONTENT),
-    );
+    await expect(service.getUserTypes()).resolves.toEqual([]);
   });
 
   it('should create a user', async () => {
@@ -232,9 +230,7 @@ describe('UserService', () => {
   it('should not let an user update another user', async () => {
     await expect(
       service.update({ id: 2, user_type_id: UserTypeEnum.USER }, 1, { name: 'Outro' }),
-    ).rejects.toThrow(
-      new ForbiddenException('Você só pode acessar o seu próprio perfil.'),
-    );
+    ).rejects.toThrow(new ForbiddenError('Você só pode acessar o seu próprio perfil.'));
     expect(prisma.user.update).not.toHaveBeenCalled();
   });
 
@@ -244,7 +240,7 @@ describe('UserService', () => {
         userTypeId: UserTypeEnum.ADMIN,
       }),
     ).rejects.toThrow(
-      new ForbiddenException(
+      new ForbiddenError(
         'Somente administradores podem conceder o perfil de administrador.',
       ),
     );
@@ -272,9 +268,7 @@ describe('UserService', () => {
   it('should not find the profile of another user', async () => {
     await expect(
       service.findProfile({ id: 2, user_type_id: UserTypeEnum.ORGANIZER }, 1),
-    ).rejects.toThrow(
-      new ForbiddenException('Você só pode acessar o seu próprio perfil.'),
-    );
+    ).rejects.toThrow(new ForbiddenError('Você só pode acessar o seu próprio perfil.'));
     expect(prisma.user.findUnique).not.toHaveBeenCalled();
   });
 

@@ -3,14 +3,13 @@
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { AxiosError } from 'axios';
 import type { z } from 'zod';
 import { ArrowRight, Mail, UserRound } from 'lucide-react';
 import { PasswordField } from '@/components/form/PasswordField';
 import { TextField } from '@/components/form/TextField';
 import { CREATE_EVENT_PATH } from '@/components/layout/nav-links';
-import { api } from '@/lib/axios';
 import { toastNotify } from '@/lib/toastify';
+import { signUp } from '@/services/auth-actions';
 import { buildLoginHref } from '@/utils/auth_redirect';
 import { maskDocument } from '@/utils/masks';
 import { registerFormSchema } from '@/utils/schemaValidations';
@@ -18,17 +17,6 @@ import { OrganizerChoice } from './OrganizerChoice';
 import { SubmitButton } from './SubmitButton';
 
 type RegisterFormData = z.infer<typeof registerFormSchema>;
-
-function getErrorMessage(error: unknown) {
-  const message =
-    error instanceof AxiosError ? error.response?.data?.message : undefined;
-
-  if (Array.isArray(message)) {
-    return message.join(' ');
-  }
-
-  return message ?? 'Não foi possível concluir o cadastro. Tente novamente.';
-}
 
 type RegisterFormProps = {
   defaultIsOrganizer?: boolean;
@@ -55,22 +43,23 @@ export function RegisterForm({
     cpf,
     isOrganizer,
   }: RegisterFormData) {
-    try {
-      await api.post('/users', {
-        name,
-        email,
-        password,
-        document: cpf.replace(/\D/g, ''),
-        isOrganizer: isOrganizer === 'true',
-      });
+    const result = await signUp({
+      name,
+      email,
+      password,
+      document: cpf.replace(/\D/g, ''),
+      isOrganizer: isOrganizer === 'true',
+    });
 
-      toastNotify('success', 'Cadastro feito com sucesso! Agora é só entrar.');
-      router.push(
-        isOrganizer === 'true' ? buildLoginHref(CREATE_EVENT_PATH) : '/login',
-      );
-    } catch (error) {
-      toastNotify('error', getErrorMessage(error));
+    if (!result.success) {
+      toastNotify('error', result.message);
+      return;
     }
+
+    toastNotify('success', result.message);
+    router.push(
+      isOrganizer === 'true' ? buildLoginHref(CREATE_EVENT_PATH) : '/login',
+    );
   }
 
   return (

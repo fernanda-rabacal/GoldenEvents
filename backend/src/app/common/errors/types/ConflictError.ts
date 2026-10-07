@@ -1,1 +1,3 @@
-export class ConflictError extends Error {}
+import { DomainError } from './DomainError.js';
+
+export class ConflictError extends DomainError {}
