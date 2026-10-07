@@ -4,9 +4,9 @@ import {
   ExecutionContext,
   CallHandler,
   NotFoundException,
-} from "@nestjs/common";
-import { catchError, Observable } from "rxjs";
-import { NotFoundError } from "../types/NotFoundError.js";
+} from '@nestjs/common';
+import { catchError, Observable } from 'rxjs';
+import { NotFoundError } from '../types/NotFoundError.js';
 
 @Injectable()
 export class NotFoundInterceptor implements NestInterceptor {

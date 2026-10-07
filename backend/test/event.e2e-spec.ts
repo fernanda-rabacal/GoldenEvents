@@ -73,20 +73,8 @@ describe('UserController', () => {
   }, 30000);
 
   beforeEach(async () => {
-    // drop schema and create a new one
+    // reset already applies the migrations and runs the seed
     execSync(`npx prisma migrate reset --force`, {
-      env: {
-        ...process.env,
-        DATABASE_URL: urlConnection,
-      },
-    });
-    execSync(`npx prisma migrate deploy`, {
-      env: {
-        ...process.env,
-        DATABASE_URL: urlConnection,
-      },
-    });
-    execSync(`npx prisma db seed`, {
       env: {
         ...process.env,
         DATABASE_URL: urlConnection,

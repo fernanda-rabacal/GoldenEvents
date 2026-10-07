@@ -9,4 +9,5 @@ export default {
     '^.+\\.ts$': ['ts-jest', { useESM: true }],
   },
   testEnvironment: 'node',
+  testTimeout: 30000,
 };
