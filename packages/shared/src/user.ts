@@ -14,3 +14,7 @@ export interface User {
   created_at: string;
   updated_at: string;
 }
+
+export function canManageEvents(userTypeId: UserTypeEnum) {
+  return userTypeId === UserTypeEnum.ADMIN || userTypeId === UserTypeEnum.ORGANIZER;
+}

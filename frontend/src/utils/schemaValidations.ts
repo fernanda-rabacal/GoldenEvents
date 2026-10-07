@@ -103,5 +103,4 @@ export const registerFormSchema = z
 export const updateUserValidationSchema = z.object({
   photo: z.string().optional().nullable(),
   name: z.string().min(5, 'O nome é obrigatório'),
-  userTypeId: z.coerce.number().min(1, 'O tipo de usuário é obrigatório'),
 });

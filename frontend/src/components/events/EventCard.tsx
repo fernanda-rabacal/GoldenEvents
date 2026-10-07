@@ -10,7 +10,7 @@ type EventCardProps = {
 
 export function EventCard({ event }: EventCardProps) {
   return (
-    <article className='group overflow-hidden rounded-3xl border border-border bg-background transition hover:-translate-y-1 hover:shadow-xl'>
+    <article className='group overflow-hidden rounded-xl border border-border bg-white transition hover:-translate-y-1 hover:shadow-xl'>
       <div className='relative h-52 overflow-hidden'>
         <img
           src={event.photo}

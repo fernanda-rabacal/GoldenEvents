@@ -9,10 +9,11 @@ import { AdminSidebar } from './AdminSidebar';
 
 type AdminShellProps = {
   user: User;
+  today: string;
   children: ReactNode;
 };
 
-export function AdminShell({ user, children }: AdminShellProps) {
+export function AdminShell({ user, today, children }: AdminShellProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const closeSidebar = () => setIsSidebarOpen(false);
@@ -20,6 +21,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
   return (
     <div className='flex min-h-screen'>
       <AdminSidebar
+        user={user}
         isOpen={isSidebarOpen}
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() =>
@@ -37,7 +39,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
       )}
 
       <div className='flex min-w-0 flex-1 flex-col'>
-        <header className='flex items-center gap-4 border-b border-border bg-card px-5 py-4 lg:px-8'>
+        <header className='flex items-center gap-4 border-b border-border bg-background px-5 py-4 lg:px-10'>
           <Button
             variant='ghost'
             size='icon-lg'
@@ -49,12 +51,15 @@ export function AdminShell({ user, children }: AdminShellProps) {
           >
             <Menu />
           </Button>
+          <p className='hidden text-body-sm font-bold text-muted-foreground md:block'>
+            {today}
+          </p>
           <div className='ml-auto'>
-            <UserMenu user={user} />
+            <UserMenu user={user} variant='profile' />
           </div>
         </header>
 
-        <main className='flex-1 px-5 py-8 lg:px-10'>{children}</main>
+        <main className='flex-1 px-5 py-8 lg:px-10 lg:py-10'>{children}</main>
       </div>
     </div>
   );

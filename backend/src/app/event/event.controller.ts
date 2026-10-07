@@ -14,6 +14,8 @@ import { EventService } from './event.service.js';
 import { CreateEventDto } from './dto/create-event.dto.js';
 import { UpdateEventDto } from './dto/update-event.dto.js';
 import { QueryEventDto } from './dto/query-event.dto.js';
+import { QueryMetricsDto } from './dto/query-metrics.dto.js';
+import type { Requester } from '../user/user.service.js';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guard/jwt.guard.js';
 import { Request } from 'express';
@@ -53,6 +55,13 @@ export class EventController {
     return await this.eventService.findAll(query, req.user['id']);
   }
 
+  @Get('/me/metrics')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  async getMyMetrics(@Query() query: QueryMetricsDto, @Req() req: Request) {
+    return await this.eventService.getOrganizerMetrics(req.user as Requester, query.days);
+  }
+
   @Get('/payment-methods')
   async findAllPaymentMethods() {
     return this.paymentMethodService.findAll();
@@ -74,7 +83,7 @@ export class EventController {
   async create(@Req() req: Request, @Body() createEventDto: CreateEventDto) {
     createEventDto.userId = req.user['id'];
 
-    const event = await this.eventService.create(createEventDto);
+    const event = await this.eventService.create(req.user as Requester, createEventDto);
 
     return new MessageResponse('Evento cadastrado com sucesso.', event);
   }
@@ -83,12 +92,12 @@ export class EventController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   async buyTicket(
-    @Param('id') id: number,
+    @Param('id') id: string,
     @Req() req: Request,
     @Body() buyTicketDto: BuyEventTicketDto,
   ) {
     buyTicketDto.userId = req.user['id'];
-    buyTicketDto.eventId = id;
+    buyTicketDto.eventId = +id;
 
     await this.eventService.buyTicket(buyTicketDto);
     return new MessageResponse('Ingresso(s) comprado(s) com sucesso.');

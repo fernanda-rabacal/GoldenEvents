@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import { BECOME_ORGANIZER_PATH } from '@/components/layout/nav-links';
 import { buttonVariants } from '@/ui/button';
 import { SectionHeading } from './SectionHeading';
 
@@ -17,7 +18,7 @@ export function CreateEventCta() {
           titleClassName='max-w-xl'
         />
         <Link
-          href='/organizador/eventos/criar'
+          href={BECOME_ORGANIZER_PATH}
           className={buttonVariants({ size: 'lg' })}
         >
           Começar agora <ArrowRight data-icon='inline-end' />

@@ -122,40 +122,27 @@ export class UserRepository {
   }
 
   async getUserTickets(userId: number) {
-    let tickets = [];
-    const categories = await this.prisma.eventCategory.findMany();
-
-    const resultData = await this.prisma.ticket.findMany({
+    return this.prisma.ticket.findMany({
       where: {
         user_id: userId,
       },
       orderBy: { id: 'asc' },
-      include: {
+      select: {
+        id: true,
+        created_at: true,
         event: {
           select: {
-            category_id: true,
+            id: true,
+            name: true,
+            slug: true,
+            photo: true,
+            start_date: true,
+            end_date: true,
+            location: true,
+            category: { select: { name: true } },
           },
         },
       },
     });
-
-    for (const ticket of resultData) {
-      const category = categories.find(ct => ct.id === ticket.event.category_id);
-      const ticketAlreadyOnCount = tickets.find(
-        item => item.event_id === ticket.event_id,
-      );
-
-      if (ticketAlreadyOnCount) {
-        tickets = tickets.map(item => {
-          if (item.event_id === ticketAlreadyOnCount.event_id) item.quantity += 1;
-
-          return item;
-        });
-      } else {
-        tickets.push({ ...ticket, category: category.name, quantity: 1 });
-      }
-    }
-
-    return tickets;
   }
 }

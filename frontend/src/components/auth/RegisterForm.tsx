@@ -8,8 +8,10 @@ import type { z } from 'zod';
 import { ArrowRight, Mail, UserRound } from 'lucide-react';
 import { PasswordField } from '@/components/form/PasswordField';
 import { TextField } from '@/components/form/TextField';
+import { CREATE_EVENT_PATH } from '@/components/layout/nav-links';
 import { api } from '@/lib/axios';
 import { toastNotify } from '@/lib/toastify';
+import { buildLoginHref } from '@/utils/auth_redirect';
 import { maskDocument } from '@/utils/masks';
 import { registerFormSchema } from '@/utils/schemaValidations';
 import { OrganizerChoice } from './OrganizerChoice';
@@ -28,7 +30,13 @@ function getErrorMessage(error: unknown) {
   return message ?? 'Não foi possível concluir o cadastro. Tente novamente.';
 }
 
-export function RegisterForm() {
+type RegisterFormProps = {
+  defaultIsOrganizer?: boolean;
+};
+
+export function RegisterForm({
+  defaultIsOrganizer = false,
+}: RegisterFormProps) {
   const router = useRouter();
   const {
     register,
@@ -37,7 +45,7 @@ export function RegisterForm() {
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerFormSchema),
-    defaultValues: { isOrganizer: 'false' },
+    defaultValues: { isOrganizer: defaultIsOrganizer ? 'true' : 'false' },
   });
 
   async function handleRegister({
@@ -57,7 +65,9 @@ export function RegisterForm() {
       });
 
       toastNotify('success', 'Cadastro feito com sucesso! Agora é só entrar.');
-      router.push('/login');
+      router.push(
+        isOrganizer === 'true' ? buildLoginHref(CREATE_EVENT_PATH) : '/login',
+      );
     } catch (error) {
       toastNotify('error', getErrorMessage(error));
     }

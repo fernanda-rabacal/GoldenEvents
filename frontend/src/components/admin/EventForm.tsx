@@ -128,7 +128,7 @@ export function EventForm({ categories, event }: EventFormProps) {
       noValidate
       className='flex flex-col gap-8'
     >
-      <div className='grid gap-8 rounded-3xl border border-border bg-card p-6 lg:grid-cols-[0.9fr_1.1fr]'>
+      <div className='grid gap-8 rounded-xl border border-border bg-card p-6 lg:grid-cols-[0.9fr_1.1fr]'>
         {/* A API ainda não recebe a foto: o upload só mostra a prévia */}
         <ImageUpload
           label='Foto do evento (PNG ou JPEG de até 2MB)'
@@ -204,7 +204,7 @@ export function EventForm({ categories, event }: EventFormProps) {
         </div>
       </div>
 
-      <div className='rounded-3xl border border-border bg-card p-6'>
+      <div className='rounded-xl border border-border bg-card p-6'>
         <RichTextEditor
           label='Descrição do evento (mínimo de 100 caracteres) *'
           markdown={event?.description ?? ''}

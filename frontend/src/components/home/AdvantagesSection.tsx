@@ -33,7 +33,7 @@ export function AdvantagesSection() {
         {ADVANTAGES.map(({ icon: Icon, text, bg }) => (
           <div
             key={text}
-            className='flex items-center gap-4 rounded-3xl border border-border bg-card p-6'
+            className='flex items-center gap-4 rounded-xl border border-border bg-card p-6'
           >
             <div
               className={`flex size-12 shrink-0 items-center justify-center rounded-2xl text-accent-foreground ${bg}`}

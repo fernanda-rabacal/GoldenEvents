@@ -183,19 +183,22 @@ describe('UserController', () => {
     });
   });
 
-  describe('GET /tickets', () => {
-    it('should get all user tickets', async () => {
+  describe('GET /users/me/tickets', () => {
+    it('should get the tickets of the logged user', async () => {
       const loginResponse = await request(app.getHttpServer()).post('/login').send({
         email: 'emailteste@email.com',
         password: '123456',
       });
 
       const res = await request(app.getHttpServer())
-        .get(`/users/tickets/${users[0].id}`)
+        .get('/users/me/tickets')
         .auth(loginResponse.body.token, { type: loginResponse.body.type })
         .expect(200);
-      expect(res.body.content).toBeDefined();
-      expect(res.body.totalRecords).toBeDefined();
+      expect(res.body).toEqual([]);
+    });
+
+    it('should throw an UnauthorizedError', async () => {
+      await request(app.getHttpServer()).get('/users/me/tickets').expect(401);
     });
   });
 

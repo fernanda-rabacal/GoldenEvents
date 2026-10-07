@@ -12,7 +12,7 @@ type FeaturedEventCardProps = {
 
 export function FeaturedEventCard({ event }: FeaturedEventCardProps) {
   return (
-    <div className='relative min-h-105 overflow-hidden rounded-4xl bg-primary shadow-2xl shadow-primary/20 lg:min-h-128'>
+    <div className='relative min-h-105 overflow-hidden rounded-3xl bg-primary shadow-2xl shadow-primary/20 lg:min-h-128'>
       <img
         src={event?.photo || FALLBACK_IMAGE}
         alt=''
@@ -21,7 +21,7 @@ export function FeaturedEventCard({ event }: FeaturedEventCardProps) {
       <div className='absolute inset-0 bg-linear-to-t from-red-900 via-primary/40 to-transparent' />
 
       {event && (
-        <div className='absolute top-7 left-7 rounded-2xl bg-white/90 p-4 shadow-lg backdrop-blur-sm'>
+        <div className='absolute top-7 left-7 rounded-xl bg-white/90 p-4 shadow-lg backdrop-blur-sm'>
           <CalendarDays className='mb-2 size-5 text-orange-500' />
           <p className='text-h3 text-foreground'>
             {formatDay(event.start_date)}

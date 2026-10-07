@@ -91,7 +91,7 @@ export function CheckoutForm({
       onSubmit={handleSubmit}
       className='mt-8 grid gap-10 lg:grid-cols-[1.35fr_.85fr] lg:items-start'
     >
-      <section className='rounded-3xl border border-border bg-card p-6'>
+      <section className='rounded-xl border border-border bg-card p-6'>
         <h2 className='text-h3 text-foreground'>Forma de pagamento</h2>
 
         {isFree ? (

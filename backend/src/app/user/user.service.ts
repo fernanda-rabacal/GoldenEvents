@@ -6,10 +6,8 @@ import {
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
-import { QueryUserTicketsDto } from './dto/query-user-ticket.dto.js';
 import { UserRepository } from './repositories/user.repository.js';
 import { NotFoundError } from '../common/errors/types/NotFoundError.js';
-import { OffsetPagination } from '../../response/pagination.response.js';
 import { UserTypeEnum } from './entities/user.entity.js';
 
 // Usuário autenticado (req.user)
@@ -94,18 +92,25 @@ export class UserService {
     return this.repository.toggleActiveUser(id, !user.active);
   }
 
-  async getUserTickets(userId: number, query: QueryUserTicketsDto) {
+  async getUserTickets(userId: number) {
     const tickets = await this.repository.getUserTickets(userId);
+    const byEvent = new Map<
+      number,
+      {
+        event: (typeof tickets)[number]['event'];
+        quantity: number;
+        tickets: { id: number; created_at: Date }[];
+      }
+    >();
 
-    const totalRecords = tickets.length;
+    for (const { event, ...ticket } of tickets) {
+      const group = byEvent.get(event.id) ?? { event, quantity: 0, tickets: [] };
 
-    const paginator = new OffsetPagination(
-      totalRecords,
-      totalRecords,
-      query.skip,
-      query.take,
-    );
+      group.quantity += 1;
+      group.tickets.push(ticket);
+      byEvent.set(event.id, group);
+    }
 
-    return paginator.paginate(tickets);
+    return [...byEvent.values()];
   }
 }

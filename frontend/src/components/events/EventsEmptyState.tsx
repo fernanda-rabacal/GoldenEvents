@@ -9,7 +9,7 @@ type EventsEmptyStateProps = {
 
 export function EventsEmptyState({ clearFiltersHref }: EventsEmptyStateProps) {
   return (
-    <div className='rounded-3xl border border-dashed border-input bg-card px-6 py-16 text-center'>
+    <div className='rounded-xl border border-dashed border-input bg-card px-6 py-16 text-center'>
       <Search className='mx-auto size-8 text-orange-500' />
       <h3 className='mt-4 text-h4 text-foreground'>Nenhum evento encontrado</h3>
       {clearFiltersHref && (

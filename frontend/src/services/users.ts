@@ -1,33 +1,26 @@
-import type { Page } from '@golden-events/shared';
-import { fetchFromApi } from './api';
+import type { Event } from '@golden-events/shared';
 import { fetchWithAuth } from './authenticated-api';
 
-export type UserType = {
+export type TicketEvent = Pick<
+  Event,
+  'name' | 'slug' | 'photo' | 'start_date' | 'location'
+> & {
   id: number;
-  name: string;
+  end_date: string | null;
+  category: { name: string };
 };
 
-type UserTicket = {
+export type TicketPurchase = {
   id: number;
-  price: number;
+  created_at: string;
+};
+
+export type EventTickets = {
+  event: TicketEvent;
   quantity: number;
-  category: string;
-  event: {
-    name?: string;
-    start_date?: string;
-    created_at?: string;
-  };
+  tickets: TicketPurchase[];
 };
 
-export function getUserTypes() {
-  return fetchFromApi<UserType[]>('/users/types', [], {
-    next: { revalidate: 3600 },
-  });
-}
-
-export function getUserTickets(userId: number, page: number, take: number) {
-  return fetchWithAuth<Page<UserTicket> | null>(
-    `/users/tickets/${userId}?take=${take}&skip=${page - 1}`,
-    null,
-  );
+export function getMyTickets() {
+  return fetchWithAuth<EventTickets[] | null>('/users/me/tickets', null);
 }

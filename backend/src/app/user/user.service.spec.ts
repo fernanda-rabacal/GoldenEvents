@@ -53,19 +53,21 @@ describe('UserService', () => {
       },
     ];
 
+    const event = {
+      id: 1,
+      name: 'Festival de Verão',
+      slug: 'festival-de-verao',
+      photo: 'foto.png',
+      start_date: new Date(),
+      end_date: null,
+      location: 'Parque da Cidade',
+      category: { name: 'Shows' },
+    };
+
     expectedOutputUserTickets = [
-      {
-        id: 1,
-        event_id: 1,
-        user_id: 1,
-        price: 10,
-        payment_method_id: 1,
-        created_at: new Date(),
-        update_at: new Date(),
-        event: {
-          category_id: 1,
-        },
-      },
+      { id: 1, created_at: new Date(), event },
+      { id: 2, created_at: new Date(), event },
+      { id: 3, created_at: new Date(), event: { ...event, id: 2 } },
     ];
   });
 
@@ -298,22 +300,24 @@ describe('UserService', () => {
     );
   });
 
-  it('should get all user tickets', async () => {
-    prisma.eventCategory.findMany.mockResolvedValueOnce([
-      { id: 1, name: 'teste', photo: 'klsmskl' },
-    ]);
+  it('should group the user tickets by event', async () => {
     prisma.ticket.findMany.mockResolvedValueOnce(expectedOutputUserTickets);
 
-    const expectedTickets = expectedOutputUserTickets.map(ticket => ({
-      ...ticket,
-      quantity: 1,
-      category: 'teste',
-    }));
+    const [first, second] = expectedOutputUserTickets;
+    const tickets = await service.getUserTickets(1);
 
-    const tickets = await service.getUserTickets(1, { skip: 0, take: 10 });
-
-    expect(tickets).toHaveProperty('content');
-    expect(tickets.totalRecords).toBe(1);
-    expect(tickets.content).toStrictEqual(expectedTickets);
+    expect(prisma.ticket.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { user_id: 1 } }),
+    );
+    expect(tickets).toHaveLength(2);
+    expect(tickets[0]).toStrictEqual({
+      event: first.event,
+      quantity: 2,
+      tickets: [
+        { id: first.id, created_at: first.created_at },
+        { id: second.id, created_at: second.created_at },
+      ],
+    });
+    expect(tickets[1].quantity).toBe(1);
   });
 });

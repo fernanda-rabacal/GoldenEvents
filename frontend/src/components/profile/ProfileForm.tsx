@@ -7,11 +7,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import type { z } from 'zod';
 import type { User } from '@golden-events/shared';
 import { ImageUpload } from '@/components/form/ImageUpload';
-import { SelectField } from '@/components/form/SelectField';
 import { TextField } from '@/components/form/TextField';
 import { toastNotify } from '@/lib/toastify';
 import { updateProfile } from '@/services/profile-actions';
-import type { UserType } from '@/services/users';
 import { Button } from '@/ui/button';
 import { maskDocument } from '@/utils/masks';
 import { updateUserValidationSchema } from '@/utils/schemaValidations';
@@ -21,10 +19,9 @@ type ProfileFormOutput = z.output<typeof updateUserValidationSchema>;
 
 type ProfileFormProps = {
   user: User;
-  userTypes: UserType[];
 };
 
-export function ProfileForm({ user, userTypes }: ProfileFormProps) {
+export function ProfileForm({ user }: ProfileFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const {
@@ -36,13 +33,12 @@ export function ProfileForm({ user, userTypes }: ProfileFormProps) {
     resolver: zodResolver(updateUserValidationSchema),
     defaultValues: {
       name: user.name,
-      userTypeId: user.user_type_id,
     },
   });
 
-  function handleSave({ name, userTypeId }: ProfileFormOutput) {
+  function handleSave({ name }: ProfileFormOutput) {
     startTransition(async () => {
-      const result = await updateProfile({ name, userTypeId });
+      const result = await updateProfile({ name });
 
       if (!result.success) {
         toastNotify('error', result.message);
@@ -61,7 +57,7 @@ export function ProfileForm({ user, userTypes }: ProfileFormProps) {
       noValidate
       className='flex flex-col gap-8'
     >
-      <div className='grid gap-8 rounded-3xl border border-border bg-card p-6 lg:grid-cols-[0.9fr_1.1fr]'>
+      <div className='grid gap-8 rounded-xl border border-border bg-card p-6 lg:grid-cols-[0.9fr_1.1fr]'>
         {/* A API ainda não recebe a foto: o upload só mostra a prévia */}
         <ImageUpload
           label='Foto de perfil (PNG ou JPEG de até 2MB)'
@@ -78,17 +74,6 @@ export function ProfileForm({ user, userTypes }: ProfileFormProps) {
           />
           <TextField label='CPF' value={maskDocument(user.document)} disabled />
           <TextField label='E-mail' type='email' value={user.email} disabled />
-          <SelectField
-            label='Tipo de usuário'
-            error={errors.userTypeId?.message}
-            {...register('userTypeId')}
-          >
-            {userTypes.map((userType) => (
-              <option key={userType.id} value={userType.id}>
-                {userType.name}
-              </option>
-            ))}
-          </SelectField>
         </div>
       </div>
 
