@@ -11,7 +11,7 @@ import {
   buildEditEventHref,
 } from '@/components/layout/nav-links';
 import { cn } from '@/lib/utils';
-import { requireUser } from '@/services/auth';
+import { requireOrganizer } from '@/services/auth';
 import { getEventCategories, getMyEvents } from '@/services/events';
 import { Button, buttonVariants } from '@/ui/button';
 import { buildEventHref } from '@/utils/events_href';
@@ -40,7 +40,7 @@ type MyEventsPageProps = {
 export default async function MyEventsPage({
   searchParams,
 }: MyEventsPageProps) {
-  await requireUser(MY_EVENTS_PATH);
+  await requireOrganizer(MY_EVENTS_PATH);
 
   const params = await searchParams;
   const active = firstValue(params.ativo);
@@ -94,15 +94,15 @@ export default async function MyEventsPage({
       <MyEventsFilters categories={categories} />
 
       {!result ? (
-        <p className='rounded-3xl border border-border bg-card p-10 text-center text-body text-destructive'>
+        <p className='rounded-xl border border-border bg-card p-10 text-center text-body text-destructive'>
           Não foi possível carregar os eventos.
         </p>
       ) : events.length === 0 ? (
-        <p className='rounded-3xl border border-dashed border-input bg-card p-10 text-center text-body text-muted-foreground'>
+        <p className='rounded-xl border border-dashed border-input bg-card p-10 text-center text-body text-muted-foreground'>
           Nenhum evento encontrado.
         </p>
       ) : (
-        <div className='overflow-x-auto rounded-3xl border border-border bg-card'>
+        <div className='overflow-x-auto rounded-xl border border-border bg-card'>
           <table className='w-full text-left text-body-sm'>
             <thead className='border-b border-border text-muted-foreground'>
               <tr>

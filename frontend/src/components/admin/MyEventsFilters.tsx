@@ -70,7 +70,7 @@ export function MyEventsFilters({ categories }: MyEventsFiltersProps) {
   }
 
   return (
-    <div className='mb-6 grid gap-4 rounded-3xl border border-border bg-card p-5 sm:grid-cols-2 lg:grid-cols-4'>
+    <div className='mb-6 grid gap-4 rounded-xl border border-border bg-card p-5 sm:grid-cols-2 lg:grid-cols-4'>
       <TextField
         label='Nome'
         type='search'

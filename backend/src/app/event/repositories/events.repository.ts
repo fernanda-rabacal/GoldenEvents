@@ -70,8 +70,17 @@ export class EventRepository {
       };
     }
 
-    if (query.start_date) {
-      //tratamento do intervalo
+    // A listagem pública só mostra eventos ativos que ainda não começaram; o organizador vê todos os seus
+    if (!userId) {
+      const now = new Date();
+      const requestedStart = query.start_date ? new Date(query.start_date) : now;
+
+      where = {
+        ...where,
+        active: true,
+        start_date: { gte: requestedStart > now ? requestedStart : now },
+      };
+    } else if (query.start_date) {
       where = {
         ...where,
         start_date: {
@@ -202,6 +211,46 @@ export class EventRepository {
       where: {
         id: id,
       },
+    });
+  }
+
+  async getTicketStats(userId: number, from?: Date, to?: Date) {
+    const where: Prisma.TicketWhereInput = {
+      event: { user_id: userId },
+      created_at: { gte: from, lt: to },
+    };
+
+    const [totals, buyers] = await Promise.all([
+      this.prisma.ticket.aggregate({ where, _count: true, _sum: { price: true } }),
+      this.prisma.ticket.findMany({
+        where,
+        distinct: ['user_id'],
+        select: { user_id: true },
+      }),
+    ]);
+
+    return {
+      tickets: totals._count,
+      revenue: totals._sum.price ?? 0,
+      audience: buyers.length,
+    };
+  }
+
+  async countActiveEvents(userId: number, now: Date, createdSince?: Date) {
+    return this.prisma.event.count({
+      where: {
+        user_id: userId,
+        active: true,
+        created_at: { gte: createdSince },
+        OR: [{ end_date: { gte: now } }, { end_date: null, start_date: { gte: now } }],
+      },
+    });
+  }
+
+  async findTicketDatesSince(userId: number, since: Date) {
+    return this.prisma.ticket.findMany({
+      where: { event: { user_id: userId }, created_at: { gte: since } },
+      select: { created_at: true },
     });
   }
 }

@@ -2,7 +2,6 @@
 
 import type { ReactNode } from 'react';
 import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import { AuthContextProvider } from '@/contexts/AuthContext';
 
 export function Providers({ children }: { children: ReactNode }) {

@@ -53,7 +53,37 @@ export function formatDateTime(date: Date | string) {
   return dayjs(date).format('DD/MM/YYYY HH:mm');
 }
 
+// "18 mai 2026 · 18:00"
+export function formatDateWithTime(date: Date | string) {
+  return dayjs(date).format('D MMM YYYY · HH:mm');
+}
+
+// "18 maio"
+export function formatDayLongMonth(date: Date | string) {
+  return dayjs(date).format('D MMMM');
+}
+
+// "12 mai 2026, 14:32"
+export function formatShortDateTime(date: Date | string) {
+  return dayjs(date).format('D MMM YYYY, HH:mm');
+}
+
 // Valor de um <input type="datetime-local"> no fuso de quem está usando
 export function toDateTimeInputValue(date?: Date | string | null) {
   return date ? dayjs(date).format('YYYY-MM-DDTHH:mm') : '';
+}
+
+const fullDateFormatter = new Intl.DateTimeFormat('pt-BR', {
+  weekday: 'long',
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+  timeZone: 'America/Sao_Paulo',
+});
+
+// "Terça-feira, 12 de maio de 2026" (fuso fixo para o servidor e o navegador renderizarem igual)
+export function formatFullDate(date: Date | string) {
+  const formatted = fullDateFormatter.format(new Date(date));
+
+  return formatted.charAt(0).toUpperCase() + formatted.slice(1);
 }

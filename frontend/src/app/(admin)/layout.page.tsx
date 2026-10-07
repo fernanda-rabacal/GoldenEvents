@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { AdminShell } from '@/components/admin/AdminShell';
 import { getCurrentUser } from '@/services/auth';
+import { formatFullDate } from '@/utils/format_date';
 
 export default async function AdminLayout({
   children,
@@ -14,5 +15,9 @@ export default async function AdminLayout({
     return children;
   }
 
-  return <AdminShell user={user}>{children}</AdminShell>;
+  return (
+    <AdminShell user={user} today={formatFullDate(new Date())}>
+      {children}
+    </AdminShell>
+  );
 }

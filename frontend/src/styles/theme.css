@@ -46,17 +46,15 @@
   --color-gray-850: #272221;
   --color-gray-900: #121214;
 
-  --color-cyan-500: #61bafb;
-
   --color-red-50: #fff1f1;
   --color-red-100: #ffdede;
-  --color-red-200: #bf7960; /* globals.scss */
-  --color-red-300: #f84747; /* globals.scss */
+  --color-red-200: #fea8a8;
+  --color-red-300: #f84747;
   --color-red-400: #e01f1f;
-  --color-red-500: #b90000; /* globals.scss */
+  --color-red-500: #b90000;
   --color-red-600: #9a0000;
   --color-red-700: #7a0101;
-  --color-red-800: #590202; /* globals.scss */
+  --color-red-800: #590202;
   --color-red-900: #3d0101;
   --color-red-950: #250000;
 
@@ -64,10 +62,10 @@
   --color-orange-100: #fdedcc;
   --color-orange-200: #fbdc99;
   --color-orange-300: #f8c966;
-  --color-orange-400: #f6b638; /* globals.scss */
-  --color-orange-500: #eba417; /* globals.scss */
+  --color-orange-400: #f6b638;
+  --color-orange-500: #eba417;
   --color-orange-600: #d99410;
-  --color-orange-700: #c78500; /* globals.scss */
+  --color-orange-700: #c78500;
   --color-orange-800: #9a6705;
   --color-orange-900: #6b4704;
   --color-orange-950: #3d2802;
@@ -75,7 +73,7 @@
   --color-yellow-50: #fffde6;
   --color-yellow-100: #fff9bf;
   --color-yellow-200: #f7e866;
-  --color-yellow-300: #e6cd00; /* globals.scss */
+  --color-yellow-300: #e6cd00;
   --color-yellow-400: #ccb600;
   --color-yellow-500: #b39f00;
   --color-yellow-600: #998800;
@@ -100,7 +98,7 @@
   --color-blue-100: #dbeefe;
   --color-blue-200: #bfe1fe;
   --color-blue-300: #93cdfd;
-  --color-blue-400: #61bafb; /* mesmo tom do cyan-500 */
+  --color-blue-400: #61bafb;
   --color-blue-500: #3b9cf6;
   --color-blue-600: #2580eb;
   --color-blue-700: #1d68d0;
@@ -109,7 +107,7 @@
   --color-blue-950: #172d50;
 
   --color-beige-50: #fffdf9;
-  --color-beige-100: #fffaf0; /* globals.scss */
+  --color-beige-100: #fffaf0;
   --color-beige-200: #fbf1dd;
   --color-beige-300: #f9e3b7;
   --color-beige-400: #f0cf8f;

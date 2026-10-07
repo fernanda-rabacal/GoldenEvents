@@ -29,10 +29,12 @@ export function EventsSection({
     <section id='eventos' className='bg-card px-5 py-20 lg:px-8'>
       <div className='mx-auto max-w-6xl'>
         <div className='mb-10 flex flex-col justify-between gap-5 sm:flex-row sm:items-end'>
-          <SectionHeading
-            eyebrow={query ? `Resultados para "${query}"` : 'Na sua agenda'}
-            title='Próximos eventos'
-          />
+          <div className='shrink-0'>
+            <SectionHeading
+              eyebrow={query ? `Resultados para "${query}"` : 'Na sua agenda'}
+              title='Próximos eventos'
+            />
+          </div>
           <CategoryFilter
             categories={categories}
             activeCategoryId={activeCategoryId}

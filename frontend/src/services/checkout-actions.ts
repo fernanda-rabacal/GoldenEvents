@@ -20,7 +20,7 @@ export async function buyTickets({
   const result = await sendWithAuth(
     `/events/${eventId}/buy-ticket`,
     'POST',
-    { eventId, quantity, paymentMethodId },
+    { quantity, paymentMethodId },
     'Compra realizada com sucesso!',
   );
 

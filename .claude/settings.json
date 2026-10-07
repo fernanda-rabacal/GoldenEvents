@@ -1,7 +1,28 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(curl -s -m 5 -o /dev/null -w \"front %{http_code}\\\\n\" http://localhost:3000/login)",
+      "Bash(curl -s -m 5 -X POST http://localhost:8080/login -H \"Content-Type: application/json\" -d '{\"email\":\"x@x.com\",\"password\":\"12345678\"}' -w \"\\\\napi %{http_code}\\\\n\")",
+      "Read(//c/Program Files/Google/Chrome/Application/**)",
+      "Read(//c/Users/nanda/AppData/Local/ms-playwright/**)",
+      "Read(//c/Users/nanda/AppData/Local/Temp/claude/c--Users-nanda-Documents-Projetos-GoldenEvents/95aeda9d-c2c5-4688-bd33-670c905186af/scratchpad/**)",
+      "Bash(npm init *)",
+      "Bash(npm i *)",
+      "Bash(node login.js)",
+      "Bash(node login.js nandarabacal02@hotmail.com 12345678 wrong.png)",
+      "Bash(bun add *)",
+      "Bash(sed -i \"s/{ waitUntil: 'networkidle' }/{ waitUntil: 'load', timeout: 120000 }/\" login.js)",
+      "Bash(sed -i \"s/await page.click/await page.waitForTimeout\\(3000\\); await page.click/\" login.js)",
+      "Bash(sed -i \"s/waitUntil: 'load'/waitUntil: 'networkidle'/\" login.js)",
+      "Bash(netstat -ano)",
+      "PowerShell(Get-CimInstance Win32_Process -Filter \"ProcessId=19460 OR ProcessId=23732\")",
+      "Bash(cd /c/Users/nanda/Documents/Projetos/GoldenEvents/frontend && bun run typecheck 2>&1 | tail -15; npx eslint src/components/events src/lib/toastify.ts src/app/providers.tsx \"src/app/\\(auth\\)/layout.page.tsx\" 2>&1 | tail -20; tail -5 \"/c/Users/nanda/AppData/Local/Temp/claude/c--Users-nanda-Documents-Projetos-GoldenEvents/95aeda9d-c2c5-4688-bd33-670c905186af/scratchpad/dev.log\")",
+      "Bash(grep -E \"error|warning|\\\\.tsx?$\")",
+      "Bash(npx prettier *)",
+      "Bash(node verify.js)",
+      "Bash(sed -i \"s/waitForTimeout\\(5000\\)/waitForTimeout\\(1500\\)/\" verify.js)",
+      "PowerShell($p = \\(Get-NetTCPConnection -LocalPort 3001 -State Listen -ErrorAction SilentlyContinue\\).OwningProcess | Select-Object -Unique; foreach \\($id in $p\\) { Stop-Process -Id $id -Force -Confirm:$false }; \"stopped: $p\")"
     ]
   }
 }

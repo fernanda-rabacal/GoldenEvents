@@ -2,13 +2,14 @@ import Link from 'next/link';
 import { Check } from 'lucide-react';
 import { Button } from '@/ui/button';
 import { Logo } from './Logo';
+import { BECOME_ORGANIZER_PATH } from './nav-links';
 
 const FOOTER_COLUMNS = [
   {
     title: 'Golden',
     links: [
       { label: 'Encontrar eventos', href: '/#eventos' },
-      { label: 'Criar evento', href: '/organizador/eventos/criar' },
+      { label: 'Criar evento', href: BECOME_ORGANIZER_PATH },
       { label: 'Categorias', href: '/#categorias' },
     ],
   },

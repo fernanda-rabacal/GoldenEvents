@@ -26,7 +26,7 @@ export function EventPurchaseCard({
   const isPaid = event.price > 0;
 
   return (
-    <aside className='rounded-3xl border border-border bg-card p-6 shadow-xl shadow-primary/5 lg:sticky lg:top-6'>
+    <aside className='rounded-xl border border-border bg-card p-6 shadow-xl shadow-primary/5 lg:sticky lg:top-6'>
       <div className='flex items-start justify-between gap-4'>
         <div>
           <p className='text-body-sm font-bold tracking-eyebrow text-orange-500 uppercase'>

@@ -7,7 +7,7 @@ import {
   MY_EVENTS_PATH,
   buildEditEventHref,
 } from '@/components/layout/nav-links';
-import { requireUser } from '@/services/auth';
+import { requireOrganizer } from '@/services/auth';
 import { getEventBySlug, getEventCategories } from '@/services/events';
 
 export const metadata: Metadata = {
@@ -20,7 +20,7 @@ type EditEventPageProps = {
 
 export default async function EditEventPage({ params }: EditEventPageProps) {
   const { slug } = await params;
-  const user = await requireUser(buildEditEventHref(slug));
+  const user = await requireOrganizer(buildEditEventHref(slug));
   const [event, categories] = await Promise.all([
     getEventBySlug(slug, { cache: 'no-store' }),
     getEventCategories(),

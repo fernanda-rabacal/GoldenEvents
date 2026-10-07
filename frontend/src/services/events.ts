@@ -1,8 +1,9 @@
-import dayjs from 'dayjs';
 import type {
   Event,
   EventCategory,
   EventSort,
+  MetricsPeriod,
+  OrganizerMetrics,
   Page,
   PaymentMethod,
 } from '@golden-events/shared';
@@ -26,7 +27,6 @@ export async function getUpcomingEvents({
 }: UpcomingEventsFilters) {
   const params = new URLSearchParams({
     active: '1',
-    start_date: dayjs().startOf('day').toISOString(),
     skip: '0',
     take: String(take),
   });
@@ -121,4 +121,11 @@ export function getMyEvents({
   }
 
   return fetchWithAuth<Page<Event> | null>(`/events/me?${params}`, null);
+}
+
+export function getMyMetrics(days: MetricsPeriod) {
+  return fetchWithAuth<OrganizerMetrics | null>(
+    `/events/me/metrics?days=${days}`,
+    null,
+  );
 }

@@ -7,7 +7,6 @@ import {
   Patch,
   UseGuards,
   Req,
-  Query,
 } from '@nestjs/common';
 import { UserService, type Requester } from './user.service.js';
 import { CreateUserDto } from './dto/create-user.dto.js';
@@ -16,7 +15,6 @@ import { MessageResponse } from '../../response/message.response.js';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guard/jwt.guard.js';
 import { Request } from 'express';
-import { QueryUserTicketsDto } from './dto/query-user-ticket.dto.js';
 
 @ApiTags('User')
 @Controller('/users')
@@ -40,11 +38,11 @@ export class UserController {
     return await this.userService.getUserTypes();
   }
 
-  @Get('/tickets/:id')
+  @Get('/me/tickets')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  async getUserTickets(@Param('id') id: string, @Query() query: QueryUserTicketsDto) {
-    return await this.userService.getUserTickets(+id, query);
+  async getMyTickets(@Req() req: Request) {
+    return await this.userService.getUserTickets((req.user as Requester).id);
   }
 
   @Get('/:id')

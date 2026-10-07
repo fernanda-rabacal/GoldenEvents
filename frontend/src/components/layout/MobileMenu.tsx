@@ -7,7 +7,7 @@ import type { User } from '@golden-events/shared';
 import { SearchForm } from '@/components/events/SearchForm';
 import { signOut } from '@/services/auth-actions';
 import { Button } from '@/ui/button';
-import { CREATE_EVENT_LINK, NAV_LINKS, USER_MENU_LINKS } from './nav-links';
+import { CREATE_EVENT_LINK, NAV_LINKS, getUserMenuLinks } from './nav-links';
 
 type MobileMenuProps = {
   user: User | null;
@@ -20,8 +20,11 @@ export function MobileMenu({ user }: MobileMenuProps) {
   const links = [
     ...NAV_LINKS,
     CREATE_EVENT_LINK,
-    ...(user ? USER_MENU_LINKS : []),
-  ];
+    ...(user ? getUserMenuLinks(user) : []),
+  ].filter(
+    (link, index, all) =>
+      all.findIndex(({ href }) => href === link.href) === index,
+  );
 
   return (
     <div className='lg:hidden'>

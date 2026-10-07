@@ -9,8 +9,8 @@ const BRAND_IMAGE =
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <main className='min-h-screen bg-background text-foreground'>
-      <div className='mx-auto grid min-h-screen max-w-7xl lg:grid-cols-[.9fr_1.1fr]'>
-        <section className='relative hidden overflow-hidden bg-red-900 p-10 text-white lg:flex lg:flex-col lg:justify-between xl:p-14'>
+      <div className='grid min-h-screen lg:grid-cols-[.9fr_1.1fr]'>
+        <section className='relative hidden overflow-hidden bg-red-900 p-10 text-white lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col lg:justify-between xl:p-14'>
           <div className='relative z-10 w-fit'>
             <Logo variant='inverted' />
           </div>

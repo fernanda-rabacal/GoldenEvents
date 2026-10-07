@@ -3,6 +3,7 @@ import { ArrowRight, Sparkles, Users } from 'lucide-react';
 import type { Event } from '@golden-events/shared';
 import { FeaturedEventCard } from './FeaturedEventCard';
 import { SearchForm } from '@/components/events/SearchForm';
+import { BECOME_ORGANIZER_PATH } from '@/components/layout/nav-links';
 import { buttonVariants } from '@/ui/button';
 
 type HeroSectionProps = {
@@ -38,7 +39,7 @@ export function HeroSection({ featuredEvent }: HeroSectionProps) {
               Explorar eventos <ArrowRight data-icon='inline-end' />
             </Link>
             <Link
-              href='/organizador/eventos/criar'
+              href={BECOME_ORGANIZER_PATH}
               className={buttonVariants({ variant: 'outline', size: 'lg' })}
             >
               Criar um evento

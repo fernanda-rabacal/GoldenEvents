@@ -8,7 +8,8 @@ import { PrismaService } from '../../db/prisma.service.js';
 import { PrismaClientMock } from '../../db/prisma.mock.js';
 import { CreateEventDto } from './dto/create-event.dto.js';
 import { NotFoundError } from '../common/errors/types/NotFoundError.js';
-import { NotAcceptableException } from '@nestjs/common';
+import { ForbiddenException, NotAcceptableException } from '@nestjs/common';
+import { UserTypeEnum } from '@golden-events/shared';
 import { BuyEventTicketDto } from './dto/buy-ticket.dto.js';
 import { CategoryService } from './category.service.js';
 import { PaymentMethodService } from './payment-method.service.js';
@@ -22,6 +23,11 @@ describe('EventService', () => {
   let expectedOutputEvent: any;
   let expectedOutputCategory: any;
   let updateEventData: any;
+
+  const upcomingEvent = () => ({
+    ...expectedOutputEvent,
+    start_date: new Date(Date.now() + 86_400_000),
+  });
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -86,23 +92,41 @@ describe('EventService', () => {
     expect(service).toBeDefined();
   });
 
-  it('should create an event', async () => {
-    const newEvent: CreateEventDto = {
-      name: 'Teste evento',
-      description: 'teste unitário',
-      startDateTime: new Date().toISOString(),
-      userId: 1,
-      categoryId: 1,
-      capacity: 300,
-      location: 'Rua do limoeiro, 12',
-      price: 10,
-    };
+  const organizer = { id: 1, user_type_id: UserTypeEnum.ORGANIZER };
+  const createEventData: CreateEventDto = {
+    name: 'Teste evento',
+    description: 'teste unitário',
+    startDateTime: new Date().toISOString(),
+    userId: 1,
+    categoryId: 1,
+    capacity: 300,
+    location: 'Rua do limoeiro, 12',
+    price: 10,
+  };
 
+  it('should create an event', async () => {
     prisma.event.create.mockResolvedValueOnce(expectedOutputEvent);
 
-    const event = await service.create(newEvent);
+    const event = await service.create(organizer, createEventData);
 
     expect(event).toStrictEqual(expectedOutputEvent);
+  });
+
+  it('should throw a ForbiddenException when a non-organizer creates an event', async () => {
+    await expect(
+      service.create({ id: 1, user_type_id: UserTypeEnum.USER }, createEventData),
+    ).rejects.toThrow(ForbiddenException);
+    expect(prisma.event.create).not.toHaveBeenCalled();
+  });
+
+  it('should throw a NotFoundError when the category does not exist', async () => {
+    prisma.eventCategory.findFirst.mockReset();
+    prisma.eventCategory.findFirst.mockResolvedValueOnce(null);
+
+    await expect(service.create(organizer, createEventData)).rejects.toThrow(
+      'Categoria não encontrada.',
+    );
+    expect(prisma.event.create).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -112,17 +136,7 @@ describe('EventService', () => {
   ])('should create an event with subtitle "%s" saved as %p', async (subtitle, saved) => {
     prisma.event.create.mockResolvedValueOnce(expectedOutputEvent);
 
-    await service.create({
-      name: 'Teste evento',
-      subtitle,
-      description: 'teste unitário',
-      startDateTime: new Date().toISOString(),
-      userId: 1,
-      categoryId: 1,
-      capacity: 300,
-      location: 'Rua do limoeiro, 12',
-      price: 10,
-    });
+    await service.create(organizer, { ...createEventData, subtitle });
 
     expect(prisma.event.create).toHaveBeenCalledWith({
       data: expect.objectContaining({ subtitle: saved }),
@@ -269,6 +283,39 @@ describe('EventService', () => {
     expect(prisma.event.findMany.mock.calls[0][0].where).not.toHaveProperty('user_id');
   });
 
+  it('should list only active events that have not started on the public listing', async () => {
+    prisma.event.findMany.mockResolvedValueOnce([]);
+    const before = new Date();
+
+    await service.findAll({ skip: 0, take: 10, active: '0', start_date: new Date(0) });
+
+    const { where } = prisma.event.findMany.mock.calls[0][0];
+    expect(where.active).toBe(true);
+    expect(where.start_date).toEqual({ gte: expect.any(Date) });
+    expect((where.start_date as { gte: Date }).gte.getTime()).toBeGreaterThanOrEqual(
+      before.getTime(),
+    );
+  });
+
+  it('should keep a future start date filter on the public listing', async () => {
+    prisma.event.findMany.mockResolvedValueOnce([]);
+    const nextYear = new Date(Date.now() + 365 * 86_400_000);
+
+    await service.findAll({ skip: 0, take: 10, start_date: nextYear });
+
+    expect(prisma.event.findMany.mock.calls[0][0].where.start_date).toEqual({
+      gte: nextYear,
+    });
+  });
+
+  it('should list past events to their organizer', async () => {
+    prisma.event.findMany.mockResolvedValueOnce([]);
+
+    await service.findAll({ skip: 0, take: 10 }, 3);
+
+    expect(prisma.event.findMany.mock.calls[0][0].where).not.toHaveProperty('start_date');
+  });
+
   it.each([
     [undefined, [{ start_date: 'asc' }, { id: 'asc' }]],
     ['start_date', [{ start_date: 'asc' }, { id: 'asc' }]],
@@ -358,7 +405,7 @@ describe('EventService', () => {
       })),
     };
 
-    prisma.event.findFirst.mockResolvedValue(expectedOutputEvent);
+    prisma.event.findFirst.mockResolvedValue(upcomingEvent());
     prisma.event.update.mockResolvedValueOnce(newUpdatedEvent);
 
     const purchasedTickets = await service.buyTicket(ticket);
@@ -382,9 +429,29 @@ describe('EventService', () => {
     );
   });
 
+  it.each([
+    [
+      'an event that already started',
+      { start_date: new Date(Date.now() - 60_000) },
+      'Não é possível comprar ingressos para um evento que já começou.',
+    ],
+    [
+      'an inactive event',
+      { active: false, start_date: new Date(Date.now() + 86_400_000) },
+      'As vendas deste evento estão encerradas.',
+    ],
+  ])('should not buy tickets for %s', async (_, event, message) => {
+    prisma.event.findFirst.mockResolvedValue({ ...expectedOutputEvent, ...event });
+
+    await expect(
+      service.buyTicket({ eventId: 1, paymentMethodId: 1, quantity: 1, userId: 1 }),
+    ).rejects.toThrow(new NotAcceptableException(message));
+    expect(prisma.event.update).not.toHaveBeenCalled();
+  });
+
   it('should not buy more tickets than are left', async () => {
     prisma.event.findFirst.mockResolvedValue({
-      ...expectedOutputEvent,
+      ...upcomingEvent(),
       quantity_left: 2,
     });
 
@@ -441,5 +508,39 @@ describe('EventService', () => {
     prisma.paymentMethod.findMany.mockResolvedValue(paymentMethods);
 
     expect(await paymentMethodService.findAll()).toStrictEqual(paymentMethods);
+  });
+
+  it('should throw a ForbiddenException when a non-organizer asks for metrics', async () => {
+    await expect(
+      service.getOrganizerMetrics({ id: 1, user_type_id: UserTypeEnum.USER }, 7),
+    ).rejects.toThrow(ForbiddenException);
+  });
+
+  it('should compute the organizer metrics', async () => {
+    prisma.ticket.aggregate
+      .mockResolvedValueOnce({ _count: 12, _sum: { price: 600 } } as never)
+      .mockResolvedValueOnce({ _count: 6, _sum: { price: 300 } } as never)
+      .mockResolvedValueOnce({ _count: 4, _sum: { price: 0 } } as never);
+    prisma.ticket.findMany
+      .mockResolvedValueOnce([{ user_id: 1 }, { user_id: 2 }, { user_id: 3 }] as never)
+      .mockResolvedValueOnce([{ user_id: 1 }] as never)
+      .mockResolvedValueOnce([{ user_id: 2 }, { user_id: 3 }] as never)
+      .mockResolvedValueOnce([
+        { created_at: new Date() },
+        { created_at: new Date() },
+      ] as never);
+    prisma.event.count.mockResolvedValueOnce(5).mockResolvedValueOnce(2);
+
+    const metrics = await service.getOrganizerMetrics(
+      { id: 1, user_type_id: UserTypeEnum.ORGANIZER },
+      7,
+    );
+
+    expect(metrics.ticketsSold).toStrictEqual({ total: 12, change: 50 });
+    expect(metrics.revenue).toStrictEqual({ total: 600, change: null });
+    expect(metrics.audience).toStrictEqual({ total: 3, change: -50 });
+    expect(metrics.activeEvents).toStrictEqual({ total: 5, createdThisMonth: 2 });
+    expect(metrics.dailySales).toHaveLength(7);
+    expect(metrics.dailySales.at(-1).tickets).toBe(2);
   });
 });
