@@ -1,6 +1,6 @@
 # Golden Events
 
-This is a collaborative full stack project of a website where you can see the latest events near to you, see the details of it, register or login in your account to buy a ticket and/or create an event. Besides, you can see and edit your profile, see the order history, edit or delete your created events and many more. This project is made with Next.js e Express.js, also using Sass and Prisma, using JWT authentication, data validation, PostgreSQL database, Redis and Docker.
+This is a collaborative full stack project of a website where you can see the latest events near to you, see the details of it, register or login in your account to buy a ticket and/or create an event. Besides, you can see and edit your profile, see the order history, edit or delete your created events and many more. This project is made with Next.js and NestJS, also using Tailwind CSS and Prisma, using JWT authentication, data validation, PostgreSQL database, Redis and Docker.
 
 <div>
   <img align="center" style="margin-bottom:50px;" src="https://github.com/fernanda-rabacal/GoldenEvents/assets/99514714/8d93fedd-8cb9-4cfb-9473-6155ec0ee3f8" />
@@ -25,6 +25,8 @@ This repository is a monorepo managed with [Bun workspaces](https://bun.sh/docs/
   - `frontend/` – Next.js web app (`golden-events`)
   - `packages/shared/` – types and enums shared by both (`@golden-events/shared`)
 
+See [ARCHITECTURE.md](ARCHITECTURE.md) for how the project is structured.
+
 To use this code without Docker, you need to have Node.js 22+ and Bun installed. Also, you need to have a PostgreSQL server (or run only the database with `docker compose up -d db redis`). 
 
   Copy `backend/.env.example` to `backend/.env`, set a value for `SECRET` and adjust the PostgreSQL credentials if needed. 
@@ -48,8 +50,8 @@ To use this code without Docker, you need to have Node.js 22+ and Bun installed.
   <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white"> 
   <img src="https://img.shields.io/badge/next%20js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" /> 
   <img src="https://img.shields.io/badge/Node%20js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" /> 
-  <img src="https://img.shields.io/badge/Sass-CC6699?style=for-the-badge&logo=sass&logoColor=white" /> 
+  <img src="https://img.shields.io/badge/Tailwind%20CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" /> 
   <img src="https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=Prisma&logoColor=white" /> 
-  <img src="https://img.shields.io/badge/Express%20js-000000?style=for-the-badge&logo=express&logoColor=white" /> 
+  <img src="https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white" /> 
   <img src="https://img.shields.io/badge/Docker-0db7ed?style=for-the-badge&logo=docker&logoColor=white" /> 
 </div>
