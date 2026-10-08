@@ -130,6 +130,7 @@ export class UserRepository {
       select: {
         id: true,
         created_at: true,
+        lot: { select: { name: true, sector: { select: { name: true } } } },
         event: {
           select: {
             id: true,

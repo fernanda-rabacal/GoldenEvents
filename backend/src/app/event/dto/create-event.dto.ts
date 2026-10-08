@@ -1,15 +1,18 @@
 import {
+  ArrayMinSize,
+  IsArray,
   IsDate,
   IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
   Length,
-  Min,
   MinDate,
+  ValidateNested,
 } from 'class-validator';
 import { ApiProperty, ApiHideProperty } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
+import { CreateSectorDto } from './sector.dto.js';
 
 export class CreateEventDto {
   @IsString()
@@ -31,16 +34,6 @@ export class CreateEventDto {
   @ApiProperty()
   categoryId: number;
 
-  @IsNumber()
-  @Min(0)
-  @ApiProperty()
-  price: number;
-
-  @IsNumber()
-  @Min(1)
-  @ApiProperty()
-  capacity: number;
-
   @IsDate()
   @Transform(({ value }) => new Date(value))
   @MinDate(() => new Date())
@@ -58,6 +51,13 @@ export class CreateEventDto {
   @IsNotEmpty()
   @ApiProperty()
   location: string;
+
+  @IsArray()
+  @ArrayMinSize(1, { message: 'O evento precisa ter pelo menos um setor.' })
+  @ValidateNested({ each: true })
+  @Type(() => CreateSectorDto)
+  @ApiProperty({ type: [CreateSectorDto] })
+  sectors: CreateSectorDto[];
 
   @ApiHideProperty()
   userId: number;

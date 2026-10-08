@@ -7,6 +7,10 @@ export class BuyEventTicketDto {
   eventId: number;
 
   @ApiProperty()
+  @IsInt()
+  lotId: number;
+
+  @ApiProperty()
   @IsNumber()
   paymentMethodId: number;
 
