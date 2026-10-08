@@ -2,7 +2,7 @@
 
 import { useState, useTransition, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import type { Event, PaymentMethod } from '@golden-events/shared';
+import type { Event, Lot, PaymentMethod, Sector } from '@golden-events/shared';
 import { MY_TICKETS_PATH } from '@/components/layout/nav-links';
 import { toastNotify } from '@/lib/toastify';
 import { buyTickets } from '@/services/checkout-actions';
@@ -14,11 +14,13 @@ import { PaymentMethodPicker } from './PaymentMethodPicker';
 import { getPaymentOptions, type PaymentKind } from './payment-options';
 import { PixPaymentForm } from './PixPaymentForm';
 
-// Taxa só exibida: a API registra o ingresso pelo preço do evento
+// Taxa só exibida: a API registra o ingresso pelo preço do lote
 const SERVICE_FEE_RATE = 0.1;
 
 type CheckoutFormProps = {
   event: Event;
+  sector: Sector;
+  lot: Lot;
   paymentMethods: PaymentMethod[];
   initialQuantity: number;
   maxQuantity: number;
@@ -26,6 +28,8 @@ type CheckoutFormProps = {
 
 export function CheckoutForm({
   event,
+  sector,
+  lot,
   paymentMethods,
   initialQuantity,
   maxQuantity,
@@ -42,9 +46,9 @@ export function CheckoutForm({
       )?.id,
   );
 
-  const isFree = event.price === 0;
-  const subtotal = event.price * quantity;
-  const serviceFee = subtotal * SERVICE_FEE_RATE;
+  const isFree = lot.price === 0;
+  const subtotal = lot.price * quantity;
+  const serviceFee = Math.round(subtotal * SERVICE_FEE_RATE);
   const total = subtotal + serviceFee;
   const selectedKind = paymentOptions.find(
     ({ id }) => id === paymentMethodId,
@@ -52,7 +56,11 @@ export function CheckoutForm({
 
   function handleQuantityChange(value: number) {
     setQuantity(value);
-    window.history.replaceState(null, '', buildCheckoutHref(event.slug, value));
+    window.history.replaceState(
+      null,
+      '',
+      buildCheckoutHref(event.slug, lot.id, value),
+    );
   }
 
   function handleSubmit(formEvent: FormEvent<HTMLFormElement>) {
@@ -72,6 +80,7 @@ export function CheckoutForm({
       const result = await buyTickets({
         eventId: Number(event.id),
         slug: event.slug,
+        lotId: lot.id,
         quantity,
         paymentMethodId: selectedPaymentMethodId,
       });
@@ -117,6 +126,8 @@ export function CheckoutForm({
 
       <OrderSummary
         event={event}
+        sector={sector}
+        lot={lot}
         quantity={quantity}
         maxQuantity={maxQuantity}
         onQuantityChange={handleQuantityChange}

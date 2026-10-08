@@ -3,9 +3,9 @@
 import { useTransition } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
+import { useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { z } from 'zod';
+import { Plus } from 'lucide-react';
 import type { Event, EventCategory } from '@golden-events/shared';
 import { ImageUpload } from '@/components/form/ImageUpload';
 import { SelectField } from '@/components/form/SelectField';
@@ -22,15 +22,17 @@ import type { ActionResult } from '@/services/authenticated-api';
 import { Button } from '@/ui/button';
 import { toDateTimeInputValue } from '@/utils/format_date';
 import { formatMoney } from '@/utils/format_money';
-import { maskCurrency, parseCurrency } from '@/utils/masks';
-import { eventValidationSchema } from '@/utils/schemaValidations';
+import { parseCurrency } from '@/utils/masks';
+import {
+  eventValidationSchema,
+  type EventFormValues,
+} from '@/utils/schemaValidations';
+import { SectorFields, newSector } from './SectorFields';
 
 const RichTextEditor = dynamic(
   () => import('@/components/form/RichTextEditor'),
   { ssr: false },
 );
-
-type EventFormValues = z.infer<typeof eventValidationSchema>;
 
 type EventFormProps = {
   categories: EventCategory[];
@@ -47,12 +49,22 @@ function toPayload(data: EventFormValues): EventPayload {
     name: data.name,
     subtitle: data.subtitle || null,
     location: data.location,
-    capacity: data.capacity,
-    price: parseCurrency(data.price),
     categoryId: data.categoryId,
     description: data.description,
     startDateTime: toIsoString(data.startDateTime)!,
     endDateTime: toIsoString(data.endDateTime),
+    sectors: data.sectors.map((sector) => ({
+      id: sector.id,
+      name: sector.name,
+      lots: sector.lots.map((lot) => ({
+        id: lot.id,
+        name: lot.name,
+        price: parseCurrency(lot.price),
+        quantity: lot.quantity,
+        salesStart: toIsoString(lot.salesStart) ?? null,
+        salesEnd: toIsoString(lot.salesEnd) ?? null,
+      })),
+    })),
   };
 }
 
@@ -62,6 +74,7 @@ export function EventForm({ categories, event }: EventFormProps) {
   const isEditing = Boolean(event);
   const {
     register,
+    control,
     setValue,
     handleSubmit,
     formState: { errors, isSubmitted },
@@ -71,8 +84,19 @@ export function EventForm({ categories, event }: EventFormProps) {
       name: event?.name ?? '',
       subtitle: event?.subtitle ?? '',
       location: event?.location ?? '',
-      capacity: event?.capacity,
-      price: formatMoney(event?.price ?? 0),
+      sectors: event?.sectors?.map((sector) => ({
+        id: sector.id,
+        name: sector.name,
+        lots: sector.lots.map((lot) => ({
+          id: lot.id,
+          sold: lot.quantity - lot.quantity_left,
+          name: lot.name,
+          price: formatMoney(lot.price),
+          quantity: lot.quantity,
+          salesStart: toDateTimeInputValue(lot.sales_start),
+          salesEnd: toDateTimeInputValue(lot.sales_end),
+        })),
+      })) ?? [newSector('Geral')],
       categoryId: event?.category_id,
       description: event?.description ?? '',
       photo: event?.photo,
@@ -80,7 +104,7 @@ export function EventForm({ categories, event }: EventFormProps) {
       endDateTime: toDateTimeInputValue(event?.end_date),
     },
   });
-  const priceField = register('price');
+  const sectors = useFieldArray({ control, name: 'sectors' });
 
   function runAction(action: () => Promise<ActionResult>) {
     startTransition(async () => {
@@ -97,14 +121,6 @@ export function EventForm({ categories, event }: EventFormProps) {
   }
 
   function handleSave(data: EventFormValues) {
-    if (event && event.quantity_left < event.capacity) {
-      toastNotify(
-        'error',
-        'Você não pode atualizar o evento pois já existem ingressos comprados.',
-      );
-      return;
-    }
-
     const payload = toPayload(data);
 
     runAction(() =>
@@ -154,27 +170,6 @@ export function EventForm({ categories, event }: EventFormProps) {
             error={errors.location?.message}
             {...register('location')}
           />
-          <div className='grid gap-5 sm:grid-cols-2'>
-            <TextField
-              label='Capacidade *'
-              type='number'
-              min={1}
-              error={errors.capacity?.message}
-              {...register('capacity')}
-            />
-            <TextField
-              label='Preço *'
-              inputMode='numeric'
-              error={errors.price?.message}
-              {...priceField}
-              onChange={(changeEvent) => {
-                changeEvent.target.value = maskCurrency(
-                  changeEvent.target.value,
-                );
-                priceField.onChange(changeEvent);
-              }}
-            />
-          </div>
           <SelectField
             label='Categoria do evento *'
             error={errors.categoryId?.message}
@@ -203,6 +198,44 @@ export function EventForm({ categories, event }: EventFormProps) {
           </div>
         </div>
       </div>
+
+      <section className='flex flex-col gap-5 rounded-xl border border-border bg-card p-6'>
+        <div>
+          <h2 className='text-h4 text-foreground'>Setores e ingressos</h2>
+          <p className='mt-1 text-body-sm text-muted-foreground'>
+            Cada setor vende um lote por vez, na ordem cadastrada. O próximo
+            lote abre quando o atual esgota ou chega ao fim das vendas.
+          </p>
+        </div>
+
+        {sectors.fields.map((field, index) => (
+          <SectorFields
+            key={field.id}
+            index={index}
+            control={control}
+            register={register}
+            errors={errors.sectors?.[index]}
+            canRemove={sectors.fields.length > 1}
+            onRemove={() => sectors.remove(index)}
+          />
+        ))}
+
+        {errors.sectors?.message && (
+          <p className='text-caption text-destructive'>
+            {errors.sectors.message}
+          </p>
+        )}
+
+        <Button
+          type='button'
+          variant='outline'
+          size='lg'
+          onClick={() => sectors.append(newSector())}
+          className='self-start'
+        >
+          <Plus data-icon='inline-start' /> Adicionar setor
+        </Button>
+      </section>
 
       <div className='rounded-xl border border-border bg-card p-6'>
         <RichTextEditor

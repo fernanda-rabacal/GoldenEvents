@@ -21,7 +21,10 @@ function getInstallments(total: number) {
     const count = index + 1;
     const value = total / count;
 
-    return { count, value: value + value * INSTALLMENT_FEE_RATE * index };
+    return {
+      count,
+      value: Math.round(value + value * INSTALLMENT_FEE_RATE * index),
+    };
   });
 }
 

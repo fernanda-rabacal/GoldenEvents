@@ -23,6 +23,7 @@ export function maskCurrency(value: string) {
   return formatMoney(parseCurrency(value));
 }
 
+// Devolve centavos, o formato que a API recebe
 export function parseCurrency(value: string) {
-  return Number(value.replace(/\D/g, '') || 0) / 100;
+  return Number(value.replace(/\D/g, '') || 0);
 }

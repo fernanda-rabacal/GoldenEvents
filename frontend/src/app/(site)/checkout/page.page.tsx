@@ -6,6 +6,7 @@ import { CheckoutForm } from '@/components/checkout/CheckoutForm';
 import { requireUser } from '@/services/auth';
 import { getEventBySlug, getPaymentMethods } from '@/services/events';
 import {
+  findOfferOnSale,
   getMaxTicketQuantity,
   getUnavailableReason,
 } from '@/utils/event_availability';
@@ -26,6 +27,7 @@ export const metadata: Metadata = {
 type CheckoutPageProps = {
   searchParams: Promise<{
     evento?: SearchParamValue;
+    lote?: SearchParamValue;
     quantidade?: SearchParamValue;
   }>;
 };
@@ -35,17 +37,18 @@ export default async function CheckoutPage({
 }: CheckoutPageProps) {
   const params = await searchParams;
   const slug = firstValue(params.evento);
+  const lotId = Number(firstValue(params.lote));
   const requestedQuantity = Math.trunc(
     Number(firstValue(params.quantidade)) || 1,
   );
 
-  if (!slug) {
+  if (!slug || !lotId) {
     redirect(EVENTS_PAGE_PATH);
   }
 
-  await requireUser(buildCheckoutHref(slug, requestedQuantity));
+  await requireUser(buildCheckoutHref(slug, lotId, requestedQuantity));
 
-  // Sem cache: preço e ingressos disponíveis precisam estar atualizados na compra
+  // Sem cache: lote da vez, preço e ingressos disponíveis precisam estar atualizados na compra
   const [event, paymentMethods] = await Promise.all([
     getEventBySlug(slug, { cache: 'no-store' }),
     getPaymentMethods(),
@@ -55,11 +58,13 @@ export default async function CheckoutPage({
     notFound();
   }
 
-  if (getUnavailableReason(event)) {
+  const offer = findOfferOnSale(event, lotId);
+
+  if (getUnavailableReason(event) || !offer?.lot) {
     redirect(buildEventHref(event.slug));
   }
 
-  const maxQuantity = getMaxTicketQuantity(event);
+  const maxQuantity = getMaxTicketQuantity(offer.lot);
   const quantity = Math.min(Math.max(1, requestedQuantity), maxQuantity);
 
   return (
@@ -82,6 +87,8 @@ export default async function CheckoutPage({
 
       <CheckoutForm
         event={event}
+        sector={offer.sector}
+        lot={offer.lot}
         paymentMethods={paymentMethods}
         initialQuantity={quantity}
         maxQuantity={maxQuantity}

@@ -44,9 +44,14 @@ export function buildEventHref(slug: string) {
   return `${EVENTS_PAGE_PATH}/${slug}`;
 }
 
-export function buildCheckoutHref(slug: string, quantity: number) {
+export function buildCheckoutHref(
+  slug: string,
+  lotId: number,
+  quantity: number,
+) {
   const params = new URLSearchParams({
     evento: slug,
+    lote: String(lotId),
     quantidade: String(quantity),
   });
 

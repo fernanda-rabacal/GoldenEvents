@@ -7,6 +7,7 @@ import { sendWithAuth, type ActionResult } from './authenticated-api';
 type BuyTicketsInput = {
   eventId: number;
   slug: string;
+  lotId: number;
   quantity: number;
   paymentMethodId: number;
 };
@@ -14,13 +15,14 @@ type BuyTicketsInput = {
 export async function buyTickets({
   eventId,
   slug,
+  lotId,
   quantity,
   paymentMethodId,
 }: BuyTicketsInput): Promise<ActionResult> {
   const result = await sendWithAuth(
     `/events/${eventId}/buy-ticket`,
     'POST',
-    { quantity, paymentMethodId },
+    { lotId, quantity, paymentMethodId },
     'Compra realizada com sucesso!',
   );
 

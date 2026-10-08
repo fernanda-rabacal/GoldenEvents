@@ -29,7 +29,7 @@ const MOCK_ORDERS: Order[] = [
     purchasedAt: '2026-10-06T14:32:00',
     quantity: 2,
     status: 'approved',
-    total: 90,
+    total: 9000,
   },
   {
     id: 2,
@@ -38,7 +38,7 @@ const MOCK_ORDERS: Order[] = [
     purchasedAt: '2026-10-06T11:08:00',
     quantity: 1,
     status: 'approved',
-    total: 35,
+    total: 3500,
   },
   {
     id: 3,
@@ -47,7 +47,7 @@ const MOCK_ORDERS: Order[] = [
     purchasedAt: '2026-10-05T18:46:00',
     quantity: 3,
     status: 'approved',
-    total: 135,
+    total: 13500,
   },
   {
     id: 4,
@@ -56,7 +56,7 @@ const MOCK_ORDERS: Order[] = [
     purchasedAt: '2026-10-05T09:21:00',
     quantity: 1,
     status: 'pending',
-    total: 45,
+    total: 4500,
   },
   {
     id: 5,
@@ -65,7 +65,7 @@ const MOCK_ORDERS: Order[] = [
     purchasedAt: '2026-10-04T16:15:00',
     quantity: 2,
     status: 'canceled',
-    total: 70,
+    total: 7000,
   },
 ];
 

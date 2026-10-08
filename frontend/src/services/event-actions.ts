@@ -1,18 +1,18 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import type { SectorInput } from '@golden-events/shared';
 import { sendWithAuth } from './authenticated-api';
 
 export type EventPayload = {
   name: string;
   subtitle: string | null;
   location: string;
-  capacity: number;
-  price: number;
   categoryId: number;
   description: string;
   startDateTime: string;
   endDateTime?: string;
+  sectors: SectorInput[];
 };
 
 // Listagens públicas (home, /eventos, detalhes) usam cache de 60s

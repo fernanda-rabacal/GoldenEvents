@@ -23,7 +23,9 @@ export function EventPurchaseCard({
   unavailableReason,
 }: EventPurchaseCardProps) {
   const { place, region } = splitLocation(event.location);
-  const isPaid = event.price > 0;
+  const isPaid = (event.sectors ?? []).some(({ lots }) =>
+    lots.some(({ price }) => price > 0),
+  );
 
   return (
     <aside className='rounded-xl border border-border bg-card p-6 shadow-xl shadow-primary/5 lg:sticky lg:top-6'>
@@ -55,11 +57,9 @@ export function EventPurchaseCard({
 
       <div className='mt-6 flex items-end justify-between'>
         <div>
-          <p className='text-body-sm text-muted-foreground'>
-            Valor do ingresso
-          </p>
+          <p className='text-body-sm text-muted-foreground'>A partir de</p>
           <p className='mt-1 text-h3 text-primary'>
-            {formatTicketPrice(event.price)}
+            {formatTicketPrice(event.min_price)}
           </p>
           {!unavailableReason && (
             <p className='mt-1 text-caption text-muted-foreground'>
