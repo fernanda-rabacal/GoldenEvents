@@ -53,6 +53,7 @@ Builds with `tsc` to `dist/`. It is the single source of truth for types that cr
 
 - `user.ts`: `UserTypeEnum` (`ADMIN=1`, `USER=2`, `ORGANIZER=3`), `User`, and `canManageEvents()`, which returns true for admins and organizers.
 - `event.ts`: `Event`, `EventCategory`, `PaymentMethod`, `CreateEventProps`, `EVENT_SORT_OPTIONS`.
+- `lot.ts`: `Sector`, `Lot`, their input types, `getCurrentLot()` (the lot turnover rule, used by the API to validate purchases and by the frontend to show what is on sale) and `summarizeLots()` (event totals).
 - `pagination.ts`: `Page<T>`.
 - `metrics.ts`: `OrganizerMetrics`, `DailySales`, `METRICS_PERIOD_OPTIONS`.
 
@@ -192,11 +193,15 @@ Prisma errors are converted first (`handleDatabaseErrors`, for example P2002 bec
 | POST | `/events`, `/events/:id/buy-ticket` | JWT |
 | PATCH / DELETE | `/events/:id` | JWT |
 
+Sectors and lots travel inside the event payload. `POST /events` requires at least one sector with one lot. On `PATCH /events/:id`, `sectors` replaces the whole list: items with `id` are updated, items without `id` are created and missing ones are deleted, all in one transaction. `POST /events/:id/buy-ticket` takes `{ lotId, quantity, paymentMethodId }`.
+
 The full contract is in Swagger (`/docs`) and in `goldenevents-api-insominia-doc.json`.
 
 ### Database
 
-- Schema: `backend/prisma/schema.prisma`. Models: `User`, `UserType`, `Event`, `EventCategory`, `PaymentMethod`, `Ticket`. Tables and columns are snake_case.
+- Schema: `backend/prisma/schema.prisma`. Models: `User`, `UserType`, `Event`, `Sector`, `Lot`, `EventCategory`, `PaymentMethod`, `Ticket`. Tables and columns are snake_case.
+- Money is always an integer in cents: `Lot.price`, `Ticket.price` (the lot price frozen at purchase), `Event.min_price` and the revenue metric.
+- Tickets are sold by lot. Each event has sectors, and each sector has lots in order (`position`). Only one lot per sector is on sale: the first one with tickets left whose sales have not ended. If that lot has a future `sales_start`, the sector waits. `Event.capacity`, `quantity_left` and `min_price` are totals of the lots, recalculated in the same transaction as every write; writes lock the event row so concurrent purchases do not compute them from stale reads.
 - Migrations: `backend/prisma/migrations/`. Create one with `bunx prisma migrate dev --name <name>` inside `backend/`. Production and Docker apply them with `prisma migrate deploy`.
 - Seeds: `backend/prisma/seeds/seed.ts` seeds user types, categories, users, events and payment methods. Event seeds are skipped when `NODE_ENV=test`.
 
