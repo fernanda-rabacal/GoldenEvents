@@ -83,7 +83,7 @@ export class UserService {
       {
         event: (typeof tickets)[number]['event'];
         quantity: number;
-        tickets: { id: number; created_at: Date }[];
+        tickets: Omit<(typeof tickets)[number], 'event'>[];
       }
     >();
 

@@ -15,6 +15,7 @@ export interface DailySales {
 
 export interface OrganizerMetrics {
   ticketsSold: MetricWithChange;
+  // Em centavos
   revenue: MetricWithChange;
   audience: MetricWithChange;
   activeEvents: {

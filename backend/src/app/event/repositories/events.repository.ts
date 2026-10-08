@@ -5,20 +5,42 @@ import { generateSlug } from '../../../util/slug.js';
 import { QueryEventDto } from '../dto/query-event.dto.js';
 import { BuyEventTicketDto } from '../dto/buy-ticket.dto.js';
 import { UpdateEventDto } from '../dto/update-event.dto.js';
-import { Prisma } from '@prisma/client';
-import type { EventSort } from '@golden-events/shared';
+import { CreateLotDto } from '../dto/lot.dto.js';
+import { UpdateSectorDto } from '../dto/sector.dto.js';
+import { Lot, Prisma } from '@prisma/client';
+import { summarizeLots, type EventSort } from '@golden-events/shared';
 
 const EVENT_ORDER_BY: Record<EventSort, Prisma.EventOrderByWithRelationInput[]> = {
   start_date: [{ start_date: 'asc' }, { id: 'asc' }],
   created_at: [{ created_at: 'desc' }, { id: 'desc' }],
-  price: [{ price: 'asc' }, { start_date: 'asc' }, { id: 'asc' }],
+  price: [{ min_price: 'asc' }, { start_date: 'asc' }, { id: 'asc' }],
 };
+
+const SECTORS_WITH_LOTS = {
+  orderBy: [{ position: 'asc' }, { id: 'asc' }],
+  include: { lots: { orderBy: [{ position: 'asc' }, { id: 'asc' }] } },
+} satisfies Prisma.Event$sectorsArgs;
+
+function toLotData(lot: CreateLotDto, position: number) {
+  return {
+    name: lot.name,
+    price: lot.price,
+    quantity: lot.quantity,
+    position,
+    sales_start: lot.salesStart ?? null,
+    sales_end: lot.salesEnd ?? null,
+  };
+}
 
 @Injectable()
 export class EventRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createEventDto: CreateEventDto) {
+    const lots = createEventDto.sectors.flatMap(({ lots }) =>
+      lots.map(lot => ({ ...lot, quantity_left: lot.quantity, sales_end: lot.salesEnd })),
+    );
+
     const event = await this.prisma.event.create({
       data: {
         name: createEventDto.name,
@@ -28,12 +50,23 @@ export class EventRepository {
         description: createEventDto.description,
         category_id: createEventDto.categoryId,
         user_id: createEventDto.userId,
-        capacity: createEventDto.capacity,
-        price: createEventDto.price,
         location: createEventDto.location,
-        quantity_left: createEventDto.capacity,
         slug: generateSlug(createEventDto.name),
+        ...summarizeLots(lots),
+        sectors: {
+          create: createEventDto.sectors.map((sector, position) => ({
+            name: sector.name,
+            position,
+            lots: {
+              create: sector.lots.map((lot, lotPosition) => ({
+                ...toLotData(lot, lotPosition),
+                quantity_left: lot.quantity,
+              })),
+            },
+          })),
+        },
       },
+      include: { sectors: SECTORS_WITH_LOTS },
     });
 
     return event;
@@ -105,6 +138,7 @@ export class EventRepository {
       where: {
         id,
       },
+      include: { sectors: SECTORS_WITH_LOTS },
     });
   }
 
@@ -116,37 +150,42 @@ export class EventRepository {
       include: {
         category: true,
         user: { select: { id: true, name: true } },
+        sectors: SECTORS_WITH_LOTS,
       },
     });
   }
 
-  async buyTicket(buyEventTicket: BuyEventTicketDto) {
-    const event = await this.findById(buyEventTicket.eventId);
-    // Criados pela relação event.tickets: o Prisma preenche o event_id
-    const tickets = Array.from({ length: buyEventTicket.quantity }, () => ({
-      user_id: buyEventTicket.userId,
-      payment_method_id: buyEventTicket.paymentMethodId,
-      price: event.price,
-    }));
+  // Retorna null quando outra compra levou o estoque do lote antes desta
+  async buyTicket(lot: Lot, buyEventTicket: BuyEventTicketDto) {
+    return this.prisma.$transaction(async tx => {
+      await this.lockEvent(tx, buyEventTicket.eventId);
 
-    const purchasedTickets = await this.prisma.event.update({
-      where: {
-        id: event.id,
-      },
-      data: {
-        quantity_left: { decrement: buyEventTicket.quantity },
-        tickets: {
-          createMany: {
-            data: tickets,
-          },
-        },
-      },
-      include: {
-        tickets: true,
-      },
+      const { count } = await tx.lot.updateMany({
+        where: { id: lot.id, quantity_left: { gte: buyEventTicket.quantity } },
+        data: { quantity_left: { decrement: buyEventTicket.quantity } },
+      });
+
+      if (count === 0) {
+        return null;
+      }
+
+      const tickets = await tx.ticket.createManyAndReturn({
+        data: Array.from({ length: buyEventTicket.quantity }, () => ({
+          event_id: buyEventTicket.eventId,
+          lot_id: lot.id,
+          user_id: buyEventTicket.userId,
+          payment_method_id: buyEventTicket.paymentMethodId,
+          price: lot.price,
+        })),
+      });
+
+      await tx.event.update({
+        where: { id: buyEventTicket.eventId },
+        data: await this.summarizeEventLots(tx, buyEventTicket.eventId),
+      });
+
+      return tickets;
     });
-
-    return purchasedTickets;
   }
 
   async update(id: number, updateEventDto: UpdateEventDto) {
@@ -181,26 +220,25 @@ export class EventRepository {
       };
     }
 
-    if (updateEventDto.capacity) {
-      data.capacity = updateEventDto.capacity;
-    }
-
-    if (updateEventDto.price) {
-      data.price = updateEventDto.price;
-    }
-
     if (updateEventDto.location) {
       data.location = updateEventDto.location;
     }
 
-    const event = await this.prisma.event.update({
-      where: {
-        id,
-      },
-      data,
-    });
+    return this.prisma.$transaction(async tx => {
+      await this.lockEvent(tx, id);
 
-    return event;
+      if (updateEventDto.sectors) {
+        await this.syncSectors(tx, id, updateEventDto.sectors);
+      }
+
+      return tx.event.update({
+        where: {
+          id,
+        },
+        data: { ...data, ...(await this.summarizeEventLots(tx, id)) },
+        include: { sectors: SECTORS_WITH_LOTS },
+      });
+    });
   }
 
   async delete(id: number) {
@@ -251,6 +289,76 @@ export class EventRepository {
     return this.prisma.ticket.findMany({
       where: { event: { user_id: userId }, created_at: { gte: since } },
       select: { created_at: true },
+    });
+  }
+
+  // Serializa as escritas de um evento: sem isso, duas compras simultâneas recalculariam os totais com leituras desatualizadas
+  private async lockEvent(tx: Prisma.TransactionClient, id: number) {
+    await tx.$queryRaw`SELECT id FROM "event" WHERE id = ${id} FOR UPDATE`;
+  }
+
+  private async summarizeEventLots(tx: Prisma.TransactionClient, eventId: number) {
+    const lots = await tx.lot.findMany({
+      where: { sector: { event_id: eventId } },
+      select: { price: true, quantity: true, quantity_left: true, sales_end: true },
+    });
+
+    return summarizeLots(lots);
+  }
+
+  // Quem chama já validou que os ids são do evento e que nada vendido é removido ou reduzido demais
+  private async syncSectors(
+    tx: Prisma.TransactionClient,
+    eventId: number,
+    sectors: UpdateSectorDto[],
+  ) {
+    const savedLots = await tx.lot.findMany({
+      where: { sector: { event_id: eventId } },
+      select: { id: true, quantity: true },
+    });
+    const savedQuantities = new Map(savedLots.map(({ id, quantity }) => [id, quantity]));
+    const keptSectorIds: number[] = [];
+    const keptLotIds = sectors.flatMap(({ lots }) =>
+      lots.flatMap(({ id }) => (id ? [id] : [])),
+    );
+
+    await tx.lot.deleteMany({
+      where: { sector: { event_id: eventId }, id: { notIn: keptLotIds } },
+    });
+
+    for (const [position, sector] of sectors.entries()) {
+      const { id: sectorId } = sector.id
+        ? await tx.sector.update({
+            where: { id: sector.id },
+            data: { name: sector.name, position },
+          })
+        : await tx.sector.create({
+            data: { event_id: eventId, name: sector.name, position },
+          });
+
+      keptSectorIds.push(sectorId);
+
+      for (const [lotPosition, lot] of sector.lots.entries()) {
+        const lotData = { ...toLotData(lot, lotPosition), sector_id: sectorId };
+
+        if (lot.id) {
+          // increment, e não um valor fixo, para não desfazer vendas feitas desde a leitura
+          await tx.lot.update({
+            where: { id: lot.id },
+            data: {
+              ...lotData,
+              quantity_left: { increment: lot.quantity - savedQuantities.get(lot.id) },
+            },
+          });
+        } else {
+          await tx.lot.create({ data: { ...lotData, quantity_left: lot.quantity } });
+        }
+      }
+    }
+
+    // Por último: um lote movido de um setor removido já mudou de setor e não cai no cascade
+    await tx.sector.deleteMany({
+      where: { event_id: eventId, id: { notIn: keptSectorIds } },
     });
   }
 }

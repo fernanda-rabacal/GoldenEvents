@@ -34,7 +34,7 @@ export function EventCard({ event }: EventCardProps) {
         </p>
         <div className='mt-5 flex items-center justify-between gap-3'>
           <p className='text-body-sm font-bold text-foreground'>
-            {formatTicketPrice(event.price)}
+            {formatTicketPrice(event.min_price)}
           </p>
           <Link
             href={`/eventos/${event.slug}`}
