@@ -1,5 +1,6 @@
 import {
   ArgumentsHost,
+  BadGatewayException,
   BadRequestException,
   Catch,
   ConflictException,
@@ -15,6 +16,7 @@ import { ConflictError } from '../types/ConflictError.js';
 import { DomainError } from '../types/DomainError.js';
 import { ForbiddenError } from '../types/ForbiddenError.js';
 import { NotFoundError } from '../types/NotFoundError.js';
+import { PaymentProviderError } from '../types/PaymentProviderError.js';
 import { PrismaClientError } from '../types/PrismaClientError.js';
 import { UnauthorizedError } from '../types/UnauthorizedError.js';
 import { handleDatabaseErrors } from '../utils/handle-database-errors.util.js';
@@ -27,6 +29,9 @@ function toHttpException(error: DomainError): HttpException {
   if (error instanceof ForbiddenError) return new ForbiddenException(error.message);
   if (error instanceof BusinessRuleError) {
     return new UnprocessableEntityException(error.message);
+  }
+  if (error instanceof PaymentProviderError) {
+    return new BadGatewayException(error.message);
   }
 
   return new BadRequestException(error.message);

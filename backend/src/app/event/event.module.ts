@@ -6,8 +6,11 @@ import { EventRepository } from './repositories/events.repository.js';
 import { CategoryRepository } from './repositories/categories.repository.js';
 import { PaymentMethodService } from './payment-method.service.js';
 import { PaymentMethodRepository } from './repositories/payment-methods.repository.js';
+import { TicketInventoryService } from './ticket-inventory.service.js';
+import { OutboxModule } from '../../shared/outbox/outbox.module.js';
 
 @Module({
+  imports: [OutboxModule],
   controllers: [EventController],
   providers: [
     EventService,
@@ -16,6 +19,8 @@ import { PaymentMethodRepository } from './repositories/payment-methods.reposito
     CategoryRepository,
     PaymentMethodService,
     PaymentMethodRepository,
+    TicketInventoryService,
   ],
+  exports: [TicketInventoryService],
 })
 export class EventModule {}

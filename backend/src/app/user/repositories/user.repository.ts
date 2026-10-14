@@ -129,6 +129,9 @@ export class UserRepository {
       orderBy: { id: 'asc' },
       select: {
         id: true,
+        code: true,
+        status: true,
+        used_at: true,
         created_at: true,
         lot: { select: { name: true, sector: { select: { name: true } } } },
         event: {
