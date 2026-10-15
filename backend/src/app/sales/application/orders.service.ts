@@ -5,8 +5,10 @@ import {
   checkBuyerCancellation,
   checkPurchase,
   checkRequestedItems,
+  checkTicketsPerBuyer,
   MIN_TIME_TO_PAY_MS,
   NOT_ENOUGH_TICKETS,
+  OPEN_ORDER_EXISTS,
   PIX_EXPIRY_MARGIN_MS,
   RESERVATION_MINUTES,
 } from '../domain/purchase-policy.js';
@@ -58,6 +60,17 @@ export class OrdersService {
       if (!(await this.inventory.reserve(tx, event.id, items))) {
         throw new BusinessRuleError(NOT_ENOUGH_TICKETS);
       }
+
+      // Depois da reserva, que trava o evento: dois pedidos simultâneos do mesmo comprador
+      // não passam juntos pelas verificações
+      if (!isFree && (await this.repository.hasOpenOrder(tx, buyerId, event.id, now))) {
+        throw new BusinessRuleError(OPEN_ORDER_EXISTS);
+      }
+
+      checkTicketsPerBuyer(
+        await this.repository.countTicketsHeld(tx, buyerId, event.id, now),
+        items,
+      );
 
       const order = await this.repository.create(tx, {
         ...price,

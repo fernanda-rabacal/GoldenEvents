@@ -17,8 +17,20 @@ import { BusinessRuleError } from '../../common/errors/types/BusinessRuleError.j
 import { ConflictError } from '../../common/errors/types/ConflictError.js';
 import { DomainError } from '../../common/errors/types/DomainError.js';
 import { PaymentProviderError } from '../../common/errors/types/PaymentProviderError.js';
+import {
+  RateLimitService,
+  type RateLimitRule,
+} from '../../../shared/rate-limit/rate-limit.service.js';
 
 const ALREADY_PAID = 'Este pagamento já foi confirmado.';
+
+// Teste de cartão roubado: muitas recusas seguidas. Provedores penalizam o lojista que as acumula
+export const DECLINED_CARDS: RateLimitRule = {
+  name: 'declined-cards',
+  limit: 5,
+  windowMs: 60 * 60_000,
+  message: 'Muitos cartões recusados. Use o Pix ou aguarde para tentar outro cartão.',
+};
 
 export type CreateChargeInput = {
   originType: ChargeOriginType;
@@ -79,9 +91,15 @@ export class BillingService {
     private readonly gateways: GatewayRegistry,
     private readonly lifecycle: ChargeLifecycle,
     private readonly outbox: OutboxService,
+    private readonly rateLimit: RateLimitService,
   ) {}
 
   async createCharge(input: CreateChargeInput) {
+    // Antes de gravar a cobrança: uma cobrança pendente sem resposta do provedor bloquearia o Pix
+    if (input.method === 'card') {
+      await this.rateLimit.assertAllowed(DECLINED_CARDS, `customer:${input.customerId}`);
+    }
+
     const charges = await this.repository.findChargesByOrigin(
       input.originType,
       input.originId,
@@ -279,7 +297,7 @@ export class BillingService {
       }),
     );
 
-    return this.prisma.$transaction(async tx => {
+    const summary = await this.prisma.$transaction(async tx => {
       let current = await this.repository.lockCharge(tx, charge.id);
 
       if (!current.provider_charge_id) {
@@ -293,6 +311,15 @@ export class BillingService {
 
       return toSummary({ ...current, status });
     });
+
+    if (summary.method === 'card' && summary.status === 'failed') {
+      await this.rateLimit.recordFailure(
+        DECLINED_CARDS,
+        `customer:${charge.customer_id}`,
+      );
+    }
+
+    return summary;
   }
 
   private async callProvider<T>(call: () => Promise<T>) {

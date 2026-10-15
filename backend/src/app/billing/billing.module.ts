@@ -12,9 +12,10 @@ import { FakeGatewayController } from './infra/http/fake-gateway.controller.js';
 import { WebhookController } from './infra/http/webhook.controller.js';
 import { WebhookEventsRepository } from './infra/webhook-events.repository.js';
 import { MessagingModule } from '../../shared/messaging/messaging.module.js';
+import { RateLimitModule } from '../../shared/rate-limit/rate-limit.module.js';
 
 @Module({
-  imports: [MessagingModule],
+  imports: [MessagingModule, RateLimitModule],
   controllers: [WebhookController, FakeGatewayController],
   providers: [
     BillingService,

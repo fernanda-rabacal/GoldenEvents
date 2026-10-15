@@ -73,6 +73,47 @@ export class OrdersRepository {
     });
   }
 
+  async hasOpenOrder(
+    tx: Prisma.TransactionClient,
+    buyerId: number,
+    eventId: number,
+    now: Date,
+  ) {
+    const count = await tx.order.count({
+      where: {
+        buyer_id: buyerId,
+        event_id: eventId,
+        status: 'awaiting_payment',
+        expires_at: { gt: now },
+      },
+    });
+
+    return count > 0;
+  }
+
+  async countTicketsHeld(
+    tx: Prisma.TransactionClient,
+    buyerId: number,
+    eventId: number,
+    now: Date,
+  ) {
+    const { _sum } = await tx.orderItem.aggregate({
+      _sum: { quantity: true },
+      where: {
+        order: {
+          buyer_id: buyerId,
+          event_id: eventId,
+          OR: [
+            { status: 'paid' },
+            { status: 'awaiting_payment', expires_at: { gt: now } },
+          ],
+        },
+      },
+    });
+
+    return _sum.quantity ?? 0;
+  }
+
   // SELECT ... FOR UPDATE: o job de expiração e a confirmação do pagamento nunca decidem ao mesmo tempo
   async lock(tx: Prisma.TransactionClient, id: string) {
     await tx.$queryRaw`SELECT id FROM "order" WHERE id = ${id}::uuid FOR UPDATE`;

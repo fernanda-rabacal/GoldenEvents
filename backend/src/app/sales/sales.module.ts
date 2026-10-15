@@ -9,9 +9,10 @@ import { OrdersRepository } from './infra/orders.repository.js';
 import { BillingModule } from '../billing/index.js';
 import { EventModule } from '../event/event.module.js';
 import { MessagingModule } from '../../shared/messaging/messaging.module.js';
+import { RateLimitModule } from '../../shared/rate-limit/rate-limit.module.js';
 
 @Module({
-  imports: [EventModule, BillingModule, MessagingModule],
+  imports: [EventModule, BillingModule, MessagingModule, RateLimitModule],
   controllers: [OrdersController],
   providers: [
     OrdersService,

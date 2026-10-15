@@ -17,6 +17,7 @@ import { OrdersService } from '../../application/orders.service.js';
 import { JwtAuthGuard } from '../../../auth/guard/jwt.guard.js';
 import type { Requester } from '../../../user/user.service.js';
 import { MessageResponse } from '../../../../response/message.response.js';
+import { RateLimit } from '../../../../shared/rate-limit/rate-limit.guard.js';
 
 @ApiTags('Order')
 @ApiBearerAuth()
@@ -27,6 +28,13 @@ export class OrdersController {
 
   // Reserva os ingressos. Pedido gratuito já sai pago, com os ingressos emitidos
   @Post()
+  @RateLimit({
+    name: 'orders-create',
+    by: 'user',
+    limit: 10,
+    windowMs: 60_000,
+    message: 'Muitas tentativas de compra em pouco tempo.',
+  })
   async create(@Req() req: Request, @Body() createOrderDto: CreateOrderDto) {
     const order = await this.ordersService.create(
       (req.user as Requester).id,
@@ -53,6 +61,13 @@ export class OrdersController {
 
   // Cartão responde na hora; Pix devolve o código e é confirmado pelo webhook
   @Post('/:id/pay')
+  @RateLimit({
+    name: 'orders-pay',
+    by: 'user',
+    limit: 10,
+    windowMs: 60_000,
+    message: 'Muitas tentativas de pagamento em pouco tempo.',
+  })
   async pay(
     @Param('id', ParseUUIDPipe) id: string,
     @Req() req: Request,
