@@ -85,6 +85,7 @@ services:
       INTERNAL_API_KEY: 'dev-internal-key'
       # As datas dos eventos são formatadas no servidor (SSR)
       TZ: 'America/Sao_Paulo'
+      FAKE_GATEWAY_SIMULATOR: 'on'
     depends_on:
       - api
       - db

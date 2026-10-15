@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import Link from 'next/link';
 import type { Event, Lot, Sector } from '@golden-events/shared';
 import { cn } from '@/lib/utils';
@@ -14,10 +15,13 @@ type OrderSummaryProps = {
   quantity: number;
   maxQuantity: number;
   onQuantityChange: (quantity: number) => void;
-  subtotal: number;
-  serviceFee: number;
   total: number;
+  // Com o pedido criado, a quantidade e o preço ficam presos aos da reserva
+  hasOrder: boolean;
+  reservation?: ReactNode;
   isSubmitting: boolean;
+  canSubmit: boolean;
+  onCancelOrder: () => void;
 };
 
 export function OrderSummary({
@@ -27,12 +31,14 @@ export function OrderSummary({
   quantity,
   maxQuantity,
   onQuantityChange,
-  subtotal,
-  serviceFee,
   total,
+  hasOrder,
+  reservation,
   isSubmitting,
+  canSubmit,
+  onCancelOrder,
 }: OrderSummaryProps) {
-  const isFree = lot.price === 0;
+  const isFree = total === 0;
 
   return (
     <aside className='rounded-xl border border-border bg-card p-6 shadow-xl shadow-primary/5 lg:sticky lg:top-6'>
@@ -47,25 +53,20 @@ export function OrderSummary({
         {sector.name} · {lot.name}
       </p>
 
+      {reservation}
+
       <div className='mt-6 border-y border-border py-5'>
         <QuantitySelector
           value={quantity}
           max={maxQuantity}
           onChange={onQuantityChange}
+          disabled={hasOrder}
         />
       </div>
 
-      <dl className='mt-5 flex flex-col gap-2 text-body-sm text-muted-foreground'>
-        <div className='flex justify-between'>
-          <dt>Ingressos ({quantity}x)</dt>
-          <dd>{isFree ? 'Gratuito' : formatMoney(subtotal)}</dd>
-        </div>
-        {!isFree && (
-          <div className='flex justify-between'>
-            <dt>Taxa de serviço</dt>
-            <dd>{formatMoney(serviceFee)}</dd>
-          </div>
-        )}
+      <dl className='mt-5 flex justify-between text-body-sm text-muted-foreground'>
+        <dt>Ingressos ({quantity}x)</dt>
+        <dd>{isFree ? 'Gratuito' : formatMoney(total)}</dd>
       </dl>
 
       <div className='mt-5 flex items-center justify-between border-t border-border pt-5'>
@@ -76,15 +77,27 @@ export function OrderSummary({
       </div>
 
       <div className='mt-6 flex flex-col gap-3'>
-        <Button type='submit' size='lg' disabled={isSubmitting}>
+        <Button type='submit' size='lg' disabled={isSubmitting || !canSubmit}>
           {isSubmitting ? 'Processando...' : 'Confirmar compra'}
         </Button>
-        <Link
-          href={buildEventHref(event.slug)}
-          className={cn(buttonVariants({ variant: 'outline', size: 'lg' }))}
-        >
-          Cancelar
-        </Link>
+        {hasOrder ? (
+          <Button
+            type='button'
+            variant='outline'
+            size='lg'
+            disabled={isSubmitting}
+            onClick={onCancelOrder}
+          >
+            Cancelar pedido
+          </Button>
+        ) : (
+          <Link
+            href={buildEventHref(event.slug)}
+            className={cn(buttonVariants({ variant: 'outline', size: 'lg' }))}
+          >
+            Cancelar
+          </Link>
+        )}
       </div>
     </aside>
   );

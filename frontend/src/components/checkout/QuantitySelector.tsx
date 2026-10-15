@@ -5,12 +5,14 @@ type QuantitySelectorProps = {
   value: number;
   max: number;
   onChange: (value: number) => void;
+  disabled?: boolean;
 };
 
 export function QuantitySelector({
   value,
   max,
   onChange,
+  disabled = false,
 }: QuantitySelectorProps) {
   return (
     <div className='flex items-center justify-between gap-4'>
@@ -21,7 +23,7 @@ export function QuantitySelector({
           variant='outline'
           size='icon-sm'
           aria-label='Diminuir quantidade'
-          disabled={value <= 1}
+          disabled={disabled || value <= 1}
           onClick={() => onChange(value - 1)}
         >
           <Minus />
@@ -34,7 +36,7 @@ export function QuantitySelector({
           variant='outline'
           size='icon-sm'
           aria-label='Aumentar quantidade'
-          disabled={value >= max}
+          disabled={disabled || value >= max}
           onClick={() => onChange(value + 1)}
         >
           <Plus />
