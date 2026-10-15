@@ -17,10 +17,11 @@ export async function getCurrentUser() {
     return null;
   }
 
-  return fetchFromApi<User | null>('/users/token', null, {
+  // Token expirado ou API fora do ar: segue como visitante em vez de derrubar o cabeçalho do site
+  return fetchFromApi<User>('/users/token', {
     headers: { Authorization: `Bearer ${token}` },
     cache: 'no-store',
-  });
+  }).catch(() => null);
 }
 
 // Para páginas que exigem login: volta para a página depois de entrar

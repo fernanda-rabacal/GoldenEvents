@@ -23,5 +23,5 @@ export type EventTickets = {
 };
 
 export function getMyTickets() {
-  return fetchWithAuth<EventTickets[] | null>('/users/me/tickets', null);
+  return fetchWithAuth<EventTickets[]>('/users/me/tickets');
 }
