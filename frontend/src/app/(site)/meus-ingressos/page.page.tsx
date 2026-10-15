@@ -46,7 +46,7 @@ export default async function MyTicketsPage({
   const query = firstValue((await searchParams).busca)?.trim() ?? '';
   const groups = await getMyTickets();
   const visibleGroups = sortByDate(
-    (groups ?? []).filter(({ event }) =>
+    groups.filter(({ event }) =>
       normalize(event.name).includes(normalize(query)),
     ),
   );
@@ -73,7 +73,7 @@ export default async function MyTicketsPage({
           </p>
         </div>
 
-        {Boolean(groups?.length) && (
+        {groups.length > 0 && (
           <form
             action={MY_TICKETS_PATH}
             method='get'
@@ -93,20 +93,11 @@ export default async function MyTicketsPage({
         )}
       </div>
 
-      {!groups && (
-        <p className='mt-8 text-body text-destructive'>
-          Não foi possível carregar seus ingressos. Tente novamente em alguns
-          instantes.
-        </p>
-      )}
+      <div className='mt-8'>
+        <TicketsSummary groups={groups} />
+      </div>
 
-      {groups && (
-        <div className='mt-8'>
-          <TicketsSummary groups={groups} />
-        </div>
-      )}
-
-      {groups?.length === 0 && (
+      {groups.length === 0 && (
         <div className='mt-6 rounded-xl border border-dashed border-input bg-card px-6 py-16 text-center'>
           <Ticket className='mx-auto size-8 text-orange-500' />
           <h2 className='mt-4 text-h4 text-foreground'>
@@ -125,7 +116,7 @@ export default async function MyTicketsPage({
         </div>
       )}
 
-      {Boolean(groups?.length) && visibleGroups.length === 0 && (
+      {groups.length > 0 && visibleGroups.length === 0 && (
         <div className='mt-6 rounded-xl border border-dashed border-input bg-card px-6 py-16 text-center'>
           <Search className='mx-auto size-8 text-orange-500' />
           <h2 className='mt-4 text-h4 text-foreground'>

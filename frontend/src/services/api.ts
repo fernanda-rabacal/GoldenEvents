@@ -5,24 +5,27 @@ export const API_URL = process.env.API_URL ?? 'http://localhost:8080';
 export const SERVER_UNREACHABLE_MESSAGE =
   'Não foi possível falar com o servidor. Tente novamente.';
 
+export class ApiError extends Error {
+  status: number;
+
+  constructor(status: number, path: string) {
+    super(`A API respondeu ${status} ao buscar ${path}`);
+    this.status = status;
+  }
+}
+
+// Leitura para server components: a falha sobe para o error.tsx da rota, que oferece tentar de novo
 export async function fetchFromApi<T>(
   path: string,
-  fallback: T,
   init?: RequestInit,
 ): Promise<T> {
-  try {
-    const response = await fetch(`${API_URL}${path}`, init);
+  const response = await fetch(`${API_URL}${path}`, init);
 
-    if (!response.ok) {
-      throw new Error(`${response.status} ${response.statusText}`);
-    }
-
-    return (await response.json()) as T;
-  } catch (error) {
-    // Com a API fora do ar a página renderiza com o fallback em vez de quebrar
-    console.error(`Erro ao buscar ${path} na API:`, error);
-    return fallback;
+  if (!response.ok) {
+    throw new ApiError(response.status, path);
   }
+
+  return (await response.json()) as T;
 }
 
 export type ApiResponse<T> = {

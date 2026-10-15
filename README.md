@@ -16,6 +16,7 @@ This is a collaborative full stack project of a website where you can see the la
 
 #### Doing:
 - Order history
+- Plans for users and organizers
 
 ### How to run:
 

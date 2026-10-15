@@ -9,15 +9,11 @@ export type ActionResult = {
 const SESSION_EXPIRED_MESSAGE = 'Sua sessão expirou. Entre novamente.';
 
 // Leitura autenticada para server components: sempre atualizada, sem cache
-export async function fetchWithAuth<T>(path: string, fallback: T) {
+export async function fetchWithAuth<T>(path: string) {
   const token = await getAuthToken();
 
-  if (!token) {
-    return fallback;
-  }
-
-  return fetchFromApi<T>(path, fallback, {
-    headers: { Authorization: `Bearer ${token}` },
+  return fetchFromApi<T>(path, {
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     cache: 'no-store',
   });
 }

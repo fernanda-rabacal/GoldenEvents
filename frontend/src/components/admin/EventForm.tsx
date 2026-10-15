@@ -7,6 +7,7 @@ import { useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Plus } from 'lucide-react';
 import type { Event, EventCategory } from '@golden-events/shared';
+import { RichTextEditorSkeleton } from '@/components/form/FormSkeletons';
 import { ImageUpload } from '@/components/form/ImageUpload';
 import { SelectField } from '@/components/form/SelectField';
 import { TextField } from '@/components/form/TextField';
@@ -31,7 +32,7 @@ import { SectorFields, newSector } from './SectorFields';
 
 const RichTextEditor = dynamic(
   () => import('@/components/form/RichTextEditor'),
-  { ssr: false },
+  { ssr: false, loading: () => <RichTextEditorSkeleton /> },
 );
 
 type EventFormProps = {
