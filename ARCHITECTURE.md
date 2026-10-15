@@ -27,7 +27,7 @@ Next.js (frontend, :3000)
                   BullMQ → Redis    Prisma → PostgreSQL
 ```
 
-Redis is only the backend of the BullMQ queues used by payments. Everything that involves money is written to PostgreSQL before it becomes a job, so Redis can lose its data without losing work (see [Payments](#payments)).
+Redis holds the BullMQ queues used by payments and the rate limit counters. Everything that involves money is written to PostgreSQL before it becomes a job, so Redis can lose its data without losing work (see [Payments](#payments)).
 
 ## Tooling
 
@@ -41,11 +41,14 @@ Redis is only the backend of the BullMQ queues used by payments. Everything that
 
 | Service | Image / build | Port | Purpose |
 |---|---|---|---|
-| `db` | postgres:16-alpine | 5432 | Development database |
-| `db-test` | postgres:16-alpine | 5433 | Local test database |
-| `redis` | redis:7-alpine | 6379 | BullMQ queues of the payment flow (`noeviction`) |
-| `api` | `backend/Dockerfile` | 8080 | Runs `prisma migrate deploy`, then the API |
-| `web` | `frontend/Dockerfile` | 3000 | Next.js app, with `API_URL=http://api:8080` |
+| `db` | postgres:16-alpine | 127.0.0.1:5432 | Development database |
+| `db-test` | postgres:16-alpine | 127.0.0.1:5433 | Local test database |
+| `redis` | redis:7-alpine | 127.0.0.1:6379 | BullMQ queues of the payment flow (`noeviction`) and rate limit counters |
+| `api` | `backend/Dockerfile` | 127.0.0.1:8080 | Runs `prisma migrate deploy`, then the API. The image sets `NODE_ENV=production`; Compose overrides it to `development` and turns on the fake provider |
+| `web` | `frontend/Dockerfile` | none | Next.js app, with `API_URL=http://api:8080`. Only `proxy` reaches it |
+| `proxy` | nginx:1.27-alpine | 3000 | The site's public port. `docker/nginx.conf` overwrites `X-Forwarded-For` with the connection's address (see [Client IP](#rate-limiting)) |
+
+Every port except the site's is bound to `127.0.0.1`: the databases have fixed passwords and Redis has none.
 
 ## packages/shared
 
@@ -96,7 +99,7 @@ The browser never calls the API directly. Every request goes through the Next.js
 
 - `services/api.ts`:
   - `fetchFromApi(path, fallback, init)` is for reads. It calls `API_URL` (defaults to `http://localhost:8080`). If the request fails it returns the fallback, so a page still renders when the API is down. Public reads use `next: { revalidate }`.
-  - `sendToApi(path, method, body, token?)` is for writes. It returns `{ ok, status, data, message }`, or `null` when the API is unreachable.
+  - `sendToApi(path, method, body, token?)` is for writes. It returns `{ ok, status, data, message }`, or `null` when the API is unreachable. It sends the browser's IP in `X-Client-IP`, with `INTERNAL_API_KEY` in `X-Internal-Key`, so the API's per-IP limits see the visitor and not the Next.js server (see [Client IP](#rate-limiting)). It reads the request headers, so only Server Actions can call it.
 - `services/authenticated-api.ts`:
   - `fetchWithAuth` is for Server Components. It reads the auth cookie, sends a `Bearer` header and uses `cache: 'no-store'`.
   - `sendWithAuth` is for Server Actions. It wraps `sendToApi` with the auth cookie and returns an `ActionResult` (`{ success, message }`).
@@ -104,7 +107,7 @@ The browser never calls the API directly. Every request goes through the Next.js
 
 ### Authentication
 
-1. `LoginForm` calls the `signIn` Server Action (`services/auth-actions.ts`), which posts to `/login`. On success it sets the auth cookie on the server and redirects to the requested page. The cookie name is `AUTH_COOKIE` from `utils/auth_cookie.ts`. The cookie is `httpOnly` and `sameSite=lax` (`secure` in production), and lasts 1 hour, or 30 days with "keep connected". Client-side JavaScript cannot read the token. `RegisterForm` uses the `signUp` Server Action the same way.
+1. `LoginForm` calls the `signIn` Server Action (`services/auth-actions.ts`), which posts to `/login`. On success it sets the auth cookie on the server and redirects to the requested page. The cookie name is `AUTH_COOKIE` from `utils/auth_cookie.ts`. The cookie is `httpOnly` and `sameSite=lax` (`secure` in production), and lasts 1 hour, or 30 days with "keep connected". `signIn` sends `keepConnected` to the API, so the JWT expires together with the cookie (`SESSION_TTL_SECONDS` in `packages/shared`). Client-side JavaScript cannot read the token. `RegisterForm` uses the `signUp` Server Action the same way.
 2. `src/proxy.page.ts` is the Next.js 16 proxy (formerly middleware). It only checks that the cookie exists, and redirects to `/login?redirect=...` when it is missing. It covers `/organizador/*`, `/meus-ingressos`, `/perfil` and `/checkout`.
 3. Pages validate the token against the API through `services/auth.ts`:
    - `getCurrentUser()` calls `GET /users/token`.
@@ -112,19 +115,25 @@ The browser never calls the API directly. Every request goes through the Next.js
    - `requireOrganizer(redirectTo)` also redirects to `/seja-organizador` when `canManageEvents()` is false.
 4. `signOut` in `services/auth-actions.ts` deletes the cookie. `utils/auth_redirect.ts` (`getSafeRedirect`) prevents open redirects.
 
+`next.config.js` sends security headers on every page: a CSP with `frame-ancestors 'none'`, `base-uri`, `form-action` and `object-src` (no `script-src`, which would need a nonce and dynamic rendering on every page), `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, and HSTS in production. `X-Powered-By` is off.
+
 ## Backend
 
 ### Bootstrap
 
 `backend/src/setup-app.ts` (`setupApp`) holds the global configuration. Both `main.ts` and the e2e tests call it, so tests run with the same rules as the real API:
 
+- `helmet` security headers. Its CSP drops `upgrade-insecure-requests` outside production, because the API runs on plain http there and the upgrade would break Swagger.
+- Express `trust proxy` (see [Client IP](#rate-limiting)).
 - A global `ValidationPipe` with `transform`, `whitelist` and `forbidNonWhitelisted`. Every request body must match a `class-validator` DTO.
 - The global `DomainErrorFilter` (see [Errors](#errors)).
 
+There is no CORS: the browser never calls the API, only the Next.js server does.
+
 `backend/src/main.ts` also sets up:
 
-- Swagger UI at `/docs`, with bearer auth.
-- CORS, and the port from `PORT` (default 8080).
+- Swagger UI at `/docs`, with bearer auth, outside production only.
+- The port from `PORT` (default 8080).
 
 The backend is ESM (`"type": "module"`, `nodenext`), so relative imports must end in `.js`.
 
@@ -143,7 +152,7 @@ backend/src/
 │   ├── billing/         charges, refunds, disputes, webhooks, gateways (same layout)
 │   └── common/errors/   domain error types, DomainErrorFilter, Prisma error helpers
 ├── shared/              outbox, BullMQ queues, domain event bus, maintenance sweeps,
-│                        state machine helper
+│                        rate limit, state machine helper
 ├── db/                  PrismaService, global PrismaModule, Prisma mock type for tests
 ├── setup-app.ts         global pipe and filter, shared by main.ts and e2e tests
 ├── response/            message, pagination and token response classes
@@ -176,18 +185,60 @@ Services throw **domain errors** from `app/common/errors/types/`, never Nest HTT
 | `BusinessRuleError` | 422 | The request is valid but breaks a business rule (sold out, event already started) |
 | `InvalidTransitionError` | 409 | A state machine refused a transition (it extends `ConflictError`) |
 | `PaymentProviderError` | 502 | The payment provider failed or did not answer |
+| `TooManyRequestsError` | 429 | A rate limit was exceeded. The filter also sets `Retry-After` |
 | `DatabaseError` | 400 | Any other Prisma error |
 
 Prisma errors are converted first (`handleDatabaseErrors`, for example P2002 becomes `UniqueConstraintError`). Anything else falls through to Nest's default handling. The passport strategies in `auth/strategy/` are the only exception: they belong to the HTTP layer and throw `UnauthorizedException` directly.
 
 ### Auth and permissions
 
-- `POST /login` uses `LocalAuthGuard` (passport-local, email and password checked with bcrypt) and returns a JWT signed with the `SECRET` env var. The payload is `{ id, name, email }`.
-- Protected routes use `JwtAuthGuard` (passport-jwt, `Bearer` header).
+- `POST /login` uses `LocalAuthGuard` (passport-local, email and password checked with bcrypt) and returns a JWT signed with the `SECRET` env var. The payload is `{ id, name, email }`. The token lasts 1 hour, or 30 days with `keepConnected: true`.
+- Deactivated users cannot log in. When the email does not exist, bcrypt still runs against a dummy hash, so the response time does not reveal which emails have an account.
+- Protected routes use `JwtAuthGuard` (passport-jwt, `Bearer` header). On every request, `AuthService.validateSession` rejects the token if the user was deactivated or changed the password after the token was issued (`User.password_changed_at`, compared with `iat` in seconds).
+- Passwords have 8 to 72 characters (`PASSWORD_MIN_LENGTH` / `PASSWORD_MAX_LENGTH`; bcrypt ignores anything past 72 bytes). Changing it requires `currentPassword`, and only the user can change their own password.
 - There is no roles guard. Services receive a `Requester` (`{ id, user_type_id }`) and check permissions themselves. For example:
   - Users can only read or edit their own profile unless they are admins.
+  - Only admins can list the users (`GET /users` returns emails and CPFs) and activate or deactivate accounts. Admins cannot deactivate themselves.
   - Only admins can grant the admin type.
   - Only organizers and admins can create events or see metrics.
+
+### Rate limiting
+
+`shared/rate-limit/` keeps fixed-window counters in Redis (`rate-limit:<rule>:<subject>`). There is no global limit: each rule protects one abuse case.
+
+| Rule | Where | Subject | Limit | Counts |
+|---|---|---|---|---|
+| `login-ip` | `@RateLimit` on `POST /login` | IP | 20 / minute | Every attempt, before bcrypt runs |
+| `login-failures` | `AuthService.authenticate` | Email | 5 / 15 minutes | Wrong passwords only. A successful login clears it |
+| `signup` | `@RateLimit` on `POST /users` | IP | 10 / hour | Every attempt |
+| `orders-create` | `@RateLimit` on `POST /orders` | User | 10 / minute | Every attempt, refused ones included |
+| `orders-pay` | `@RateLimit` on `POST /orders/:id/pay` | User | 10 / minute | Every attempt |
+| `declined-cards` | `BillingService.createCharge` | Customer | 5 / hour | Declined cards only. Pix is still accepted |
+| `current-password-failures` | `UserService.update` | User | 5 / 15 minutes | Wrong `currentPassword` only, so a stolen token cannot be used to guess the password |
+
+- `@RateLimit` adds `RateLimitGuard` to the route. Guards on the same method run bottom-up, so `@RateLimit` goes below `@UseGuards(LocalAuthGuard)` on the login. Per-user rules need `JwtAuthGuard` to run first, which the class-level guard of `OrdersController` does.
+- Rules that only count failures call `assertAllowed` before the attempt and `recordFailure` after it fails.
+- Webhooks have no limit. Providers send them in bursts and treat a 429 as a failure, and the signature check already rejects forged requests cheaply.
+- If Redis is down, the request goes through and a warning is logged. The limiter uses its own connection with a 500 ms timeout, because the BullMQ connection waits forever.
+- `RATE_LIMIT=off` disables every rule (the e2e tests do this, except `rate-limit.e2e-spec.ts`).
+
+Sales also allows **one open order per buyer and event**. Every unpaid order holds stock for 10 minutes, so without this rule a single account could reserve a whole event. The check runs after the stock reservation, which locks the event row, so simultaneous orders of the same buyer cannot both pass it. Free orders are not affected, because they are paid at once. In the same transaction, a buyer can hold at most `MAX_TICKETS_PER_BUYER_PER_EVENT` (10) tickets per event, adding up paid orders, the open order and the new one. This applies to free orders too.
+
+**Client IP.** Per-IP rules use `clientIp()` (`shared/rate-limit/client-ip.ts`):
+
+- **From the Next.js server.** `sendToApi` sends the browser's IP in `X-Client-IP` and the shared secret `INTERNAL_API_KEY` in `X-Internal-Key`. The API uses `X-Client-IP` only when the key matches (compared in constant time) and the value is a valid IP. This does not depend on the Next.js server's address, which Vercel does not keep fixed. With `NODE_ENV=production`, the API does not start without a key of at least 32 characters (`openssl rand -hex 32`). Without it, every visitor would share the Next.js server's limit.
+- **Anything else** (a direct call to the API, or a wrong key) uses `req.ip`. `setupApp` sets Express `trust proxy` from `TRUST_PROXY` (default `loopback`), so `X-Forwarded-For` is only read when the connection comes from the proxy in front of the API. `TRUST_PROXY` accepts `true`, a number of hops, or a list of addresses.
+
+`sendToApi` takes the browser's IP from the last entry of the `X-Forwarded-For` that Next.js receives. Next.js keeps any `X-Forwarded-For` the browser sends: it only fills the header in when it is missing. So Next.js must never be reachable directly, and the proxy in front of it must overwrite the header, or append to it as the only proxy. In Docker Compose that is `proxy` (`docker/nginx.conf`, `proxy_set_header X-Forwarded-For $remote_addr`); the `web` service publishes no port. Vercel overwrites the header itself. The nginx config passes `$http_host` with the port as `Host`, because Server Actions refuse requests whose `Origin` does not match it.
+
+Per host:
+
+| Where | Settings |
+|---|---|
+| Docker Compose | `INTERNAL_API_KEY` is the same fixed development value on `api` and `web`. `TRUST_PROXY` keeps the default: nothing sits in front of the API |
+| Vercel (Next.js) | Set `INTERNAL_API_KEY` and `API_URL` in the project's environment variables. No proxy to add |
+| Railway (API) | `INTERNAL_API_KEY`, the same as Vercel's, and `TRUST_PROXY=true`. Railway's edge overwrites `X-Forwarded-For`, so its leftmost entry is the client, and it has no fixed address range to list. After deploying, send a fake `X-Forwarded-For` straight to the API and check that the limit still counts your real IP |
+| AWS behind an ALB (API) | `TRUST_PROXY=1`. The ALB appends the connection's address by default, so the rightmost entry is the client. If Next.js also moves to AWS, its ALB works the same way for `sendToApi` |
 
 ### Routes
 
@@ -195,9 +246,11 @@ Prisma errors are converted first (`handleDatabaseErrors`, for example P2002 bec
 |---|---|---|
 | POST | `/login` | Email and password |
 | POST | `/users` | Public (signup) |
-| GET | `/users`, `/users/types` | Public |
+| GET | `/users/types` | Public |
+| GET | `/users` | JWT (admin) |
 | GET | `/users/token`, `/users/me/tickets`, `/users/:id` | JWT |
-| PATCH | `/users/:id`, `/users/:id/active` | JWT |
+| PATCH | `/users/:id` | JWT |
+| PATCH | `/users/:id/active` | JWT (admin) |
 | GET | `/events`, `/events/categories`, `/events/categories/:id`, `/events/payment-methods`, `/events/slug/:slug`, `/events/:id` | Public |
 | GET | `/events/me`, `/events/me/metrics?days=` | JWT |
 | POST | `/events` | JWT |
@@ -206,7 +259,7 @@ Prisma errors are converted first (`handleDatabaseErrors`, for example P2002 bec
 | GET | `/orders/:id` | JWT (buyer or admin) |
 | POST | `/orders/:id/pay`, `/orders/:id/cancel` | JWT (buyer) |
 | POST | `/webhooks/:provider` | Provider signature |
-| POST | `/fake-gateway/charges/:chargeId/pay`, `/fake-gateway/charges/:chargeId/dispute`, `/fake-gateway/disputes/:disputeId/close` | None. Only with `PAYMENT_PROVIDER=fake`, outside production |
+| POST | `/fake-gateway/charges/:chargeId/pay`, `/fake-gateway/charges/:chargeId/dispute`, `/fake-gateway/disputes/:disputeId/close` | None. Only with `PAYMENT_PROVIDER=fake` and `FAKE_GATEWAY_SIMULATOR=on` |
 
 Sectors and lots travel inside the event payload. `POST /events` requires at least one sector with one lot. On `PATCH /events/:id`, `sectors` replaces the whole list: items with `id` are updated, items without `id` are created and missing ones are deleted, all in one transaction. `DELETE /events/:id` deactivates the event; if it has not started yet, it also cancels its sales (see [Payments](#payments)).
 
@@ -221,7 +274,7 @@ The full contract is in Swagger (`/docs`) and in `goldenevents-api-insominia-doc
 - Money is always an integer in cents: `Lot.price`, `Ticket.price` and `OrderItem.unit_price_cents` (the lot price frozen at purchase), the order and charge `*_cents` columns, `Event.min_price` and the revenue metric. Organizer metrics ignore cancelled tickets.
 - Tickets are sold by lot. Each event has sectors, and each sector has lots in order (`position`). Only one lot per sector is on sale: the first one with tickets left whose sales have not ended. If that lot has a future `sales_start`, the sector waits. `Event.capacity`, `quantity_left` and `min_price` are totals of the lots, recalculated in the same transaction as every write; writes lock the event row so concurrent purchases do not compute them from stale reads.
 - Migrations: `backend/prisma/migrations/`. Create one with `bunx prisma migrate dev --name <name>` inside `backend/`. Production and Docker apply them with `prisma migrate deploy`.
-- Seeds: `backend/prisma/seeds/seed.ts` seeds user types, categories, users, events, orders and payment methods. The order seeds have one order in each situation: paid by card and by Pix, free, with a used ticket, refunded, disputed, expired, cancelled and awaiting payment. Event and order seeds are skipped when `NODE_ENV=test`.
+- Seeds: `backend/prisma/seeds/seed.ts` seeds user types, categories, users, events, orders and payment methods. The order seeds have one order in each situation: paid by card and by Pix, free, with a used ticket, refunded, disputed, expired, cancelled and awaiting payment. Event and order seeds are skipped when `NODE_ENV=test`. With `NODE_ENV=production` the seed only creates the reference data (user types, categories and payment methods): the sample users share the password `123456`, an admin included.
 
 ## Payments
 
@@ -229,7 +282,7 @@ Phase 1 of `MODELAGEM.md` (single ticket sales) is implemented. The only provide
 
 ### Flow
 
-1. **`POST /orders`** checks the purchase policy (event active and not started, lot is the current one, at most `MAX_TICKETS_PER_ORDER` tickets). In one transaction, it then reserves the stock and creates the order as `awaiting_payment`, with a 10-minute `expires_at`. The reservation decrements `Lot.quantity_left` under the event row lock. A delayed job is scheduled in the `order-expiration` queue. A free order (total 0) is created as `paid` with its tickets and never gets a charge.
+1. **`POST /orders`** checks the purchase policy (event active and not started, lot is the current one, at most `MAX_TICKETS_PER_ORDER` tickets). In one transaction, it then reserves the stock, checks that the buyer has no other open order for the event (see [Rate limiting](#rate-limiting)) and creates the order as `awaiting_payment`, with a 10-minute `expires_at`. The reservation decrements `Lot.quantity_left` under the event row lock. A delayed job is scheduled in the `order-expiration` queue. A free order (total 0) is created as `paid` with its tickets and never gets a charge.
 2. **`POST /orders/:id/pay`** calls `BillingService.createCharge`. The charge gets the idempotency key `charge:order:<orderId>:<attempt>`. Asking for Pix again returns the same QR code. Switching method cancels the open charge first. A declined card is recorded as `failed` and answered with 422.
 3. **Confirmation is asynchronous.** The provider sends a webhook to `POST /webhooks/:provider`. It is verified, saved in `webhook_event` (unique per provider event) and enqueued. The `webhooks` worker asks the provider for the current status, so duplicated or out-of-order events cannot move a charge backwards. It then applies the charge state machine and writes `billing.charge_succeeded` to the outbox in the same transaction. A card approved at once takes the same path from step 3 on.
 4. **The outbox relay** publishes new `outbox` rows to the `domain-events` queue every `OUTBOX_POLL_INTERVAL_MS`. Each consumer is idempotent: it records `(consumer, message_id)` in `processed_message` in the same transaction as its effect. The sales consumer marks the order `paid`, stores `paid_charge_id`, issues the tickets (random `code` for the QR) and emits `sales.order_paid`.
@@ -267,6 +320,11 @@ Every job uses a deterministic `jobId`, so enqueuing the same work twice is harm
 - Webhooks are signed with HMAC-SHA256 (`x-fake-signature` header, `FAKE_GATEWAY_WEBHOOK_SECRET`).
 - After an API restart it no longer knows the old charges. It still refunds them, because a refund is only requested for charges the database already considers paid.
 
+It approves almost any card, so everything around it fails closed:
+
+- `GatewayRegistry` stops the API at startup when `PAYMENT_PROVIDER` is missing or unknown, and when it is `fake` with `NODE_ENV=production`. The backend image sets `NODE_ENV=production`, so it cannot run in production until a real provider exists.
+- The `/fake-gateway` simulator answers only with `PAYMENT_PROVIDER=fake` and `FAKE_GATEWAY_SIMULATOR=on`. Forgetting a variable leaves it closed.
+
 A real provider is a new class that implements `PaymentGateway` (`billing/domain/gateway-port.ts`), registered in `PAYMENT_GATEWAYS` and added to the `PaymentProvider` enum.
 
 ### Differences from `MODELAGEM.md`
@@ -282,10 +340,15 @@ A real provider is a new class that implements `PaymentGateway` (`billing/domain
 | `SECRET` | backend | JWT signing key |
 | `DATABASE_URL` | backend | PostgreSQL connection string |
 | `REDIS_URL` | backend | Redis for the BullMQ queues, defaults to `redis://localhost:6379` |
-| `PAYMENT_PROVIDER` | backend | Provider for new charges, defaults to `fake` |
+| `NODE_ENV` | backend | `production` hides Swagger, refuses the fake provider and keeps the sample users out of the seed. The backend image sets it |
+| `PAYMENT_PROVIDER` | backend | Provider for new charges. Required: the API does not start without it |
+| `FAKE_GATEWAY_SIMULATOR` | backend | `on` opens the `/fake-gateway` routes. `.env.test`, `.env.example` and Docker Compose set it |
 | `FAKE_GATEWAY_WEBHOOK_SECRET` | backend | Signs the fake provider webhooks, defaults to `fake-secret` |
 | `QUEUE_WORKERS` | backend | `off` disables the queue workers and the outbox relay in this process |
 | `OUTBOX_POLL_INTERVAL_MS` | backend | How often the outbox relay polls, defaults to 500 |
+| `RATE_LIMIT` | backend | `off` disables the rate limits. `.env.test` sets it |
+| `TRUST_PROXY` | backend | Express `trust proxy` for the proxy in front of the API: `true`, a number of hops or a list of addresses. Defaults to `loopback` |
+| `INTERNAL_API_KEY` | backend, frontend | Shared secret that lets the Next.js server send the browser's IP. Same value on both. Required in production, at least 32 characters |
 | `PORT` | backend | Optional, defaults to 8080 |
 | `API_URL` | frontend | Server-side base URL of the API, defaults to `http://localhost:8080` |
 
@@ -298,12 +361,12 @@ Only the backend has tests. Both suites use Jest 30 with ts-jest in ESM mode.
 | Suite | Command | Files | Needs |
 |---|---|---|---|
 | Unit | `bun run test` | `backend/src/**/*.spec.ts` | Nothing. Prisma is mocked with `jest-mock-extended`. |
-| E2E | `bun run test:e2e` | `backend/test/*.e2e-spec.ts` | Docker. Each file starts a Postgres container with testcontainers, runs migrations and seeds, then calls the API with supertest. `payments.e2e-spec.ts` also starts a Redis container and runs the real workers. |
+| E2E | `bun run test:e2e` | `backend/test/*.e2e-spec.ts` | Docker. Each file starts a Postgres container with testcontainers, runs migrations and seeds, then calls the API with supertest. `payments.e2e-spec.ts` also starts a Redis container and runs the real workers. `rate-limit.e2e-spec.ts` starts Redis too and is the only file with the rate limits on. |
 
 E2E tests run in band, and tests inside a file depend on the order they run in.
 
 `payments.e2e-spec.ts` covers the Phase 1 acceptance criteria:
-- 100 simultaneous purchases for 10 tickets.
+- 100 simultaneous purchases for 10 tickets, by 100 buyers, and simultaneous orders of one buyer for the same event.
 - The same webhook delivered 3 times, and an old event arriving after the payment.
 - A Pix paid after expiration, with and without stock left.
 - A declined card and a duplicate payment.
@@ -311,6 +374,8 @@ E2E tests run in band, and tests inside a file depend on the order they run in.
 - Rebuilding the queues after a Redis `FLUSHALL`.
 
 Payment confirmation is asynchronous, so those tests poll the database with `waitFor`.
+
+`user.e2e-spec.ts` covers the admin-only routes, the token lifetime, sessions ended by a deactivation or a password change, and the helmet headers.
 
 ## Conventions
 
@@ -330,3 +395,7 @@ Payment confirmation is asynchronous, so those tests poll the database with `wai
 - The frontend checkout still calls `POST /events/:id/buy-ticket`, which was replaced by `/orders`. Buying from the site fails until the checkout is moved to the order flow.
 - The only payment provider is the in-memory fake. Nothing sends e-mails on `sales.order_paid` yet.
 - `goldenevents-api-insominia-doc.json` is from 2024 and does not cover sectors, lots or orders. Swagger (`/docs`) is up to date.
+- The production deploy must keep Next.js behind a proxy that overwrites `X-Forwarded-For` (see [Client IP](#rate-limiting)). Vercel and Docker Compose do this, but nothing in the code can enforce it.
+- On Railway, `TRUST_PROXY=true` relies on the edge overwriting `X-Forwarded-For`. Railway staff confirm it, but the docs do not promise it. It only affects direct calls to the API: requests from the site use `X-Client-IP`.
+- `POST /users` answers 409 for an email or CPF that is already registered, which tells a visitor that the account exists. The signup rate limit slows this down. Fixing it needs email confirmation, which the project does not have yet.
+- The site's CSP has no `script-src`: restricting scripts needs a per-request nonce, which turns every page into dynamic rendering.
