@@ -1,6 +1,9 @@
 // Valores monetários são sempre inteiros em centavos
 export const MAX_TICKETS_PER_ORDER = 10;
 
+// Somando pedidos pagos e o pedido em aberto: freia o cambismo
+export const MAX_TICKETS_PER_BUYER_PER_EVENT = 10;
+
 export type OrderStatus = 'awaiting_payment' | 'paid' | 'expired' | 'cancelled' | 'refunded';
 
 export type TicketStatus = 'valid' | 'used' | 'cancelled';

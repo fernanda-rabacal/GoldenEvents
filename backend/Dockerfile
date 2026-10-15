@@ -21,6 +21,9 @@ RUN bun x turbo run build --filter=golden-events-api
 
 WORKDIR /golden-events/backend
 
+# Depois do build, que precisa das devDependencies. O docker-compose de desenvolvimento sobrescreve
+ENV NODE_ENV=production
+
 EXPOSE 8080
 
 CMD ["sh", "-c", "npx prisma migrate deploy && npm run start:prod"]

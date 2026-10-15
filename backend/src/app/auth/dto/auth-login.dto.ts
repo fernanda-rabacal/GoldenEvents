@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class AuthLoginDto {
   @IsEmail()
@@ -11,4 +11,10 @@ export class AuthLoginDto {
   @IsNotEmpty()
   @ApiProperty()
   password: string;
+
+  // Token de 30 dias em vez de 1 hora
+  @IsOptional()
+  @IsBoolean()
+  @ApiProperty({ required: false })
+  keepConnected?: boolean;
 }

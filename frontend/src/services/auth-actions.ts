@@ -2,13 +2,11 @@
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { SESSION_TTL_SECONDS } from '@golden-events/shared';
 import { AUTH_COOKIE } from '@/utils/auth_cookie';
 import { getSafeRedirect } from '@/utils/auth_redirect';
 import { SERVER_UNREACHABLE_MESSAGE, sendToApi } from './api';
 import type { ActionResult } from './authenticated-api';
-
-const ONE_HOUR = 60 * 60;
-const THIRTY_DAYS = 60 * 60 * 24 * 30;
 
 type SignInPayload = {
   email: string;
@@ -32,6 +30,7 @@ export async function signIn(
   const response = await sendToApi<{ token?: string }>('/login', 'POST', {
     email,
     password,
+    keepConnected: keep_connected,
   });
 
   if (!response) {
@@ -50,7 +49,9 @@ export async function signIn(
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',
     path: '/',
-    maxAge: keep_connected ? THIRTY_DAYS : ONE_HOUR,
+    maxAge: keep_connected
+      ? SESSION_TTL_SECONDS.keepConnected
+      : SESSION_TTL_SECONDS.default,
   });
 
   redirect(getSafeRedirect(redirectTo));

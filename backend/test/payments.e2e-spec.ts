@@ -1,4 +1,6 @@
+import { UserTypeEnum } from '@golden-events/shared';
 import { INestApplication } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaClient, type TicketStatus } from '@prisma/client';
 import { PostgreSqlContainer } from '@testcontainers/postgresql';
@@ -16,6 +18,7 @@ import { EventModule } from '../src/app/event/event.module.js';
 import { EVENT_CANCELLED } from '../src/app/event/event.events.js';
 import { EventCancellationConsumer } from '../src/app/sales/application/event-cancellation.consumer.js';
 import { OrderExpirationService } from '../src/app/sales/application/order-expiration.service.js';
+import { OPEN_ORDER_EXISTS } from '../src/app/sales/domain/purchase-policy.js';
 import { SalesModule } from '../src/app/sales/index.js';
 import { UserModule } from '../src/app/user/user.module.js';
 import { PrismaModule } from '../src/db/prisma.module.js';
@@ -448,12 +451,54 @@ describe('Payments (phase 1)', () => {
       await pay(token, body.data.id, PIX).expect(409);
     });
 
-    it('should create exactly 10 orders out of 100 simultaneous purchases for 10 tickets', async () => {
-      const { lotId } = await createEvent([{ name: 'Lote', price: 4500, quantity: 10 }]);
+    it('should limit the tickets of one buyer per event, paid ones included', async () => {
+      const { lotId } = await createEvent([{ name: 'Lote', price: 4500, quantity: 30 }]);
       const token = await login();
 
+      await paidOrder(token, lotId, 8);
+
+      const res = await createOrder(token, lotId, 3).expect(422);
+      expect(res.body.message).toBe(
+        'Cada pessoa pode comprar no máximo 10 ingressos por evento. Você já tem 8.',
+      );
+      expect(await lotLeft(lotId)).toBe(22);
+
+      await paidOrder(token, lotId, 2);
+      await createOrder(await login(OTHER_BUYER), lotId, 10).expect(201);
+    });
+
+    it('should keep the fake provider simulator closed unless it is turned on', async () => {
+      process.env.FAKE_GATEWAY_SIMULATOR = 'off';
+
+      try {
+        const res = await http()
+          .post('/fake-gateway/charges/00000000-0000-0000-0000-000000000000/pay')
+          .expect(404);
+
+        expect(res.body.message).toBe('Simulador do provedor fake desativado.');
+      } finally {
+        process.env.FAKE_GATEWAY_SIMULATOR = 'on';
+      }
+    });
+
+    it('should create exactly 10 orders out of 100 simultaneous purchases for 10 tickets', async () => {
+      const { lotId } = await createEvent([{ name: 'Lote', price: 4500, quantity: 10 }]);
+      // Um comprador por pedido: cada um só pode ter um pedido em aberto por evento
+      const buyers = await prisma.user.createManyAndReturn({
+        data: Array.from({ length: 100 }, (_, i) => ({
+          name: `Comprador ${i}`,
+          email: `comprador-${i}@teste.com`,
+          password: 'sem-login',
+          document: `9${String(i).padStart(10, '0')}`,
+          user_type_id: UserTypeEnum.USER,
+        })),
+      });
+      const jwt = module.get(JwtService);
+
       const responses = await Promise.all(
-        Array.from({ length: 100 }, () => createOrder(token, lotId, 1)),
+        buyers.map(({ id, name, email }) =>
+          createOrder(jwt.sign({ id, name, email }), lotId, 1),
+        ),
       );
       const statuses = responses.map(({ status }) => status);
 
@@ -462,6 +507,30 @@ describe('Payments (phase 1)', () => {
       expect(await prisma.order.count()).toBe(10);
       expect(await lotLeft(lotId)).toBe(0);
     }, 60_000);
+
+    it('should keep a single open order per buyer and event', async () => {
+      const { lotId } = await createEvent([{ name: 'Lote', price: 4500, quantity: 10 }]);
+      const token = await login();
+
+      const responses = await Promise.all(
+        Array.from({ length: 5 }, () => createOrder(token, lotId, 1)),
+      );
+      const [created] = responses.filter(({ status }) => status === 201);
+      const refused = responses.filter(({ status }) => status === 422);
+
+      expect(refused).toHaveLength(4);
+      expect(refused[0].body.message).toBe(OPEN_ORDER_EXISTS);
+      expect(await lotLeft(lotId)).toBe(9);
+
+      await http()
+        .post(`/orders/${created.body.data.id}/cancel`)
+        .auth(token, { type: 'bearer' })
+        .expect(200);
+      await createOrder(token, lotId, 1).expect(201);
+
+      // Outro comprador não é afetado
+      await createOrder(await login(OTHER_BUYER), lotId, 1).expect(201);
+    });
 
     it('should not sell a lot that is not the current one', async () => {
       const startedLots = [
@@ -618,7 +687,7 @@ describe('Payments (phase 1)', () => {
       const { lotId } = await createEvent([{ name: 'Lote', price: 4500, quantity: 10 }]);
       const token = await login();
       const paid = await createOrder(token, lotId).expect(201);
-      const abandoned = await createOrder(token, lotId, 1).expect(201);
+      const abandoned = await createOrder(await login(OTHER_BUYER), lotId, 1).expect(201);
       const charge = await pay(token, paid.body.data.id, PIX).expect(201);
 
       // Webhook gravado e enfileirado, mas a fila está parada

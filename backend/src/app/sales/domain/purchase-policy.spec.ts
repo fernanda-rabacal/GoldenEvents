@@ -3,6 +3,7 @@ import {
   checkBuyerCancellation,
   checkPurchase,
   checkRequestedItems,
+  checkTicketsPerBuyer,
   NOT_ENOUGH_TICKETS,
 } from './purchase-policy.js';
 import { BusinessRuleError } from '../../common/errors/types/BusinessRuleError.js';
@@ -134,6 +135,15 @@ describe('purchase policy', () => {
           { start_date: new Date(Date.now() - 60_000) },
         ),
       ).toThrow(BusinessRuleError);
+    });
+  });
+
+  describe('checkTicketsPerBuyer', () => {
+    it('should allow buying up to 10 tickets per event, counting the ones already held', () => {
+      expect(() => checkTicketsPerBuyer(6, [{ lotId: 10, quantity: 4 }])).not.toThrow();
+      expect(() => checkTicketsPerBuyer(6, [{ lotId: 10, quantity: 5 }])).toThrow(
+        'Você já tem 6.',
+      );
     });
   });
 });

@@ -78,10 +78,11 @@ export class FakeGatewayController {
     return { webhookEventId };
   }
 
+  // Só com as duas variáveis explícitas: esquecer uma delas nunca deixa o simulador aberto
   private assertEnabled() {
     if (
-      process.env.NODE_ENV === 'production' ||
-      (process.env.PAYMENT_PROVIDER ?? 'fake') !== 'fake'
+      process.env.FAKE_GATEWAY_SIMULATOR !== 'on' ||
+      process.env.PAYMENT_PROVIDER !== 'fake'
     ) {
       throw new NotFoundError('Simulador do provedor fake desativado.');
     }

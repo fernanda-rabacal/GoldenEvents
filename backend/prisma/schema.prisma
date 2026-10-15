@@ -330,15 +330,17 @@ model EventCategory {
 }
 
 model User {
-  id           Int      @id @default(autoincrement())
-  name         String
-  user_type_id Int
-  email        String   @unique
-  password     String
-  document     String   @unique
-  active       Boolean  @default(true)
-  created_at   DateTime @default(now())
-  updated_at   DateTime @default(now()) @updatedAt
+  id                  Int       @id @default(autoincrement())
+  name                String
+  user_type_id        Int
+  email               String    @unique
+  password            String
+  document            String    @unique
+  active              Boolean   @default(true)
+  // Tokens emitidos antes disto deixam de valer
+  password_changed_at DateTime?
+  created_at          DateTime  @default(now())
+  updated_at          DateTime  @default(now()) @updatedAt
 
   user_type UserType @relation(fields: [user_type_id], references: [id])
 

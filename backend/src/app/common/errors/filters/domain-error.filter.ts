@@ -6,11 +6,13 @@ import {
   ConflictException,
   ForbiddenException,
   HttpException,
+  HttpStatus,
   NotFoundException,
   UnauthorizedException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
+import type { Response } from 'express';
 import { BusinessRuleError } from '../types/BusinessRuleError.js';
 import { ConflictError } from '../types/ConflictError.js';
 import { DomainError } from '../types/DomainError.js';
@@ -18,6 +20,7 @@ import { ForbiddenError } from '../types/ForbiddenError.js';
 import { NotFoundError } from '../types/NotFoundError.js';
 import { PaymentProviderError } from '../types/PaymentProviderError.js';
 import { PrismaClientError } from '../types/PrismaClientError.js';
+import { TooManyRequestsError } from '../types/TooManyRequestsError.js';
 import { UnauthorizedError } from '../types/UnauthorizedError.js';
 import { handleDatabaseErrors } from '../utils/handle-database-errors.util.js';
 import { isPrismaError } from '../utils/is-prisma-error.util.js';
@@ -33,6 +36,9 @@ function toHttpException(error: DomainError): HttpException {
   if (error instanceof PaymentProviderError) {
     return new BadGatewayException(error.message);
   }
+  if (error instanceof TooManyRequestsError) {
+    return new HttpException(error.message, HttpStatus.TOO_MANY_REQUESTS);
+  }
 
   return new BadRequestException(error.message);
 }
@@ -40,6 +46,13 @@ function toHttpException(error: DomainError): HttpException {
 @Catch()
 export class DomainErrorFilter extends BaseExceptionFilter {
   catch(error: unknown, host: ArgumentsHost) {
+    if (error instanceof TooManyRequestsError) {
+      host
+        .switchToHttp()
+        .getResponse<Response>()
+        .setHeader('Retry-After', String(error.retryAfterSeconds));
+    }
+
     if (error instanceof DomainError) {
       return super.catch(toHttpException(error), host);
     }

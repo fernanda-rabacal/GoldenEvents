@@ -1,9 +1,17 @@
-import { getCurrentLot, MAX_TICKETS_PER_ORDER } from '@golden-events/shared';
+import {
+  getCurrentLot,
+  MAX_TICKETS_PER_BUYER_PER_EVENT,
+  MAX_TICKETS_PER_ORDER,
+} from '@golden-events/shared';
 import { BusinessRuleError } from '../../common/errors/types/BusinessRuleError.js';
 import { NotFoundError } from '../../common/errors/types/NotFoundError.js';
 
 export const NOT_ENOUGH_TICKETS =
   'Não há ingressos suficientes disponíveis para esta compra.';
+
+// Cada pedido em aberto prende estoque sem pagar: sem este limite, uma conta esgota o evento
+export const OPEN_ORDER_EXISTS =
+  'Você já tem um pedido aguardando pagamento para este evento. Pague ou cancele esse pedido antes de fazer outro.';
 
 export const RESERVATION_MINUTES = 10;
 
@@ -46,6 +54,17 @@ export function checkRequestedItems(items: RequestedItem[]) {
   ) {
     throw new BusinessRuleError(
       `Um pedido pode ter no máximo ${MAX_TICKETS_PER_ORDER} ingressos.`,
+    );
+  }
+}
+
+// heldTickets: ingressos de pedidos pagos e do pedido em aberto do comprador no evento
+export function checkTicketsPerBuyer(heldTickets: number, items: RequestedItem[]) {
+  const requested = items.reduce((total, { quantity }) => total + quantity, 0);
+
+  if (heldTickets + requested > MAX_TICKETS_PER_BUYER_PER_EVENT) {
+    throw new BusinessRuleError(
+      `Cada pessoa pode comprar no máximo ${MAX_TICKETS_PER_BUYER_PER_EVENT} ingressos por evento. Você já tem ${heldTickets}.`,
     );
   }
 }
