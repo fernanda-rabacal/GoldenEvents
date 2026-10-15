@@ -2,27 +2,57 @@ import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
 import { UserRepository } from './repositories/user.repository.js';
+import { BusinessRuleError } from '../common/errors/types/BusinessRuleError.js';
 import { ForbiddenError } from '../common/errors/types/ForbiddenError.js';
 import { NotFoundError } from '../common/errors/types/NotFoundError.js';
 import { UserTypeEnum } from './entities/user.entity.js';
+import { compareEncrypedData } from '../../util/crypt.js';
+import {
+  RateLimitService,
+  type RateLimitRule,
+} from '../../shared/rate-limit/rate-limit.service.js';
 
 // Usuário autenticado (req.user)
 export type Requester = { id: number; user_type_id: number };
+
+// Com um token roubado, a senha atual é a última barreira: não pode ser adivinhada à vontade
+export const CURRENT_PASSWORD_FAILURES: RateLimitRule = {
+  name: 'current-password-failures',
+  limit: 5,
+  windowMs: 15 * 60_000,
+  message: 'Muitas tentativas com a senha atual errada.',
+};
 
 function isAdmin(requester: Requester) {
   return requester.user_type_id === UserTypeEnum.ADMIN;
 }
 
+function assertAdmin(requester: Requester) {
+  if (!isAdmin(requester)) {
+    throw new ForbiddenError('Somente administradores podem fazer isso.');
+  }
+}
+
 @Injectable()
 export class UserService {
-  constructor(private readonly repository: UserRepository) {}
+  constructor(
+    private readonly repository: UserRepository,
+    private readonly rateLimit: RateLimitService,
+  ) {}
 
   async create(createUserDto: CreateUserDto) {
     return this.repository.create(createUserDto);
   }
 
-  async findAll() {
+  // Devolve e-mail e CPF de todo mundo: só para administradores
+  async findAll(requester: Requester) {
+    assertAdmin(requester);
+
     return this.repository.findAll();
+  }
+
+  async findSession(id: number) {
+    return this.repository.findSession(id);
   }
 
   async findById(id: number) {
@@ -65,15 +95,44 @@ export class UserService {
       );
     }
 
+    if (updateUserDto.password !== undefined) {
+      await this.assertCurrentPassword(requester, userId, updateUserDto.currentPassword);
+    }
+
     return this.repository.update(userId, updateUserDto);
   }
 
-  async toggleActiveUser(id: number) {
+  async toggleActiveUser(requester: Requester, id: number) {
+    assertAdmin(requester);
+
+    if (requester.id === id) {
+      throw new BusinessRuleError('Você não pode desativar a sua própria conta.');
+    }
+
     const user = await this.findById(id);
 
-    if (!user) throw new NotFoundError('Usuário não encontrado.');
-
     return this.repository.toggleActiveUser(id, !user.active);
+  }
+
+  private async assertCurrentPassword(
+    requester: Requester,
+    userId: number,
+    currentPassword: string,
+  ) {
+    if (requester.id !== userId) {
+      throw new ForbiddenError('Só o próprio usuário pode trocar a senha.');
+    }
+
+    const subject = `user:${userId}`;
+
+    await this.rateLimit.assertAllowed(CURRENT_PASSWORD_FAILURES, subject);
+
+    const hash = await this.repository.findPasswordHash(userId);
+
+    if (!hash || !(await compareEncrypedData(currentPassword, hash))) {
+      await this.rateLimit.recordFailure(CURRENT_PASSWORD_FAILURES, subject);
+      throw new BusinessRuleError('A senha atual está incorreta.');
+    }
   }
 
   async getUserTickets(userId: number) {

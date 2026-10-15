@@ -2,13 +2,13 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { AuthTokenDto } from '../dto/auth-token.dto.js';
-import { UserService } from '../../../app/user/user.service.js';
+import { AuthService } from '../auth.service.js';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
-    private readonly userService: UserService,
+    private readonly authService: AuthService,
     config: ConfigService,
   ) {
     super({
@@ -18,12 +18,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: AuthTokenDto) {
-    if (!payload) {
-      throw new UnauthorizedException('Não autenticado.');
+  async validate(payload: AuthTokenDto & { iat: number }) {
+    const user = payload && (await this.authService.validateSession(payload));
+
+    if (!user) {
+      throw new UnauthorizedException('Sua sessão expirou. Entre novamente.');
     }
 
-    const user = await this.userService.findById(payload.id);
     return user;
   }
 }

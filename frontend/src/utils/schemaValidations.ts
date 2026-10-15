@@ -1,5 +1,9 @@
 import z from 'zod';
 import dayjs from 'dayjs';
+import {
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_MIN_LENGTH,
+} from '@golden-events/shared';
 
 const lotValidationSchema = z
   .object({
@@ -148,7 +152,12 @@ export const registerFormSchema = z
     }),
     password: z
       .string()
-      .min(6, { message: 'A senha precisa ter pelo menos 6 caracteres.' }),
+      .min(PASSWORD_MIN_LENGTH, {
+        message: `A senha precisa ter pelo menos ${PASSWORD_MIN_LENGTH} caracteres.`,
+      })
+      .max(PASSWORD_MAX_LENGTH, {
+        message: `A senha pode ter no máximo ${PASSWORD_MAX_LENGTH} caracteres.`,
+      }),
     confirm_password: z
       .string()
       .min(1, { message: 'Este campo é obrigatório' }),

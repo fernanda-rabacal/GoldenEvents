@@ -15,6 +15,7 @@ import { MessageResponse } from '../../response/message.response.js';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guard/jwt.guard.js';
 import { Request } from 'express';
+import { RateLimit } from '../../shared/rate-limit/rate-limit.guard.js';
 
 @ApiTags('User')
 @Controller('/users')
@@ -22,8 +23,10 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
-  async findAll() {
-    return await this.userService.findAll();
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  async findAll(@Req() req: Request) {
+    return await this.userService.findAll(req.user as Requester);
   }
 
   @Get('/token')
@@ -53,6 +56,13 @@ export class UserController {
   }
 
   @Post()
+  @RateLimit({
+    name: 'signup',
+    by: 'ip',
+    limit: 10,
+    windowMs: 60 * 60_000,
+    message: 'Muitos cadastros feitos a partir desta rede.',
+  })
   async create(@Body() createUserDto: CreateUserDto) {
     return this.userService.create(createUserDto);
   }
@@ -71,12 +81,12 @@ export class UserController {
   @Patch('/:id/active')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  async toggleActiveUser(@Param('id') id: string) {
+  async toggleActiveUser(@Param('id') id: string, @Req() req: Request) {
     const activeMessage = {
       true: 'ativado',
       false: 'desativado',
     };
-    const user = await this.userService.toggleActiveUser(+id);
+    const user = await this.userService.toggleActiveUser(req.user as Requester, +id);
 
     return new MessageResponse(
       `Usuário ${activeMessage[String(user.active)]} com sucesso.`,

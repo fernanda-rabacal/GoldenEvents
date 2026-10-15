@@ -11,13 +11,20 @@ const prisma = new PrismaClient();
 async function main() {
   await createUserTypes(prisma);
   await createEventCategories(prisma);
+  await createPaymentMethods(prisma);
+
+  // Os usuários de exemplo têm senha conhecida, inclusive um administrador:
+  // produção recebe só os dados de referência
+  if (process.env.NODE_ENV === 'production') {
+    return;
+  }
+
   await createUsers(prisma);
   // Os testes E2E esperam o banco sem eventos nem pedidos
   if (process.env.NODE_ENV !== 'test') {
     await createEvents(prisma);
     await createOrders(prisma);
   }
-  await createPaymentMethods(prisma);
 }
 
 main()

@@ -10,9 +10,11 @@ function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
 }
 
-function removePassword<T extends { password: string }>(user: T): Omit<T, 'password'> {
+function removePassword<T extends { password: string; password_changed_at: Date | null }>(
+  user: T,
+): Omit<T, 'password' | 'password_changed_at'> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { password, ...rest } = user;
+  const { password, password_changed_at, ...rest } = user;
 
   return rest;
 }
@@ -79,6 +81,30 @@ export class UserRepository {
     return user;
   }
 
+  async findPasswordHash(id: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      select: { password: true },
+    });
+
+    return user?.password ?? null;
+  }
+
+  // O que o JwtStrategy precisa para aceitar o token a cada requisição
+  async findSession(id: number) {
+    return this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        user_type_id: true,
+        active: true,
+        password_changed_at: true,
+      },
+    });
+  }
+
   async getUserTypes() {
     const userTypes = await this.prisma.userType.findMany();
 
@@ -89,7 +115,10 @@ export class UserRepository {
     const data: Prisma.UserUpdateInput = {};
 
     if (updateUserDto.name) data.name = updateUserDto.name;
-    if (updateUserDto.password) data.password = await encryptData(updateUserDto.password);
+    if (updateUserDto.password) {
+      data.password = await encryptData(updateUserDto.password);
+      data.password_changed_at = new Date();
+    }
     if (updateUserDto.userTypeId) {
       data.user_type = {
         connect: {

@@ -1,7 +1,7 @@
 import { UniqueConstraintError } from './../common/errors/types/UniqueConstraintError.js';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaClient } from '@prisma/client';
-import { mockDeep } from 'jest-mock-extended';
+import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
 import { UserService } from './user.service.js';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { encryptData } from '../../util/crypt.js';
@@ -13,17 +13,27 @@ import { PrismaClientError } from '../common/errors/types/PrismaClientError.js';
 import { PrismaErrors } from '../common/errors/utils/handle-database-errors.util.js';
 import { NotFoundError } from '../common/errors/types/NotFoundError.js';
 import { ForbiddenError } from '../common/errors/types/ForbiddenError.js';
+import { BusinessRuleError } from '../common/errors/types/BusinessRuleError.js';
+import { RateLimitService } from '../../shared/rate-limit/rate-limit.service.js';
+
+const ADMIN = { id: 2, user_type_id: UserTypeEnum.ADMIN };
 
 describe('UserService', () => {
   let service: UserService;
   let prisma: PrismaClientMock;
+  let rateLimit: DeepMockProxy<RateLimitService>;
   let expectedOutputUser: any;
   let expectedOutputUserTypes: any;
   let expectedOutputUserTickets: any;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [UserService, UserRepository, PrismaService],
+      providers: [
+        UserService,
+        UserRepository,
+        PrismaService,
+        { provide: RateLimitService, useValue: mockDeep<RateLimitService>() },
+      ],
     })
       .overrideProvider(PrismaService)
       .useValue(mockDeep<PrismaClient>())
@@ -31,6 +41,7 @@ describe('UserService', () => {
 
     service = module.get(UserService);
     prisma = module.get(PrismaService);
+    rateLimit = module.get(RateLimitService);
 
     expectedOutputUser = {
       id: 1,
@@ -170,12 +181,19 @@ describe('UserService', () => {
     await expect(service.create(mockUser)).rejects.toThrow();
   });
 
-  it('should get all users', async () => {
+  it('should get all users for an admin', async () => {
     prisma.user.findMany.mockResolvedValueOnce([expectedOutputUser]);
 
-    const users = await service.findAll();
+    const users = await service.findAll(ADMIN);
 
     expect(expectedOutputUser).toStrictEqual(users[0]);
+  });
+
+  it('should not list the users to someone who is not an admin', async () => {
+    await expect(
+      service.findAll({ id: 1, user_type_id: UserTypeEnum.ORGANIZER }),
+    ).rejects.toBeInstanceOf(ForbiddenError);
+    expect(prisma.user.findMany).not.toHaveBeenCalled();
   });
 
   it('should find an user by his id', async () => {
@@ -205,14 +223,21 @@ describe('UserService', () => {
   it('should update an user', async () => {
     const updateUserData = {
       password: '987654321',
+      currentPassword: '123456789',
       name: 'Teste 2',
       userTypeId: UserTypeEnum.ORGANIZER,
     };
     const updatedUser = {
       ...expectedOutputUser,
-      ...updateUserData,
+      name: updateUserData.name,
+      user_type_id: updateUserData.userTypeId,
+      password: 'novo-hash',
+      password_changed_at: new Date(),
     };
 
+    prisma.user.findUnique.mockResolvedValueOnce({
+      password: await encryptData(updateUserData.currentPassword),
+    } as any);
     prisma.user.update.mockResolvedValueOnce(updatedUser);
 
     const user = await service.update(
@@ -222,9 +247,36 @@ describe('UserService', () => {
     );
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...updatedUserWithoutPassword } = updatedUser;
+    const { password, password_changed_at, ...publicUser } = updatedUser;
 
-    expect(user).toStrictEqual(updatedUserWithoutPassword);
+    expect(user).toStrictEqual(publicUser);
+    expect(prisma.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ password_changed_at: expect.any(Date) }),
+      }),
+    );
+  });
+
+  it('should not change the password when the current one is wrong', async () => {
+    prisma.user.findUnique.mockResolvedValueOnce({
+      password: await encryptData('123456789'),
+    } as any);
+
+    await expect(
+      service.update({ id: 1, user_type_id: UserTypeEnum.USER }, 1, {
+        password: '987654321',
+        currentPassword: 'senha-errada',
+      }),
+    ).rejects.toThrow(new BusinessRuleError('A senha atual está incorreta.'));
+    expect(rateLimit.recordFailure).toHaveBeenCalled();
+    expect(prisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it('should not let an admin change the password of another user', async () => {
+    await expect(
+      service.update(ADMIN, 1, { password: '987654321', currentPassword: 'x' }),
+    ).rejects.toBeInstanceOf(ForbiddenError);
+    expect(prisma.user.update).not.toHaveBeenCalled();
   });
 
   it('should not let an user update another user', async () => {
@@ -281,7 +333,7 @@ describe('UserService', () => {
       password: await encryptData('123456789'),
     });
 
-    const user = await service.toggleActiveUser(1);
+    const user = await service.toggleActiveUser(ADMIN, 1);
 
     expect(user).toStrictEqual(deactivatedUser);
   });
@@ -289,9 +341,19 @@ describe('UserService', () => {
   it('should throw an NotFound error on deactivate an user', async () => {
     prisma.user.findUnique.mockResolvedValueOnce(undefined);
 
-    await expect(service.toggleActiveUser(1)).rejects.toThrow(
+    await expect(service.toggleActiveUser(ADMIN, 1)).rejects.toThrow(
       new NotFoundError('Usuário não encontrado.'),
     );
+  });
+
+  it('should only let an admin deactivate an user, and not their own account', async () => {
+    await expect(
+      service.toggleActiveUser({ id: 1, user_type_id: UserTypeEnum.USER }, 3),
+    ).rejects.toBeInstanceOf(ForbiddenError);
+    await expect(service.toggleActiveUser(ADMIN, ADMIN.id)).rejects.toBeInstanceOf(
+      BusinessRuleError,
+    );
+    expect(prisma.user.update).not.toHaveBeenCalled();
   });
 
   it('should group the user tickets by event', async () => {
