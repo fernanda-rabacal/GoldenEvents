@@ -18,6 +18,13 @@ export const maskDocument = (value: string | undefined) => {
     .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
 };
 
+export function maskCardNumber(value: string) {
+  return value
+    .replace(/\D/g, '')
+    .slice(0, 19)
+    .replace(/(\d{4})(?=\d)/g, '$1 ');
+}
+
 // Os dígitos digitados são centavos: "4500" -> "R$ 45,00"
 export function maskCurrency(value: string) {
   return formatMoney(parseCurrency(value));

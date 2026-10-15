@@ -49,6 +49,19 @@ export function findOfferOnSale(event: Event, lotId: number) {
   );
 }
 
+// Qualquer lote, à venda ou não: é o caso do lote que o próprio pedido em aberto esgotou
+export function findLot(event: Event, lotId: number) {
+  for (const sector of event.sectors ?? []) {
+    const lot = sector.lots.find(({ id }) => id === lotId);
+
+    if (lot) {
+      return { sector, lot };
+    }
+  }
+
+  return undefined;
+}
+
 export function getMaxTicketQuantity(lot: Pick<Lot, 'quantity_left'>) {
   return Math.max(0, Math.min(lot.quantity_left, MAX_TICKETS_PER_ORDER));
 }
