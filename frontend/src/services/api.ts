@@ -1,3 +1,5 @@
+import { headers } from 'next/headers';
+
 export const API_URL = process.env.API_URL ?? 'http://localhost:8080';
 
 export const SERVER_UNREACHABLE_MESSAGE =
@@ -30,6 +32,18 @@ export type ApiResponse<T> = {
   message?: string;
 };
 
+// A API limita o login e o cadastro por IP. Sem informar o IP do navegador, todo mundo
+// chegaria lá com o IP deste servidor e dividiria o mesmo limite. A chave prova à API que
+// o IP veio daqui
+async function getClientIpHeaders() {
+  const key = process.env.INTERNAL_API_KEY;
+  // O proxy na frente do Next (Vercel, nginx) sobrescreve o header ou acrescenta no fim: o último é o real
+  const ip = (await headers()).get('x-forwarded-for')?.split(',').pop()?.trim();
+
+  return key && ip ? { 'X-Internal-Key': key, 'X-Client-IP': ip } : undefined;
+}
+
+// Só para server actions, que têm uma requisição do navegador para repassar.
 // Retorna null quando a API não responde
 export async function sendToApi<T = Record<string, unknown>>(
   path: string,
@@ -43,6 +57,7 @@ export async function sendToApi<T = Record<string, unknown>>(
       headers: {
         'Content-Type': 'application/json',
         ...(token && { Authorization: `Bearer ${token}` }),
+        ...(await getClientIpHeaders()),
       },
       body: body ? JSON.stringify(body) : undefined,
     });

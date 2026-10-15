@@ -6,8 +6,9 @@ services:
       POSTGRES_DB: 'golden_events'
       POSTGRES_USER: 'postgres'
       POSTGRES_PASSWORD: 'password'
+    # Só na máquina local, como as outras portas internas: senhas fixas e Redis sem senha
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - pg-data:/var/lib/postgresql/data
     healthcheck:
@@ -25,7 +26,7 @@ services:
       POSTGRES_USER: 'postgres'
       POSTGRES_PASSWORD: 'password'
     ports:
-      - "5433:5432"
+      - "127.0.0.1:5433:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d golden_events"]
       interval: 5s
@@ -38,7 +39,7 @@ services:
     container_name: golden-events-redis
     command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     volumes:
       - redis-data:/data
     healthcheck:
@@ -58,15 +59,22 @@ services:
     environment:
       DATABASE_URL: 'postgresql://postgres:password@db:5432/golden_events?schema=public'
       REDIS_URL: 'redis://redis:6379'
+      # Igual à do web: com ela a API aceita o IP do navegador que o Next informa
+      INTERNAL_API_KEY: 'dev-internal-key'
+      # A imagem roda como produção, que recusa o provedor fake. Aqui é desenvolvimento
+      NODE_ENV: 'development'
+      PAYMENT_PROVIDER: 'fake'
+      FAKE_GATEWAY_SIMULATOR: 'on'
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
     ports:
-      - "8080:8080"
-      - "5555:5555"
+      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:5555:5555"
 
+  # Sem porta publicada: o Next mantém o X-Forwarded-For que receber, então só o proxy fala com ele
   web:
     container_name: golden-events-web
     build:
@@ -74,13 +82,23 @@ services:
       dockerfile: frontend/Dockerfile
     environment:
       API_URL: 'http://api:8080'
+      INTERNAL_API_KEY: 'dev-internal-key'
       # As datas dos eventos são formatadas no servidor (SSR)
       TZ: 'America/Sao_Paulo'
     depends_on:
       - api
       - db
+
+  # Porta pública do site. Grava no X-Forwarded-For o IP real da conexão (docker/nginx.conf)
+  proxy:
+    image: nginx:1.27-alpine
+    container_name: golden-events-proxy
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - web
     ports:
-      - "3000:3000"
+      - "3000:80"
 
 volumes:
   pg-data:
