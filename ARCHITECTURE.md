@@ -103,7 +103,19 @@ The browser never calls the API directly. Every request goes through the Next.js
 - `services/authenticated-api.ts`:
   - `fetchWithAuth` is for Server Components. It reads the auth cookie, sends a `Bearer` header and uses `cache: 'no-store'`.
   - `sendWithAuth` is for Server Actions. It wraps `sendToApi` with the auth cookie and returns an `ActionResult` (`{ success, message }`).
+  - `sendWithAuthForData` does the same and also returns the API's `data`. Use it only when the browser needs that data, since everything an action returns is sent to the browser.
 - `services/*-actions.ts` are Server Actions (`'use server'`). Client components call them and show `result.message` in a toast. They call `revalidatePath` or `redirect` after a write.
+
+### Checkout
+
+`/checkout` (`components/checkout/CheckoutForm.tsx`) follows the [payments flow](#flow):
+
+1. **Confirmar compra** creates the order (`POST /orders`) and pays it right away (`POST /orders/:id/pay`). A free order is created as paid and goes straight to the confirmation screen. Boleto is not offered, because the API only charges cards and Pix.
+2. **Card:** the card becomes a token in the browser (`lib/card-token.ts`), and only the token reaches the Next.js server. That file stands in for a provider SDK. It checks the number (Luhn), the expiry date and the CVV. The test card `4000 0000 0000 0002` becomes `tok_declined`, which the fake provider declines.
+3. **Pix:** the page shows the QR code and the copy-and-paste code from the charge. When `FAKE_GATEWAY_SIMULATOR=on`, a button calls `/fake-gateway/charges/:id/pay`.
+4. The confirmation is asynchronous, so the page polls `GET /orders/:id` every 2 seconds until the order is `paid`, and then shows the confirmation screen. If the order expires or is cancelled, the page discards it and the buyer starts again.
+
+The order keeps the reserved quantity and price, and the page shows the time left on the reservation. After a declined card the buyer pays the same order again. The API allows one open order per buyer and event, so the page resumes that order instead of creating another one, even when its lot is no longer on sale. **Cancelar pedido** cancels it and releases the tickets.
 
 ### Authentication
 
@@ -342,7 +354,7 @@ A real provider is a new class that implements `PaymentGateway` (`billing/domain
 | `REDIS_URL` | backend | Redis for the BullMQ queues, defaults to `redis://localhost:6379` |
 | `NODE_ENV` | backend | `production` hides Swagger, refuses the fake provider and keeps the sample users out of the seed. The backend image sets it |
 | `PAYMENT_PROVIDER` | backend | Provider for new charges. Required: the API does not start without it |
-| `FAKE_GATEWAY_SIMULATOR` | backend | `on` opens the `/fake-gateway` routes. `.env.test`, `.env.example` and Docker Compose set it |
+| `FAKE_GATEWAY_SIMULATOR` | backend, frontend | `on` opens the `/fake-gateway` routes and shows the Pix payment simulator in the checkout. `.env.test`, `.env.example` and Docker Compose set it |
 | `FAKE_GATEWAY_WEBHOOK_SECRET` | backend | Signs the fake provider webhooks, defaults to `fake-secret` |
 | `QUEUE_WORKERS` | backend | `off` disables the queue workers and the outbox relay in this process |
 | `OUTBOX_POLL_INTERVAL_MS` | backend | How often the outbox relay polls, defaults to 500 |
@@ -392,7 +404,6 @@ Payment confirmation is asynchronous, so those tests poll the database with `wai
 - The backend `tsconfig.json` has `strictNullChecks` and `noImplicitAny` turned off. The frontend and shared package are strict.
 - `backend/.env.test` is committed and contains a `SECRET`. That is fine for tests, but it must never be reused in other environments.
 - The frontend has no automated tests.
-- The frontend checkout still calls `POST /events/:id/buy-ticket`, which was replaced by `/orders`. Buying from the site fails until the checkout is moved to the order flow.
 - The only payment provider is the in-memory fake. Nothing sends e-mails on `sales.order_paid` yet.
 - `goldenevents-api-insominia-doc.json` is from 2024 and does not cover sectors, lots or orders. Swagger (`/docs`) is up to date.
 - The production deploy must keep Next.js behind a proxy that overwrites `X-Forwarded-For` (see [Client IP](#rate-limiting)). Vercel and Docker Compose do this, but nothing in the code can enforce it.
