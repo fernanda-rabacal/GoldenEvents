@@ -12,13 +12,13 @@ import { NotFoundError } from '../common/errors/types/NotFoundError.js';
 import { BusinessRuleError } from '../common/errors/types/BusinessRuleError.js';
 import { ForbiddenError } from '../common/errors/types/ForbiddenError.js';
 import { UserTypeEnum } from '@golden-events/shared';
-import { BuyEventTicketDto } from './dto/buy-ticket.dto.js';
 import { CategoryService } from './category.service.js';
 import { PaymentMethodService } from './payment-method.service.js';
 import { PaymentMethodRepository } from './repositories/payment-methods.repository.js';
+import { OutboxService } from '../../shared/outbox/outbox.service.js';
+import { EVENT_CANCELLED } from './event.events.js';
 
 const DAY_MS = 86_400_000;
-const NOT_ENOUGH_TICKETS = 'Não há ingressos suficientes disponíveis para esta compra.';
 
 function buildLot(overrides: Record<string, unknown> = {}) {
   return {
@@ -72,6 +72,7 @@ describe('EventService', () => {
         PaymentMethodService,
         PaymentMethodRepository,
         PrismaService,
+        OutboxService,
       ],
     })
       .overrideProvider(PrismaService)
@@ -503,6 +504,18 @@ describe('EventService', () => {
     const event = await service.delete(1, 1);
 
     expect(event).toHaveProperty('active', false);
+    expect(prisma.outboxMessage.create).not.toHaveBeenCalled();
+  });
+
+  it('should cancel the sales when deleting an event that has not started', async () => {
+    prisma.event.findFirst.mockResolvedValueOnce(upcomingEvent());
+    prisma.event.update.mockResolvedValue({ ...expectedOutputEvent, active: false });
+
+    await service.delete(1, 1);
+
+    expect(prisma.outboxMessage.create).toHaveBeenCalledWith({
+      data: { event_type: EVENT_CANCELLED, payload: { eventId: 1 } },
+    });
   });
 
   it('should throw a ForbiddenError on delete an event', async () => {
@@ -652,150 +665,6 @@ describe('EventService', () => {
     await expect(service.findBySlug('teste')).rejects.toThrow(
       new NotFoundError('Evento não encontrado'),
     );
-  });
-
-  describe('buying tickets', () => {
-    const purchase = (overrides: Partial<BuyEventTicketDto> = {}): BuyEventTicketDto => ({
-      eventId: 1,
-      lotId: 10,
-      paymentMethodId: 1,
-      quantity: 3,
-      userId: 1,
-      ...overrides,
-    });
-
-    function mockPurchase() {
-      prisma.lot.updateMany.mockResolvedValueOnce({ count: 3 });
-      prisma.ticket.createManyAndReturn.mockResolvedValueOnce([{ id: 1 }] as never);
-    }
-
-    it('should buy tickets of the current lot at its price in cents', async () => {
-      prisma.event.findFirst.mockResolvedValue(upcomingEvent());
-      mockPurchase();
-
-      const tickets = await service.buyTicket(purchase());
-
-      expect(tickets).toStrictEqual([{ id: 1 }]);
-      expect(prisma.$queryRaw).toHaveBeenCalled();
-      expect(prisma.lot.updateMany).toHaveBeenCalledWith({
-        where: { id: 10, quantity_left: { gte: 3 } },
-        data: { quantity_left: { decrement: 3 } },
-      });
-      expect(prisma.ticket.createManyAndReturn).toHaveBeenCalledWith({
-        data: Array.from({ length: 3 }, () => ({
-          event_id: 1,
-          lot_id: 10,
-          user_id: 1,
-          payment_method_id: 1,
-          price: 4500,
-        })),
-      });
-      expect(prisma.event.update).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { id: 1 } }),
-      );
-    });
-
-    it.each([
-      ['the previous lot sold out', { quantity_left: 0 }],
-      ['the previous lot sales ended', { sales_end: new Date(Date.now() - 60_000) }],
-    ])('should sell the next lot when %s', async (_, previousLot) => {
-      prisma.event.findFirst.mockResolvedValue(
-        upcomingEvent(
-          pistaWithLots(
-            { id: 10, ...previousLot },
-            { id: 11, name: '2º lote', price: 6000, position: 1 },
-          ),
-        ),
-      );
-      mockPurchase();
-
-      await service.buyTicket(purchase({ lotId: 11 }));
-
-      expect(prisma.ticket.createManyAndReturn.mock.calls[0][0].data[0]).toEqual(
-        expect.objectContaining({ lot_id: 11, price: 6000 }),
-      );
-    });
-
-    it.each([
-      ['a lot after the current one', () => upcomingEvent(), 11],
-      [
-        'a lot whose sales have not started',
-        () =>
-          upcomingEvent(
-            pistaWithLots({ id: 10, sales_start: new Date(Date.now() + DAY_MS) }),
-          ),
-        10,
-      ],
-    ])('should not sell %s', async (_, buildEvent, lotId) => {
-      prisma.event.findFirst.mockResolvedValue(buildEvent());
-
-      await expect(service.buyTicket(purchase({ lotId }))).rejects.toThrow(
-        new BusinessRuleError('Este lote não está à venda.'),
-      );
-      expect(prisma.$transaction).not.toHaveBeenCalled();
-    });
-
-    it('should throw a NotFoundError for a lot of another event', async () => {
-      prisma.event.findFirst.mockResolvedValue(upcomingEvent());
-
-      await expect(service.buyTicket(purchase({ lotId: 99 }))).rejects.toThrow(
-        new NotFoundError('Lote não encontrado.'),
-      );
-    });
-
-    it.each([
-      [
-        'an event that already started',
-        { start_date: new Date(Date.now() - 60_000) },
-        'Não é possível comprar ingressos para um evento que já começou.',
-      ],
-      [
-        'an inactive event',
-        { active: false, start_date: new Date(Date.now() + DAY_MS) },
-        'As vendas deste evento estão encerradas.',
-      ],
-    ])('should not buy tickets for %s', async (_, event, message) => {
-      prisma.event.findFirst.mockResolvedValue({ ...expectedOutputEvent, ...event });
-
-      await expect(service.buyTicket(purchase({ quantity: 1 }))).rejects.toThrow(
-        new BusinessRuleError(message),
-      );
-      expect(prisma.$transaction).not.toHaveBeenCalled();
-    });
-
-    it('should not buy more tickets than are left in the lot', async () => {
-      prisma.event.findFirst.mockResolvedValue(
-        upcomingEvent(pistaWithLots({ id: 10, quantity_left: 2 })),
-      );
-
-      await expect(service.buyTicket(purchase())).rejects.toThrow(
-        new BusinessRuleError(NOT_ENOUGH_TICKETS),
-      );
-      expect(prisma.$transaction).not.toHaveBeenCalled();
-    });
-
-    it('should not create tickets when another purchase took the lot first', async () => {
-      prisma.event.findFirst.mockResolvedValue(upcomingEvent());
-      prisma.lot.updateMany.mockResolvedValueOnce({ count: 0 });
-
-      await expect(service.buyTicket(purchase())).rejects.toThrow(
-        new BusinessRuleError(NOT_ENOUGH_TICKETS),
-      );
-      expect(prisma.ticket.createManyAndReturn).not.toHaveBeenCalled();
-      expect(prisma.event.update).not.toHaveBeenCalled();
-    });
-
-    it('should throw an NotFoundError on wrong eventId at buyTicket', async () => {
-      prisma.event.findFirst.mockImplementation(request => {
-        if (request.where.id === expectedOutputEvent.id) return expectedOutputEvent;
-
-        return null;
-      });
-
-      await expect(service.buyTicket(purchase({ eventId: 2 }))).rejects.toThrow(
-        new NotFoundError('Evento não encontrado'),
-      );
-    });
   });
 
   it('should find all categories', async () => {

@@ -3,12 +3,15 @@ import { PrismaService } from '../../../db/prisma.service.js';
 import { CreateEventDto } from '../dto/create-event.dto.js';
 import { generateSlug } from '../../../util/slug.js';
 import { QueryEventDto } from '../dto/query-event.dto.js';
-import { BuyEventTicketDto } from '../dto/buy-ticket.dto.js';
 import { UpdateEventDto } from '../dto/update-event.dto.js';
 import { CreateLotDto } from '../dto/lot.dto.js';
 import { UpdateSectorDto } from '../dto/sector.dto.js';
-import { Lot, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { summarizeLots, type EventSort } from '@golden-events/shared';
+import { OutboxService } from '../../../shared/outbox/outbox.service.js';
+import { EVENT_CANCELLED } from '../event.events.js';
+
+export type LotQuantity = { lotId: number; quantity: number };
 
 const EVENT_ORDER_BY: Record<EventSort, Prisma.EventOrderByWithRelationInput[]> = {
   start_date: [{ start_date: 'asc' }, { id: 'asc' }],
@@ -34,7 +37,10 @@ function toLotData(lot: CreateLotDto, position: number) {
 
 @Injectable()
 export class EventRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly outbox: OutboxService,
+  ) {}
 
   async create(createEventDto: CreateEventDto) {
     const lots = createEventDto.sectors.flatMap(({ lots }) =>
@@ -155,36 +161,64 @@ export class EventRepository {
     });
   }
 
-  // Retorna null quando outra compra levou o estoque do lote antes desta
-  async buyTicket(lot: Lot, buyEventTicket: BuyEventTicketDto) {
-    return this.prisma.$transaction(async tx => {
-      await this.lockEvent(tx, buyEventTicket.eventId);
+  async findByLotIds(lotIds: number[]) {
+    return this.prisma.event.findFirst({
+      where: { sectors: { some: { lots: { some: { id: { in: lotIds } } } } } },
+      include: { sectors: SECTORS_WITH_LOTS },
+    });
+  }
 
+  // Tudo ou nada: false quando algum lote não tem estoque. Roda na transação de quem
+  // reserva (o pedido), então a reserva só existe se o pedido existir
+  async reserveLots(tx: Prisma.TransactionClient, eventId: number, items: LotQuantity[]) {
+    await this.lockEvent(tx, eventId);
+
+    const lots = await tx.lot.findMany({
+      where: {
+        id: { in: items.map(({ lotId }) => lotId) },
+        sector: { event_id: eventId },
+      },
+      select: { id: true, quantity_left: true },
+    });
+    const left = new Map(lots.map(({ id, quantity_left }) => [id, quantity_left]));
+
+    if (items.some(({ lotId, quantity }) => (left.get(lotId) ?? 0) < quantity)) {
+      return false;
+    }
+
+    for (const { lotId, quantity } of items) {
+      // UPDATE condicional: mesmo que outra escrita escape do lock, o estoque nunca fica negativo
       const { count } = await tx.lot.updateMany({
-        where: { id: lot.id, quantity_left: { gte: buyEventTicket.quantity } },
-        data: { quantity_left: { decrement: buyEventTicket.quantity } },
+        where: { id: lotId, quantity_left: { gte: quantity } },
+        data: { quantity_left: { decrement: quantity } },
       });
 
       if (count === 0) {
-        return null;
+        throw new Error(`O lote ${lotId} perdeu o estoque durante a reserva.`);
       }
+    }
 
-      const tickets = await tx.ticket.createManyAndReturn({
-        data: Array.from({ length: buyEventTicket.quantity }, () => ({
-          event_id: buyEventTicket.eventId,
-          lot_id: lot.id,
-          user_id: buyEventTicket.userId,
-          payment_method_id: buyEventTicket.paymentMethodId,
-          price: lot.price,
-        })),
+    await tx.event.update({
+      where: { id: eventId },
+      data: await this.summarizeEventLots(tx, eventId),
+    });
+
+    return true;
+  }
+
+  async releaseLots(tx: Prisma.TransactionClient, eventId: number, items: LotQuantity[]) {
+    await this.lockEvent(tx, eventId);
+
+    for (const { lotId, quantity } of items) {
+      await tx.lot.updateMany({
+        where: { id: lotId, sector: { event_id: eventId } },
+        data: { quantity_left: { increment: quantity } },
       });
+    }
 
-      await tx.event.update({
-        where: { id: buyEventTicket.eventId },
-        data: await this.summarizeEventLots(tx, buyEventTicket.eventId),
-      });
-
-      return tickets;
+    await tx.event.update({
+      where: { id: eventId },
+      data: await this.summarizeEventLots(tx, eventId),
     });
   }
 
@@ -241,20 +275,29 @@ export class EventRepository {
     });
   }
 
-  async delete(id: number) {
-    return this.prisma.event.update({
-      data: {
-        active: false,
-      },
-      where: {
-        id: id,
-      },
+  async delete(id: number, cancelSales: boolean) {
+    return this.prisma.$transaction(async tx => {
+      const event = await tx.event.update({
+        data: {
+          active: false,
+        },
+        where: {
+          id: id,
+        },
+      });
+
+      if (cancelSales) {
+        await this.outbox.add(tx, EVENT_CANCELLED, { eventId: id });
+      }
+
+      return event;
     });
   }
 
   async getTicketStats(userId: number, from?: Date, to?: Date) {
     const where: Prisma.TicketWhereInput = {
       event: { user_id: userId },
+      status: { not: 'cancelled' },
       created_at: { gte: from, lt: to },
     };
 
@@ -287,7 +330,11 @@ export class EventRepository {
 
   async findTicketDatesSince(userId: number, since: Date) {
     return this.prisma.ticket.findMany({
-      where: { event: { user_id: userId }, created_at: { gte: since } },
+      where: {
+        event: { user_id: userId },
+        status: { not: 'cancelled' },
+        created_at: { gte: since },
+      },
       select: { created_at: true },
     });
   }

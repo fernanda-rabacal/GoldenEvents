@@ -72,23 +72,30 @@ model Lot {
 }
 
 model Ticket {
-  id                Int      @id @default(autoincrement())
+  id                Int          @id @default(autoincrement())
   event_id          Int
   lot_id            Int
   user_id           Int
   // Preço do lote congelado no momento da compra
   price             Int
-  payment_method_id Int
-  created_at        DateTime @default(now())
-  updated_at        DateTime @default(now()) @updatedAt
+  // Opcionais só para ingressos anteriores aos pedidos
+  order_item_id     String?      @db.Uuid
+  payment_method_id Int?
+  code              String       @unique
+  status            TicketStatus @default(valid)
+  used_at           DateTime?
+  created_at        DateTime     @default(now())
+  updated_at        DateTime     @default(now()) @updatedAt
 
-  event          Event         @relation(fields: [event_id], references: [id])
-  lot            Lot           @relation(fields: [lot_id], references: [id])
-  user           User          @relation(fields: [user_id], references: [id])
-  payment_method PaymentMethod @relation(fields: [payment_method_id], references: [id])
+  event          Event          @relation(fields: [event_id], references: [id])
+  lot            Lot            @relation(fields: [lot_id], references: [id])
+  user           User           @relation(fields: [user_id], references: [id])
+  payment_method PaymentMethod? @relation(fields: [payment_method_id], references: [id])
+  order_item     OrderItem?     @relation(fields: [order_item_id], references: [id])
 
   @@index([user_id, event_id])
   @@index([lot_id])
+  @@index([order_item_id])
   @@map("ticket")
 }
 
@@ -98,6 +105,218 @@ model PaymentMethod {
   ticket Ticket[]
 
   @@map("payment_method")
+}
+
+enum TicketStatus {
+  valid
+  used
+  cancelled
+
+  @@map("ticket_status")
+}
+
+// Vendas. buyer_id, event_id e lot_id não têm chave estrangeira: são de outros módulos
+model Order {
+  id                 String      @id @default(uuid()) @db.Uuid
+  buyer_id           Int
+  event_id           Int
+  status             OrderStatus
+  subtotal_cents     Int
+  discount_cents     Int         @default(0)
+  total_cents        Int
+  platform_fee_cents Int         @default(0)
+  currency           String      @default("BRL") @db.Char(3)
+  expires_at         DateTime
+  paid_at            DateTime?
+  paid_charge_id     String?     @db.Uuid
+  created_at         DateTime    @default(now())
+  updated_at         DateTime    @default(now()) @updatedAt
+
+  items OrderItem[]
+
+  @@index([buyer_id])
+  @@index([event_id, status])
+  @@index([status, expires_at])
+  @@map("order")
+}
+
+model OrderItem {
+  id               String @id @default(uuid()) @db.Uuid
+  order_id         String @db.Uuid
+  lot_id           Int
+  quantity         Int
+  unit_price_cents Int
+
+  order   Order    @relation(fields: [order_id], references: [id])
+  tickets Ticket[]
+
+  @@index([order_id])
+  @@map("order_item")
+}
+
+enum OrderStatus {
+  awaiting_payment
+  paid
+  expired
+  cancelled
+  refunded
+
+  @@map("order_status")
+}
+
+// Cobrança. A origem é polimórfica e sem chave estrangeira: a cobrança não conhece pedidos
+model Charge {
+  id                 String           @id @default(uuid()) @db.Uuid
+  origin_type        ChargeOriginType
+  origin_id          String           @db.Uuid
+  customer_id        Int
+  amount_cents       Int
+  currency           String           @db.Char(3)
+  method             ChargeMethod
+  status             ChargeStatus
+  provider           PaymentProvider
+  provider_charge_id String?
+  idempotency_key    String           @unique
+  pix_qr_code        String?
+  expires_at         DateTime?
+  created_at         DateTime         @default(now())
+  updated_at         DateTime         @default(now()) @updatedAt
+
+  refunds  Refund[]
+  disputes Dispute[]
+
+  @@unique([provider, provider_charge_id])
+  @@index([origin_type, origin_id])
+  @@map("charge")
+}
+
+model Refund {
+  id                 String       @id @default(uuid()) @db.Uuid
+  charge_id          String       @db.Uuid
+  amount_cents       Int
+  reason             RefundReason
+  status             RefundStatus
+  provider_refund_id String?
+  idempotency_key    String       @unique
+  created_at         DateTime     @default(now())
+  updated_at         DateTime     @default(now()) @updatedAt
+
+  charge Charge @relation(fields: [charge_id], references: [id])
+
+  @@index([charge_id])
+  @@index([provider_refund_id])
+  @@map("refund")
+}
+
+model Dispute {
+  id                  String        @id @default(uuid()) @db.Uuid
+  charge_id           String        @db.Uuid
+  provider_dispute_id String        @unique
+  status              DisputeStatus
+  amount_cents        Int
+  reason              String?
+  created_at          DateTime      @default(now())
+  updated_at          DateTime      @default(now()) @updatedAt
+
+  charge Charge @relation(fields: [charge_id], references: [id])
+
+  @@index([charge_id])
+  @@map("dispute")
+}
+
+model WebhookEvent {
+  id                String          @id @default(uuid()) @db.Uuid
+  provider          PaymentProvider
+  provider_event_id String
+  type              String
+  payload           Json
+  received_at       DateTime        @default(now())
+  processed_at      DateTime?
+  attempts          Int             @default(0)
+  last_error        String?
+
+  @@unique([provider, provider_event_id])
+  @@index([processed_at, received_at])
+  @@map("webhook_event")
+}
+
+enum ChargeOriginType {
+  order
+
+  @@map("charge_origin_type")
+}
+
+enum ChargeMethod {
+  card
+  pix
+
+  @@map("charge_method")
+}
+
+enum ChargeStatus {
+  pending
+  authorized
+  succeeded
+  failed
+  cancelled
+  refunded
+  partially_refunded
+
+  @@map("charge_status")
+}
+
+enum PaymentProvider {
+  fake
+
+  @@map("payment_provider")
+}
+
+enum RefundReason {
+  buyer_request
+  event_cancelled
+  late_payment
+  duplicate
+
+  @@map("refund_reason")
+}
+
+enum RefundStatus {
+  pending
+  succeeded
+  failed
+
+  @@map("refund_status")
+}
+
+enum DisputeStatus {
+  open
+  won
+  lost
+
+  @@map("dispute_status")
+}
+
+// published_at: enviada para a fila; processed_at: todos os consumidores rodaram
+model OutboxMessage {
+  id           String    @id @default(uuid()) @db.Uuid
+  event_type   String
+  payload      Json
+  created_at   DateTime  @default(now())
+  published_at DateTime?
+  processed_at DateTime?
+
+  @@index([published_at, created_at])
+  @@index([processed_at, published_at])
+  @@map("outbox")
+}
+
+model ProcessedMessage {
+  consumer     String
+  message_id   String   @db.Uuid
+  processed_at DateTime @default(now())
+
+  @@id([consumer, message_id])
+  @@map("processed_message")
 }
 
 model EventCategory {

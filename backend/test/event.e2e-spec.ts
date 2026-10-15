@@ -10,13 +10,13 @@ import { CategoryRepository } from '../src/app/event/repositories/categories.rep
 import { EventRepository } from '../src/app/event/repositories/events.repository.js';
 import { UserModule } from '../src/app/user/user.module.js';
 import { PrismaModule } from '../src/db/prisma.module.js';
+import { OutboxModule } from '../src/shared/outbox/outbox.module.js';
 import { setupApp } from '../src/setup-app.js';
 import request from 'supertest';
 import { PostgreSqlContainer } from '@testcontainers/postgresql';
 import { execSync } from 'child_process';
 
 const ORGANIZER = { email: 'nandarabacal02@hotmail.com', password: '123456' };
-const BUYER = { email: 'mayan@hotmail.com', password: '123456' };
 
 describe('EventController', () => {
   let container: any;
@@ -51,11 +51,12 @@ describe('EventController', () => {
     });
   }
 
-  function buyTickets(token: string, eventId: number, lotId: number, quantity: number) {
-    return request(app.getHttpServer())
-      .post(`/events/${eventId}/buy-ticket`)
-      .auth(token, { type: 'bearer' })
-      .send({ lotId, quantity, paymentMethodId: 1 });
+  // A compra mora no módulo de vendas (payments.e2e-spec.ts); aqui só importa o estoque do lote
+  function sellTickets(lotId: number, quantity: number) {
+    return prisma.lot.update({
+      where: { id: lotId },
+      data: { quantity_left: { decrement: quantity } },
+    });
   }
 
   beforeAll(async () => {
@@ -73,7 +74,7 @@ describe('EventController', () => {
     });
 
     module = await Test.createTestingModule({
-      imports: [PrismaModule, AuthModule, UserModule, EventModule],
+      imports: [PrismaModule, OutboxModule, AuthModule, UserModule, EventModule],
       providers: [EventService, EventRepository, CategoryService, CategoryRepository],
     }).compile();
 
@@ -303,7 +304,7 @@ describe('EventController', () => {
       const eventDB = await createEvent(token);
       const [pista] = eventDB.sectors;
 
-      await buyTickets(token, eventDB.id, pista.lots[0].id, 1).expect(201);
+      await sellTickets(pista.lots[0].id, 1);
 
       const res = await request(app.getHttpServer())
         .patch(`/events/${eventDB.id}`)
@@ -346,7 +347,7 @@ describe('EventController', () => {
       const eventDB = await createEvent(token);
       const [pista, camarote] = eventDB.sectors;
 
-      await buyTickets(token, eventDB.id, pista.lots[0].id, 1).expect(201);
+      await sellTickets(pista.lots[0].id, 1);
 
       const res = await request(app.getHttpServer())
         .patch(`/events/${eventDB.id}`)
@@ -377,78 +378,6 @@ describe('EventController', () => {
 
     it('should throw an UnauthorizedError', async () => {
       await request(app.getHttpServer()).patch(`/events/1`).send(updateData).expect(401);
-    });
-  });
-
-  describe('POST /events/:id/buy-ticket', () => {
-    it('should buy tickets of the current lot at its price in cents', async () => {
-      const eventDB = await createEvent(await login());
-      const buyer = await login(BUYER);
-      const [firstLot] = eventDB.sectors[0].lots;
-
-      const res = await buyTickets(buyer, eventDB.id, firstLot.id, 2).expect(201);
-
-      expect(res.body.message).toEqual('Ingresso(s) comprado(s) com sucesso.');
-      expect(
-        await prisma.ticket.findMany({ select: { lot_id: true, price: true } }),
-      ).toEqual([
-        { lot_id: firstLot.id, price: 4500 },
-        { lot_id: firstLot.id, price: 4500 },
-      ]);
-      expect(await prisma.lot.findUnique({ where: { id: firstLot.id } })).toEqual(
-        expect.objectContaining({ quantity_left: 0 }),
-      );
-      expect(await prisma.event.findUnique({ where: { id: eventDB.id } })).toEqual(
-        expect.objectContaining({ quantity_left: 150, min_price: 6000 }),
-      );
-
-      const tickets = await request(app.getHttpServer())
-        .get('/users/me/tickets')
-        .auth(buyer, { type: 'bearer' })
-        .expect(200);
-
-      expect(tickets.body[0].tickets[0].lot).toEqual({
-        name: '1º lote',
-        sector: { name: 'Pista' },
-      });
-    });
-
-    it('should only sell the next lot after the current one sells out', async () => {
-      const eventDB = await createEvent(await login());
-      const buyer = await login(BUYER);
-      const [firstLot, secondLot] = eventDB.sectors[0].lots;
-
-      const res = await buyTickets(buyer, eventDB.id, secondLot.id, 1).expect(422);
-      expect(res.body.message).toEqual('Este lote não está à venda.');
-
-      await buyTickets(buyer, eventDB.id, firstLot.id, 2).expect(201);
-      await buyTickets(buyer, eventDB.id, secondLot.id, 1).expect(201);
-
-      expect(
-        await prisma.ticket.count({ where: { lot_id: secondLot.id, price: 6000 } }),
-      ).toBe(1);
-    });
-
-    it('should not sell more tickets than the lot has left', async () => {
-      const eventDB = await createEvent(await login());
-      const [firstLot] = eventDB.sectors[0].lots;
-
-      const res = await buyTickets(await login(BUYER), eventDB.id, firstLot.id, 3).expect(
-        422,
-      );
-
-      expect(res.body.message).toEqual(
-        'Não há ingressos suficientes disponíveis para esta compra.',
-      );
-      expect(await prisma.ticket.count()).toBe(0);
-    });
-
-    it('should return 404 for a lot of another event', async () => {
-      const eventDB = await createEvent(await login());
-
-      const res = await buyTickets(await login(BUYER), eventDB.id, 999999, 1).expect(404);
-
-      expect(res.body.message).toEqual('Lote não encontrado.');
     });
   });
 });

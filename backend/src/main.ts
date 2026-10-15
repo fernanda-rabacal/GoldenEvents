@@ -4,8 +4,11 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { setupApp } from './setup-app.js';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  // rawBody: a assinatura dos webhooks é calculada sobre os bytes originais do corpo
+  const app = await NestFactory.create(AppModule, { rawBody: true });
   setupApp(app);
+  // Fecha os workers da fila antes de sair, sem abandonar jobs no meio
+  app.enableShutdownHooks();
 
   // Swagger Documentation
   const docConfig = new DocumentBuilder()

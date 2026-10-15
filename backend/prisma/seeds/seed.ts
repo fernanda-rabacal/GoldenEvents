@@ -4,6 +4,7 @@ import { createEventCategories } from './createEventCategoriesSeeder.js';
 import { createUsers } from './createUsersSeeder.js';
 import { createEvents } from './createEventsSeeder.js';
 import { createPaymentMethods } from './createPaymentMethodsSeeder.js';
+import { createOrders } from './createOrdersSeeder.js';
 
 const prisma = new PrismaClient();
 
@@ -11,9 +12,10 @@ async function main() {
   await createUserTypes(prisma);
   await createEventCategories(prisma);
   await createUsers(prisma);
-  // Os testes E2E esperam o banco sem eventos
+  // Os testes E2E esperam o banco sem eventos nem pedidos
   if (process.env.NODE_ENV !== 'test') {
     await createEvents(prisma);
+    await createOrders(prisma);
   }
   await createPaymentMethods(prisma);
 }

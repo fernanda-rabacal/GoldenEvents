@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import type { Lot, Sector } from '@prisma/client';
 import {
   canManageEvents,
-  getCurrentLot,
   type MetricsPeriod,
   type OrganizerMetrics,
 } from '@golden-events/shared';
@@ -11,7 +10,6 @@ import { UpdateEventDto } from './dto/update-event.dto.js';
 import { CreateLotDto } from './dto/lot.dto.js';
 import { UpdateSectorDto } from './dto/sector.dto.js';
 import { QueryEventDto } from './dto/query-event.dto.js';
-import { BuyEventTicketDto } from './dto/buy-ticket.dto.js';
 import { CategoryRepository } from './repositories/categories.repository.js';
 import { EventRepository } from './repositories/events.repository.js';
 import { BusinessRuleError } from '../common/errors/types/BusinessRuleError.js';
@@ -47,8 +45,6 @@ function percentChange(current: number, previous: number) {
 
   return Math.round(((current - previous) / previous) * 1000) / 10;
 }
-
-const NOT_ENOUGH_TICKETS = 'Não há ingressos suficientes disponíveis para esta compra.';
 
 type SalesWindow = Pick<CreateLotDto, 'name' | 'salesStart' | 'salesEnd'>;
 
@@ -169,47 +165,6 @@ export class EventService {
     return event;
   }
 
-  async buyTicket(buyEventTicket: BuyEventTicketDto) {
-    const { active, start_date, sectors } = await this.findById(buyEventTicket.eventId);
-
-    if (!active) {
-      throw new BusinessRuleError('As vendas deste evento estão encerradas.');
-    }
-
-    if (start_date <= new Date()) {
-      throw new BusinessRuleError(
-        'Não é possível comprar ingressos para um evento que já começou.',
-      );
-    }
-
-    const sector = sectors.find(({ lots }) =>
-      lots.some(({ id }) => id === buyEventTicket.lotId),
-    );
-
-    if (!sector) {
-      throw new NotFoundError('Lote não encontrado.');
-    }
-
-    const lot = sector.lots.find(({ id }) => id === buyEventTicket.lotId);
-    const currentLot = getCurrentLot(sector.lots);
-
-    if (currentLot.status !== 'on_sale' || currentLot.lot.id !== lot.id) {
-      throw new BusinessRuleError('Este lote não está à venda.');
-    }
-
-    if (buyEventTicket.quantity > lot.quantity_left) {
-      throw new BusinessRuleError(NOT_ENOUGH_TICKETS);
-    }
-
-    const tickets = await this.repository.buyTicket(lot, buyEventTicket);
-
-    if (!tickets) {
-      throw new BusinessRuleError(NOT_ENOUGH_TICKETS);
-    }
-
-    return tickets;
-  }
-
   async update(id: number, userId: number, updateEventDto: UpdateEventDto) {
     const event = await this.findById(id);
 
@@ -249,13 +204,15 @@ export class EventService {
   }
 
   async delete(id: number, userId: number) {
-    const { user_id } = await this.findById(id);
+    const { user_id, active, start_date } = await this.findById(id);
 
     if (userId !== user_id) {
       throw new ForbiddenError('Você não pode deletar um evento que não é seu.');
     }
 
-    return this.repository.delete(id);
+    // Só um evento que ainda não aconteceu é cancelado (com estorno dos pedidos);
+    // apagar um evento passado apenas o esconde
+    return this.repository.delete(id, active && start_date > new Date());
   }
 
   async getOrganizerMetrics(
