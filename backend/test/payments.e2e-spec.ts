@@ -709,4 +709,93 @@ describe('Payments (phase 1)', () => {
       expect(await prisma.webhookEvent.count()).toBe(1);
     });
   });
+
+  describe('Organizer sales', () => {
+    const OTHER_ORGANIZER = {
+      name: 'Outra produtora',
+      email: 'outra.produtora@hotmail.com',
+      document: '98765432100',
+      password: '12345678',
+    };
+
+    it('should show the organizer the orders, totals and lots of their own events only', async () => {
+      const { eventId, lotId } = await createEvent([
+        { name: 'Lote', price: 4500, quantity: 10 },
+      ]);
+      const paidId = await paidOrder(await login(), lotId, 2);
+      await createOrder(await login(OTHER_BUYER), lotId, 1).expect(201);
+      const token = await login(ORGANIZER);
+
+      const orders = await http()
+        .get(`/orders/organizer?event_id=${eventId}`)
+        .auth(token, { type: 'bearer' })
+        .expect(200);
+
+      expect(orders.body.totalFiltered).toBe(2);
+      expect(orders.body.content.find(({ id }) => id === paidId)).toMatchObject({
+        status: 'paid',
+        method: 'card',
+        ticket_count: 2,
+        buyer: { email: BUYER.email },
+        event: { id: eventId },
+        items: [{ lot_name: 'Lote', sector_name: 'Pista', quantity: 2 }],
+      });
+
+      const summary = await http()
+        .get(`/orders/organizer/summary?event_id=${eventId}`)
+        .auth(token, { type: 'bearer' })
+        .expect(200);
+
+      expect(summary.body).toMatchObject({
+        grossRevenue: 9000,
+        paidOrders: 1,
+        ticketsSold: 2,
+        averageOrder: 9000,
+      });
+
+      const lots = await http()
+        .get(`/events/${eventId}/lots/sales`)
+        .auth(token, { type: 'bearer' })
+        .expect(200);
+
+      expect(lots.body[0].lots[0]).toMatchObject({
+        quantity: 10,
+        sold: 2,
+        reserved: 1,
+        revenue: 9000,
+        status: 'on_sale',
+      });
+
+      await http()
+        .post('/users')
+        .send({ ...OTHER_ORGANIZER, isOrganizer: true })
+        .expect(201);
+      const otherToken = await login({
+        email: OTHER_ORGANIZER.email,
+        password: OTHER_ORGANIZER.password,
+      });
+
+      await http()
+        .get(`/orders/organizer?event_id=${eventId}`)
+        .auth(otherToken, { type: 'bearer' })
+        .expect(403);
+      await http()
+        .get(`/events/${eventId}/lots/sales`)
+        .auth(otherToken, { type: 'bearer' })
+        .expect(403);
+
+      const otherOrders = await http()
+        .get('/orders/organizer')
+        .auth(otherToken, { type: 'bearer' })
+        .expect(200);
+
+      expect(otherOrders.body.content).toEqual([]);
+    });
+
+    it('should not let a buyer read sales', async () => {
+      const token = await login();
+
+      await http().get('/orders/organizer').auth(token, { type: 'bearer' }).expect(403);
+    });
+  });
 });
