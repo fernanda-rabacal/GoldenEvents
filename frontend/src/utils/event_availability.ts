@@ -8,6 +8,7 @@ import {
 } from '@golden-events/shared';
 
 const MAX_TICKETS_PER_ORDER = 10;
+const LOW_STOCK_THRESHOLD = 10;
 
 export type SectorOffer = {
   sector: Sector;
@@ -60,6 +61,24 @@ export function findLot(event: Event, lotId: number) {
   }
 
   return undefined;
+}
+
+// O estoque só aparece quando está acabando. Com outro lote na fila, o setor não esgota: só este preço
+export function getLowStockWarning({ sector, lot, status }: SectorOffer) {
+  if (status !== 'on_sale' || !lot || lot.quantity_left > LOW_STOCK_THRESHOLD) {
+    return null;
+  }
+
+  const remaining =
+    lot.quantity_left === 1
+      ? 'Resta apenas 1 ingresso'
+      : `Restam apenas ${lot.quantity_left} ingressos`;
+  const hasNextLot = sector.lots.some(
+    ({ position, quantity_left }) =>
+      position > lot.position && quantity_left > 0,
+  );
+
+  return hasNextLot ? `${remaining} neste lote` : remaining;
 }
 
 export function getMaxTicketQuantity(lot: Pick<Lot, 'quantity_left'>) {

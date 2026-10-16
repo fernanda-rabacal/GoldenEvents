@@ -8,6 +8,7 @@ import { QuantitySelector } from '@/components/checkout/QuantitySelector';
 import { cn } from '@/lib/utils';
 import { Button, buttonVariants } from '@/ui/button';
 import {
+  getLowStockWarning,
   getMaxTicketQuantity,
   getSectorOffers,
   type SectorOffer,
@@ -30,7 +31,7 @@ function describeOffer({ lot, status }: SectorOffer) {
     return `Vendas a partir de ${formatDateTime(lot.sales_start)}`;
   }
 
-  return `${lot.name} · ${lot.quantity_left} disponíveis`;
+  return `${lot.name}`;
 }
 
 export function BuyTicketForm({
@@ -68,6 +69,7 @@ export function BuyTicketForm({
         {offers.map((offer) => {
           const { sector, lot, status } = offer;
           const isOnSale = status === 'on_sale' && lot;
+          const lowStockWarning = getLowStockWarning(offer);
 
           return (
             <label
@@ -93,6 +95,11 @@ export function BuyTicketForm({
                 <span className='text-caption text-muted-foreground'>
                   {describeOffer(offer)}
                 </span>
+                {lowStockWarning && (
+                  <span className='mt-1.5 self-start rounded-md bg-yellow-100 px-2 py-1 text-caption font-bold text-yellow-700'>
+                    {lowStockWarning}
+                  </span>
+                )}
               </span>
               {isOnSale && (
                 <span className='font-bold text-primary'>

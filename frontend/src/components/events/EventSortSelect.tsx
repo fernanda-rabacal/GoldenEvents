@@ -35,7 +35,7 @@ export function EventSortSelect({ value }: EventSortSelectProps) {
   }
 
   return (
-    <label className='flex shrink-0 items-center gap-3 text-body-sm font-bold text-foreground/80'>
+    <label className='flex shrink-0 items-center gap-3 py-1 text-body-sm font-bold text-foreground/80'>
       Ordenar por
       <select
         value={value}
