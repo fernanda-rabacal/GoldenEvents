@@ -362,10 +362,18 @@ Every job uses a deterministic `jobId`, so enqueuing the same work twice is harm
 
 It approves almost any card, so everything around it fails closed:
 
-- `GatewayRegistry` stops the API at startup when `PAYMENT_PROVIDER` is missing or unknown, and when it is `fake` with `NODE_ENV=production`. The backend image sets `NODE_ENV=production`, so it cannot run in production until a real provider exists.
+- `GatewayRegistry` stops the API at startup when `PAYMENT_PROVIDER` is missing or unknown, and when it is `fake` with `NODE_ENV=production`. The backend image sets `NODE_ENV=production`, so production needs `PAYMENT_PROVIDER=stripe`.
 - The `/fake-gateway` simulator answers only with `PAYMENT_PROVIDER=fake` and `FAKE_GATEWAY_SIMULATOR=on`. Forgetting a variable leaves it closed.
 
 A real provider is a new class that implements `PaymentGateway` (`billing/domain/gateway-port.ts`), registered in `PAYMENT_GATEWAYS` and added to the `PaymentProvider` enum.
+
+### Stripe provider
+
+`StripeGateway` (`PAYMENT_PROVIDER=stripe`) maps each charge to a PaymentIntent, without `payment_method_types`: the methods come from the Dashboard settings.
+
+- Card: the checkout renders the Payment Element and sends only a ConfirmationToken as `paymentToken`. The API creates the PaymentIntent with the charge idempotency key and confirms it in a separate call, so a retry after a timeout reuses the same intent. When the bank asks for 3D Secure, `POST /orders/:id/pay` returns a pending charge with `client_secret` (never stored) and the browser finishes with `stripe.handleNextAction`.
+- Pix: confirmed on the server with `payment_method_data[type]=pix`, expiring with the order. `pix_qr_code` is the copy-paste code from `next_action.pix_display_qr_code`. Pix must be enabled in the Dashboard.
+- Webhooks: point an endpoint to `/webhooks/stripe` with `payment_intent.*`, `refund.created`, `refund.updated`, `refund.failed` and `charge.dispute.*`. Only the event and object ids are stored; other event types are acknowledged and dropped. Locally, `stripe listen --forward-to localhost:8080/webhooks/stripe` prints the signing secret.
 
 ### Differences from `MODELAGEM.md`
 
@@ -382,8 +390,11 @@ A real provider is a new class that implements `PaymentGateway` (`billing/domain
 | `REDIS_URL` | backend | Redis for the BullMQ queues, defaults to `redis://localhost:6379` |
 | `NODE_ENV` | backend | `production` hides Swagger, refuses the fake provider and keeps the sample users out of the seed. The backend image sets it |
 | `PAYMENT_PROVIDER` | backend | Provider for new charges. Required: the API does not start without it |
-| `FAKE_GATEWAY_SIMULATOR` | backend, frontend | `on` opens the `/fake-gateway` routes and shows the Pix payment simulator in the checkout. `.env.test`, `.env.example` and Docker Compose set it |
+| `FAKE_GATEWAY_SIMULATOR` | backend, frontend | `on` opens the `/fake-gateway` routes and shows the Pix payment simulator in the checkout. `.env.test` sets it; Docker Compose reads it from `backend/.env` and `frontend/.env.local` |
 | `FAKE_GATEWAY_WEBHOOK_SECRET` | backend | Signs the fake provider webhooks, defaults to `fake-secret` |
+| `STRIPE_SECRET_KEY` | backend | Restricted key (`rk_`) for the Stripe API. Required with `PAYMENT_PROVIDER=stripe` |
+| `STRIPE_WEBHOOK_SECRET` | backend | Signing secret (`whsec_`) of the Stripe webhook endpoint. Required with `PAYMENT_PROVIDER=stripe` |
+| `STRIPE_PUBLISHABLE_KEY` | frontend | Publishable key (`pk_`). When set, the checkout card form is the Stripe Payment Element |
 | `QUEUE_WORKERS` | backend | `off` disables the queue workers and the outbox relay in this process |
 | `OUTBOX_POLL_INTERVAL_MS` | backend | How often the outbox relay polls, defaults to 500 |
 | `RATE_LIMIT` | backend | `off` disables the rate limits. `.env.test` sets it |
@@ -459,7 +470,7 @@ On a failure, Playwright keeps a trace and a screenshot in `e2e/test-results/` a
 - The backend `tsconfig.json` has `strictNullChecks` and `noImplicitAny` turned off. The frontend and shared package are strict.
 - `backend/.env.test` is committed and contains a `SECRET`. That is fine for tests, but it must never be reused in other environments.
 - The frontend has no unit tests. It is covered only by the browser E2E suite.
-- The only payment provider is the in-memory fake. Nothing sends e-mails on `sales.order_paid` yet.
+- Stripe Connect (split with the organizers) is not built yet: every Stripe charge settles on the platform. Nothing sends e-mails on `sales.order_paid` yet.
 - `goldenevents-api-insominia-doc.json` is from 2024 and does not cover sectors, lots or orders. Swagger (`/docs`) is up to date.
 - The production deploy must keep Next.js behind a proxy that overwrites `X-Forwarded-For` (see [Client IP](#rate-limiting)). Vercel and Docker Compose do this, but nothing in the code can enforce it.
 - On Railway, `TRUST_PROXY=true` relies on the edge overwriting `X-Forwarded-For`. Railway staff confirm it, but the docs do not promise it. It only affects direct calls to the API: requests from the site use `X-Client-IP`.
