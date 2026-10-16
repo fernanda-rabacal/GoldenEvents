@@ -16,6 +16,14 @@ export class TicketInventoryService {
     return this.repository.findByLotIds(lotIds);
   }
 
+  async findOrganizerEvents(userId: number) {
+    return this.repository.findNamesByOrganizer(userId);
+  }
+
+  async findLotLabels(lotIds: number[]) {
+    return this.repository.findLotLabels(lotIds);
+  }
+
   async reserve(tx: Prisma.TransactionClient, eventId: number, items: LotQuantity[]) {
     return this.repository.reserveLots(tx, eventId, items);
   }

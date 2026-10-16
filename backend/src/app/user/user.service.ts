@@ -70,6 +70,15 @@ export class UserService {
     return this.repository.findByEmail(email);
   }
 
+  // Nome e e-mail dos compradores, para quem vende: sem CPF nem tipo de conta
+  async findContacts(ids: number[]) {
+    return this.repository.findContacts(ids);
+  }
+
+  async findIdsMatching(term: string, take = 200) {
+    return this.repository.findIdsMatching(term, take);
+  }
+
   async getUserTypes() {
     return this.repository.getUserTypes();
   }

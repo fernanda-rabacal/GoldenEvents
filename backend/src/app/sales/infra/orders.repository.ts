@@ -16,6 +16,27 @@ const ORDER_WITH_TICKETS = {
   },
 } satisfies Prisma.OrderInclude;
 
+export type OrganizerOrderFilters = {
+  eventIds: number[];
+  buyerIds?: number[];
+  status?: OrderStatus;
+  createdSince?: Date;
+};
+
+function organizerOrderWhere({
+  eventIds,
+  buyerIds,
+  status,
+  createdSince,
+}: OrganizerOrderFilters): Prisma.OrderWhereInput {
+  return {
+    event_id: { in: eventIds },
+    buyer_id: buyerIds ? { in: buyerIds } : undefined,
+    status,
+    created_at: { gte: createdSince },
+  };
+}
+
 // Código aleatório que vai no QR code do ingresso
 function generateTicketCode() {
   return randomBytes(12).toString('base64url');
@@ -172,6 +193,50 @@ export class OrdersRepository {
     });
 
     return orders.map(({ id }) => id);
+  }
+
+  async findPageForEvents(filters: OrganizerOrderFilters, skip: number, take: number) {
+    const where = organizerOrderWhere(filters);
+
+    return this.prisma.$transaction([
+      this.prisma.order.count({ where }),
+      this.prisma.order.findMany({
+        where,
+        orderBy: [{ created_at: 'desc' }, { id: 'desc' }],
+        include: ORDER_WITH_TICKETS,
+        skip,
+        take,
+      }),
+    ]);
+  }
+
+  async summarizeForEvents(eventIds: number[], paidSince?: Date) {
+    const paid: Prisma.OrderWhereInput = {
+      event_id: { in: eventIds },
+      status: 'paid',
+      paid_at: { gte: paidSince },
+    };
+
+    const [orders, items, refundedOrders] = await this.prisma.$transaction([
+      this.prisma.order.aggregate({
+        where: paid,
+        _count: true,
+        _sum: { total_cents: true, platform_fee_cents: true },
+      }),
+      this.prisma.orderItem.aggregate({
+        where: { order: paid },
+        _sum: { quantity: true },
+      }),
+      this.prisma.order.count({ where: { ...paid, status: 'refunded' } }),
+    ]);
+
+    return {
+      paidOrders: orders._count,
+      totalCents: orders._sum.total_cents ?? 0,
+      feeCents: orders._sum.platform_fee_cents ?? 0,
+      ticketsSold: items._sum.quantity ?? 0,
+      refundedOrders,
+    };
   }
 
   async findOpenByEvent(eventId: number, take: number, cursor?: string) {

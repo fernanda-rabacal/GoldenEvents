@@ -47,7 +47,7 @@ export function TextField({
           id={inputId}
           aria-invalid={Boolean(error)}
           aria-describedby={message ? messageId : undefined}
-          className={`w-full rounded-2xl border border-input bg-card py-3.5 text-body text-foreground transition outline-none placeholder:text-muted-foreground/60 focus:border-ring focus:ring-2 focus:ring-ring/40 aria-invalid:border-destructive aria-invalid:focus:ring-destructive/20 ${Icon ? 'pl-11' : 'pl-4'} ${trailing ? 'pr-12' : 'pr-4'}`}
+          className={`w-full rounded-md border border-input bg-card py-2.5 text-body-sm text-foreground transition outline-none placeholder:text-muted-foreground/60 focus:border-ring focus:ring-2 focus:ring-ring/40 aria-invalid:border-destructive aria-invalid:focus:ring-destructive/20 ${Icon ? 'pl-11' : 'pl-4'} ${trailing ? 'pr-12' : 'pr-4'}`}
           {...inputProps}
         />
         {trailing}

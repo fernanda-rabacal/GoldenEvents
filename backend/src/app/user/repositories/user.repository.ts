@@ -105,6 +105,28 @@ export class UserRepository {
     });
   }
 
+  async findContacts(ids: number[]) {
+    return this.prisma.user.findMany({
+      where: { id: { in: ids } },
+      select: { id: true, name: true, email: true },
+    });
+  }
+
+  async findIdsMatching(term: string, take: number) {
+    const users = await this.prisma.user.findMany({
+      where: {
+        OR: [
+          { name: { contains: term, mode: 'insensitive' } },
+          { email: { contains: term, mode: 'insensitive' } },
+        ],
+      },
+      select: { id: true },
+      take,
+    });
+
+    return users.map(({ id }) => id);
+  }
+
   async getUserTypes() {
     const userTypes = await this.prisma.userType.findMany();
 

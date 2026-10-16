@@ -35,7 +35,8 @@ test('cria um evento pelo painel e acompanha a venda', async ({ page, context, b
 
   const buyerContext = await browser.newContext();
   const buyerPage = await buyerContext.newPage();
-  await authenticate(buyerContext, await login(await createUser()));
+  const buyer = await createUser();
+  await authenticate(buyerContext, await login(buyer));
 
   await startCheckout(buyerPage, { slug, name: eventName });
   await fillCard(buyerPage);
@@ -47,6 +48,22 @@ test('cria um evento pelo painel e acompanha a venda', async ({ page, context, b
   await expect(
     page.getByText('Ingressos vendidos', { exact: true }).locator('xpath=following-sibling::p[1]'),
   ).toHaveText('1');
+
+  await page.getByRole('link', { name: 'Ver todas' }).click();
+  await expect(page).toHaveURL(/\/organizador\/ingressos-e-vendas$/);
+
+  await page.getByRole('button', { name: new RegExp(`Ver o pedido .* de ${buyer.name}`) }).click();
+  const order = page.getByRole('dialog', { name: buyer.name });
+  await expect(order.getByText(eventName)).toBeVisible();
+  await expect(order.getByText('Você recebe')).toBeVisible();
+  await order.getByRole('button', { name: 'Fechar' }).click();
+
+  await page.getByLabel('Evento', { exact: true }).selectOption({ label: eventName });
+  await expect(page).toHaveURL(/evento=\d+/);
+  const lotsTab = page.getByRole('link', { name: 'Ingressos', exact: true });
+  await lotsTab.click();
+  await expect(page.getByRole('img', { name: '1 de 30 vendidos, 0 reservados' })).toBeVisible();
+  await expect(lotsTab).toHaveAttribute('aria-current', 'page');
 });
 
 test('manda quem não organiza eventos para a página de virar organizador', async ({ page, buyer }) => {

@@ -6,6 +6,7 @@ import type {
   OrganizerMetrics,
   Page,
   PaymentMethod,
+  SectorSales,
 } from '@golden-events/shared';
 import { ApiError, fetchFromApi } from './api';
 import { fetchWithAuth } from './authenticated-api';
@@ -128,4 +129,8 @@ export function getMyEvents({
 
 export function getMyMetrics(days: MetricsPeriod) {
   return fetchWithAuth<OrganizerMetrics>(`/events/me/metrics?days=${days}`);
+}
+
+export function getEventLotSales(eventId: number) {
+  return fetchWithAuth<SectorSales[]>(`/events/${eventId}/lots/sales`);
 }

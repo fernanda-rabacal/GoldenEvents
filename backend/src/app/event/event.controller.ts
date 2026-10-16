@@ -9,6 +9,7 @@ import {
   Body,
   Req,
   Patch,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { EventService } from './event.service.js';
 import { CreateEventDto } from './dto/create-event.dto.js';
@@ -74,6 +75,13 @@ export class EventController {
   @Get('/:id')
   async findById(@Param('id') id: string) {
     return this.eventService.findById(+id);
+  }
+
+  @Get('/:id/lots/sales')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  async getLotSales(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
+    return this.eventService.getLotSales(req.user as Requester, id);
   }
 
   @Post()

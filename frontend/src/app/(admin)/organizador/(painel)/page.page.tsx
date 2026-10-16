@@ -15,7 +15,7 @@ import {
 } from '@golden-events/shared';
 import { AdminPageHeading } from '@/components/admin/AdminPageHeading';
 import { MetricCard } from '@/components/admin/MetricCard';
-import { OrdersHistory } from '@/components/admin/OrdersHistory';
+import { RecentOrders } from '@/components/admin/RecentOrders';
 import { SalesChart } from '@/components/admin/SalesChart';
 import { SalesPeriodSelect } from '@/components/admin/SalesPeriodSelect';
 import {
@@ -25,6 +25,7 @@ import {
 import { cn } from '@/lib/utils';
 import { requireOrganizer } from '@/services/auth';
 import { getMyMetrics } from '@/services/events';
+import { getOrganizerOrders } from '@/services/orders';
 import { buttonVariants } from '@/ui/button';
 import {
   firstValue,
@@ -37,6 +38,7 @@ export const metadata: Metadata = {
 };
 
 const CHANGE_DESCRIPTION = 'em relação aos 30 dias anteriores';
+const RECENT_ORDERS = 5;
 
 type OrganizerDashboardPageProps = {
   searchParams: Promise<{ periodo?: SearchParamValue }>;
@@ -75,7 +77,10 @@ export default async function OrganizerDashboardPage({
 }: OrganizerDashboardPageProps) {
   const user = await requireOrganizer(ORGANIZER_PATH);
   const period = parsePeriod(firstValue((await searchParams).periodo));
-  const metrics = await getMyMetrics(period);
+  const [metrics, recentOrders] = await Promise.all([
+    getMyMetrics(period),
+    getOrganizerOrders({ page: 1, take: RECENT_ORDERS }),
+  ]);
   const firstName = user.name.split(' ')[0];
 
   return (
@@ -168,7 +173,7 @@ export default async function OrganizerDashboardPage({
       </div>
 
       <div className='mt-6'>
-        <OrdersHistory />
+        <RecentOrders orders={recentOrders.content} />
       </div>
     </>
   );

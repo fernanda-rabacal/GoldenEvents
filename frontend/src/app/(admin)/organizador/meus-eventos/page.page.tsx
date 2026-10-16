@@ -142,8 +142,8 @@ export default async function MyEventsPage({
                         className={cn(
                           'rounded-full px-2.5 py-1 text-caption font-bold',
                           event.active
-                            ? 'bg-accent text-accent-foreground'
-                            : 'bg-muted text-muted-foreground',
+                            ? 'bg-green-100 text-green-600'
+                            : 'bg-red-100 text-red-500',
                         )}
                       >
                         {event.active ? 'Sim' : 'Não'}

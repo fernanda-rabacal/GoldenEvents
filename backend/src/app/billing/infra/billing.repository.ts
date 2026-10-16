@@ -43,6 +43,13 @@ export class BillingRepository {
     });
   }
 
+  async findChargeMethods(ids: string[]) {
+    return this.prisma.charge.findMany({
+      where: { id: { in: ids } },
+      select: { id: true, method: true },
+    });
+  }
+
   async findPaidChargesWithoutRefund(
     originType: ChargeOriginType,
     originIds: string[],

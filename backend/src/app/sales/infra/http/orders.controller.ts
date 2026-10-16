@@ -6,6 +6,7 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -13,7 +14,12 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Request } from 'express';
 import { CreateOrderDto } from './dto/create-order.dto.js';
 import { PayOrderDto } from './dto/pay-order.dto.js';
+import {
+  QueryOrganizerOrdersDto,
+  QueryOrganizerSummaryDto,
+} from './dto/query-organizer-sales.dto.js';
 import { OrdersService } from '../../application/orders.service.js';
+import { OrganizerSalesService } from '../../application/organizer-sales.service.js';
 import { JwtAuthGuard } from '../../../auth/guard/jwt.guard.js';
 import type { Requester } from '../../../user/user.service.js';
 import { MessageResponse } from '../../../../response/message.response.js';
@@ -24,7 +30,10 @@ import { RateLimit } from '../../../../shared/rate-limit/rate-limit.guard.js';
 @UseGuards(JwtAuthGuard)
 @Controller('/orders')
 export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) {}
+  constructor(
+    private readonly ordersService: OrdersService,
+    private readonly organizerSales: OrganizerSalesService,
+  ) {}
 
   // Reserva os ingressos. Pedido gratuito já sai pago, com os ingressos emitidos
   @Post()
@@ -52,6 +61,20 @@ export class OrdersController {
   @Get()
   async findMine(@Req() req: Request) {
     return this.ordersService.findMine((req.user as Requester).id);
+  }
+
+  // Antes de /:id: senão "organizer" seria lido como o id de um pedido
+  @Get('/organizer')
+  async findForOrganizer(@Query() query: QueryOrganizerOrdersDto, @Req() req: Request) {
+    return this.organizerSales.listOrders(req.user as Requester, query);
+  }
+
+  @Get('/organizer/summary')
+  async summarizeForOrganizer(
+    @Query() query: QueryOrganizerSummaryDto,
+    @Req() req: Request,
+  ) {
+    return this.organizerSales.summarize(req.user as Requester, query);
   }
 
   @Get('/:id')
