@@ -102,6 +102,7 @@ export default async function CheckoutPage({
       maxQuantity={maxQuantity}
       openOrder={reservation?.order}
       canSimulatePix={process.env.FAKE_GATEWAY_SIMULATOR === 'on'}
+      stripePublishableKey={process.env.STRIPE_PUBLISHABLE_KEY}
     >
       <Link
         href={buildEventHref(event.slug)}
