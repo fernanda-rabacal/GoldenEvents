@@ -150,6 +150,16 @@ export class BillingService {
     return charges.map(toSummary);
   }
 
+  async findMethodsByChargeIds(ids: string[]): Promise<Map<string, ChargeMethod>> {
+    if (ids.length === 0) {
+      return new Map();
+    }
+
+    const charges = await this.repository.findChargeMethods(ids);
+
+    return new Map(charges.map(({ id, method }) => [id, method]));
+  }
+
   async findActiveCharge(originType: ChargeOriginType, originId: string) {
     const charges = await this.listCharges(originType, originId);
 

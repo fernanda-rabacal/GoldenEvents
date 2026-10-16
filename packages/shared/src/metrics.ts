@@ -24,3 +24,18 @@ export interface OrganizerMetrics {
   };
   dailySales: DailySales[];
 }
+
+export const SALES_PERIOD_OPTIONS = [7, 30, 90] as const;
+
+export type SalesPeriod = (typeof SALES_PERIOD_OPTIONS)[number];
+
+// Pedidos pagos no período (pela data do pagamento). Valores em centavos
+export interface OrganizerSalesSummary {
+  grossRevenue: number;
+  // Bruto menos a taxa da plataforma
+  netRevenue: number;
+  paidOrders: number;
+  ticketsSold: number;
+  averageOrder: number;
+  refundedOrders: number;
+}

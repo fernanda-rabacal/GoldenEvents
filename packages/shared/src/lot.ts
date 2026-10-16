@@ -83,3 +83,26 @@ export function summarizeLots(
     min_price: prices.length > 0 ? Math.min(...prices) : 0,
   };
 }
+
+// queued: aguardando a virada dos lotes anteriores; ended: vendas encerradas com sobra
+export type LotSalesStatus = 'on_sale' | 'scheduled' | 'queued' | 'ended' | 'sold_out';
+
+export interface LotSales {
+  id: number;
+  name: string;
+  price: number;
+  quantity: number;
+  sold: number;
+  // Segurados por pedidos aguardando pagamento
+  reserved: number;
+  revenue: number;
+  sales_start: string | null;
+  sales_end: string | null;
+  status: LotSalesStatus;
+}
+
+export interface SectorSales {
+  id: number;
+  name: string;
+  lots: LotSales[];
+}

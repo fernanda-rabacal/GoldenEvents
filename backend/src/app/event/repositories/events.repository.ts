@@ -168,6 +168,21 @@ export class EventRepository {
     });
   }
 
+  async findNamesByOrganizer(userId: number) {
+    return this.prisma.event.findMany({
+      where: { user_id: userId },
+      orderBy: { start_date: 'desc' },
+      select: { id: true, name: true },
+    });
+  }
+
+  async findLotLabels(lotIds: number[]) {
+    return this.prisma.lot.findMany({
+      where: { id: { in: lotIds } },
+      select: { id: true, name: true, sector: { select: { name: true } } },
+    });
+  }
+
   // Tudo ou nada: false quando algum lote não tem estoque. Roda na transação de quem
   // reserva (o pedido), então a reserva só existe se o pedido existir
   async reserveLots(tx: Prisma.TransactionClient, eventId: number, items: LotQuantity[]) {
@@ -337,6 +352,21 @@ export class EventRepository {
       },
       select: { created_at: true },
     });
+  }
+
+  async getTicketStatsByLot(eventId: number) {
+    const groups = await this.prisma.ticket.groupBy({
+      by: ['lot_id'],
+      where: { event_id: eventId, status: { not: 'cancelled' } },
+      _count: { _all: true },
+      _sum: { price: true },
+    });
+
+    return groups.map(({ lot_id, _count, _sum }) => ({
+      lotId: lot_id,
+      sold: _count._all,
+      revenue: _sum.price ?? 0,
+    }));
   }
 
   // Serializa as escritas de um evento: sem isso, duas compras simultâneas recalculariam os totais com leituras desatualizadas

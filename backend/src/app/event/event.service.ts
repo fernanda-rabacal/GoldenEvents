@@ -12,6 +12,7 @@ import { UpdateSectorDto } from './dto/sector.dto.js';
 import { QueryEventDto } from './dto/query-event.dto.js';
 import { CategoryRepository } from './repositories/categories.repository.js';
 import { EventRepository } from './repositories/events.repository.js';
+import { buildSectorSales } from './lot-sales.js';
 import { BusinessRuleError } from '../common/errors/types/BusinessRuleError.js';
 import { ForbiddenError } from '../common/errors/types/ForbiddenError.js';
 import { NotFoundError } from '../common/errors/types/NotFoundError.js';
@@ -213,6 +214,19 @@ export class EventService {
     // Só um evento que ainda não aconteceu é cancelado (com estorno dos pedidos);
     // apagar um evento passado apenas o esconde
     return this.repository.delete(id, active && start_date > new Date());
+  }
+
+  async getLotSales(requester: Requester, eventId: number) {
+    const event = await this.findById(eventId);
+
+    if (event.user_id !== requester.id) {
+      throw new ForbiddenError('Você só pode ver as vendas dos seus eventos.');
+    }
+
+    return buildSectorSales(
+      event.sectors,
+      await this.repository.getTicketStatsByLot(eventId),
+    );
   }
 
   async getOrganizerMetrics(

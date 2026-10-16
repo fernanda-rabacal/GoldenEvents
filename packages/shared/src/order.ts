@@ -72,3 +72,38 @@ export interface PayOrderInput {
   // Token do cartão gerado pelo provedor no navegador; o número do cartão nunca passa pela API
   paymentToken?: string;
 }
+
+export const ORDER_STATUS_OPTIONS = [
+  'awaiting_payment',
+  'paid',
+  'expired',
+  'cancelled',
+  'refunded',
+] as const satisfies readonly OrderStatus[];
+
+export interface OrganizerOrderItem {
+  lot_id: number;
+  lot_name: string;
+  sector_name: string;
+  quantity: number;
+  unit_price_cents: number;
+  tickets: OrderTicket[];
+}
+
+// Pedido visto pelo produtor: com o comprador, o evento e a forma de pagamento
+export interface OrganizerOrder {
+  id: string;
+  status: OrderStatus;
+  event: { id: number; name: string };
+  buyer: { id: number; name: string; email: string };
+  // null quando não houve cobrança: pedido gratuito ou ainda não pago
+  method: ChargeMethod | null;
+  ticket_count: number;
+  subtotal_cents: number;
+  discount_cents: number;
+  total_cents: number;
+  platform_fee_cents: number;
+  created_at: string;
+  paid_at: string | null;
+  items: OrganizerOrderItem[];
+}
