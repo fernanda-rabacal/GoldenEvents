@@ -58,10 +58,10 @@ Builds with `tsc` to `dist/`. It is the single source of truth for types that cr
 
 - `user.ts`: `UserTypeEnum` (`ADMIN=1`, `USER=2`, `ORGANIZER=3`), `User`, and `canManageEvents()`, which returns true for admins and organizers.
 - `event.ts`: `Event`, `EventCategory`, `PaymentMethod`, `CreateEventProps`, `EVENT_SORT_OPTIONS`.
-- `lot.ts`: `Sector`, `Lot`, their input types, `getCurrentLot()` (the lot turnover rule, used by the API to validate purchases and by the frontend to show what is on sale) and `summarizeLots()` (event totals).
+- `lot.ts`: `Sector`, `Lot`, their input types, `getCurrentLot()` (the lot turnover rule, used by the API to validate purchases and by the frontend to show what is on sale), `summarizeLots()` (event totals) and `SectorSales` / `LotSales` (sales per lot for the organizer).
 - `pagination.ts`: `Page<T>`.
-- `metrics.ts`: `OrganizerMetrics`, `DailySales`, `METRICS_PERIOD_OPTIONS`.
-- `order.ts`: `Order`, `OrderItem`, `Charge`, their status unions, `CreateOrderInput`, `PayOrderInput` and `MAX_TICKETS_PER_ORDER`.
+- `metrics.ts`: `OrganizerMetrics`, `DailySales`, `METRICS_PERIOD_OPTIONS`, `OrganizerSalesSummary` and `SALES_PERIOD_OPTIONS`.
+- `order.ts`: `Order`, `OrderItem`, `Charge`, their status unions, `CreateOrderInput`, `PayOrderInput`, `MAX_TICKETS_PER_ORDER` and `OrganizerOrder` (an order as the organizer sees it, with buyer, event and payment method).
 
 When you add a type that both apps need, put it here instead of duplicating it.
 
@@ -291,9 +291,11 @@ Per host:
 | PATCH | `/users/:id/active` | JWT (admin) |
 | GET | `/events`, `/events/categories`, `/events/categories/:id`, `/events/payment-methods`, `/events/slug/:slug`, `/events/:id` | Public |
 | GET | `/events/me`, `/events/me/metrics?days=` | JWT |
+| GET | `/events/:id/lots/sales` | JWT (the event organizer) |
 | POST | `/events` | JWT |
 | PATCH / DELETE | `/events/:id` | JWT |
 | GET / POST | `/orders` | JWT |
+| GET | `/orders/organizer?event_id=&days=&status=&search=&skip=&take=`, `/orders/organizer/summary?event_id=&days=` | JWT (organizer; only orders of their own events) |
 | GET | `/orders/:id` | JWT (buyer or admin) |
 | POST | `/orders/:id/pay`, `/orders/:id/cancel` | JWT (buyer) |
 | POST | `/webhooks/:provider` | Provider signature |
@@ -436,7 +438,7 @@ Each test creates its own users and events through the API, so the tests run in 
 | `checkout-card.spec.ts` | Approved card through to Meus ingressos, a declined card followed by a new attempt, and card validation in the browser |
 | `checkout-pix.spec.ts` | Pix paid through the simulator, and switching from Pix to card |
 | `checkout-order.spec.ts` | Resuming an open order, cancelling it, and a free event |
-| `organizer.spec.ts` | Creating an event in the dashboard, buying a ticket for it, and the sale showing in the metrics. Also that buyers are kept out of `/organizador` |
+| `organizer.spec.ts` | Creating an event in the dashboard, buying a ticket for it, and the sale showing in the metrics, in the order details and in the lot progress of `/organizador/ingressos-e-vendas`. Also that buyers are kept out of `/organizador` |
 
 Selectors use roles, labels and visible text. There is no `data-testid`. Toasts are found with the `toast()` helper, because Next's route announcer also has `role="alert"`.
 
