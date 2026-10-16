@@ -1,0 +1,20 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "test:e2e": {
+      "passThroughEnv": [
+        "CI",
+        "HOME",
+        "USERPROFILE",
+        "LOCALAPPDATA",
+        "APPDATA",
+        "TEMP",
+        "TMP",
+        "DOCKER_*",
+        "TESTCONTAINERS_*",
+        "PLAYWRIGHT_*"
+      ]
+    }
+  }
+}

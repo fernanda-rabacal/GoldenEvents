@@ -4,13 +4,14 @@ This document describes how Golden Events is structured today. For the planned p
 
 ## Overview
 
-Golden Events is a monorepo with three workspaces:
+Golden Events is a monorepo with four workspaces:
 
 | Workspace | Package | Stack |
 |---|---|---|
 | `frontend/` | `golden-events` | Next.js 16 (App Router), React 19, Tailwind CSS 4 |
 | `backend/` | `golden-events-api` | NestJS 12, Prisma 5, PostgreSQL 16 |
 | `packages/shared/` | `@golden-events/shared` | TypeScript types and enums used by both apps |
+| `e2e/` | `@golden-events/e2e` | Playwright browser tests that run the site against the real API |
 
 ```
 Browser
@@ -36,6 +37,7 @@ Redis holds the BullMQ queues used by payments and the rate limit counters. Ever
 - **Task runner:** Turborepo. All root scripts (`dev`, `build`, `lint`, `typecheck`, `test`, `test:e2e`, `format`) run `turbo run <task>`.
   - Every task depends on `^build`, so `packages/shared` is always built before the apps that import it.
   - `backend/turbo.json` adds `db:generate` (`prisma generate`) as a dependency of `build`, `dev`, `typecheck`, `test` and `test:e2e`.
+  - `e2e/turbo.json` passes through the variables that Playwright and testcontainers need (`LOCALAPPDATA`, `HOME`, `DOCKER_*`, ...). Turborepo's strict env mode would filter them out.
   - Run a task in one package with `bunx turbo run <task> --filter=<package>`.
 - **Docker Compose** (`docker-compose.yml`):
 
@@ -368,12 +370,13 @@ Templates live in `backend/.env.example`. Tests use `backend/.env.test`.
 
 ## Testing
 
-Only the backend has tests. Both suites use Jest 30 with ts-jest in ESM mode.
+The backend suites use Jest 30 with ts-jest in ESM mode. The browser suite uses Playwright.
 
 | Suite | Command | Files | Needs |
 |---|---|---|---|
 | Unit | `bun run test` | `backend/src/**/*.spec.ts` | Nothing. Prisma is mocked with `jest-mock-extended`. |
 | E2E | `bun run test:e2e` | `backend/test/*.e2e-spec.ts` | Docker. Each file starts a Postgres container with testcontainers, runs migrations and seeds, then calls the API with supertest. `payments.e2e-spec.ts` also starts a Redis container and runs the real workers. `rate-limit.e2e-spec.ts` starts Redis too and is the only file with the rate limits on. |
+| Browser E2E | `bun run test:e2e` | `e2e/tests/*.spec.ts` | Docker and Chromium (`bunx playwright install chromium`, once). See [Browser E2E](#browser-e2e). |
 
 E2E tests run in band, and tests inside a file depend on the order they run in.
 
@@ -389,6 +392,32 @@ Payment confirmation is asynchronous, so those tests poll the database with `wai
 
 `user.e2e-spec.ts` covers the admin-only routes, the token lifetime, sessions ended by a deactivation or a password change, and the helmet headers.
 
+### Browser E2E
+
+`bun run test:e2e` runs the backend suites and the browser suite. To run only the browser suite, use `bunx turbo run test:e2e --filter=@golden-events/e2e`. Extra arguments go to Playwright, for example `-- --ui`, `-- --headed` or `-- tests/checkout-pix.spec.ts`.
+
+`e2e/scripts/run.ts` starts everything before calling Playwright, because Playwright's `webServer` starts before `globalSetup`:
+1. Postgres and Redis containers (testcontainers).
+2. `prisma migrate deploy` and the seed with `NODE_ENV=test`, so the database has the seed users and no events.
+3. The built API on `:8090`, with the fake provider and the simulator on and the rate limits off.
+4. `next start` on `:3100`, pointing at that API.
+
+The servers write their output to `e2e/.logs/`. Everything is stopped at the end, and new containers are created on each run.
+
+Each test creates its own users and events through the API, so the tests run in parallel without sharing state. Logged-in tests set the `golden_token` cookie directly. `auth.spec.ts` goes through the real signup and login forms.
+
+| Spec | Covers |
+|---|---|
+| `auth.spec.ts` | Signup, login, the redirect back to a protected page, and a wrong password |
+| `checkout-card.spec.ts` | Approved card through to Meus ingressos, a declined card followed by a new attempt, and card validation in the browser |
+| `checkout-pix.spec.ts` | Pix paid through the simulator, and switching from Pix to card |
+| `checkout-order.spec.ts` | Resuming an open order, cancelling it, and a free event |
+| `organizer.spec.ts` | Creating an event in the dashboard, buying a ticket for it, and the sale showing in the metrics. Also that buyers are kept out of `/organizador` |
+
+Selectors use roles, labels and visible text. There is no `data-testid`. Toasts are found with the `toast()` helper, because Next's route announcer also has `role="alert"`.
+
+On a failure, Playwright keeps a trace and a screenshot in `e2e/test-results/` and writes the report to `e2e/playwright-report/`. CI uploads both, along with `e2e/.logs/`.
+
 ## Conventions
 
 - **Branches:** `type/short-description` (for example `feat/checkout`, `fix/login-redirect`), opened as PRs into `develop`. `develop` is merged into `main`.
@@ -403,7 +432,7 @@ Payment confirmation is asynchronous, so those tests poll the database with `wai
 
 - The backend `tsconfig.json` has `strictNullChecks` and `noImplicitAny` turned off. The frontend and shared package are strict.
 - `backend/.env.test` is committed and contains a `SECRET`. That is fine for tests, but it must never be reused in other environments.
-- The frontend has no automated tests.
+- The frontend has no unit tests. It is covered only by the browser E2E suite.
 - The only payment provider is the in-memory fake. Nothing sends e-mails on `sales.order_paid` yet.
 - `goldenevents-api-insominia-doc.json` is from 2024 and does not cover sectors, lots or orders. Swagger (`/docs`) is up to date.
 - The production deploy must keep Next.js behind a proxy that overwrites `X-Forwarded-For` (see [Client IP](#rate-limiting)). Vercel and Docker Compose do this, but nothing in the code can enforce it.
