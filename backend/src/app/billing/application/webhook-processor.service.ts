@@ -61,7 +61,10 @@ export class WebhookProcessor implements OnModuleInit {
       const gateway = this.gateways.get(webhookEvent.provider);
       const event = gateway.parseWebhook(webhookEvent.payload as Record<string, unknown>);
 
-      await this.handlers[event.resource](gateway, event.resourceId);
+      if (event.resource) {
+        await this.handlers[event.resource](gateway, event.resourceId);
+      }
+
       await this.webhookEvents.markProcessed(webhookEventId);
     } catch (error) {
       await this.webhookEvents.recordError(webhookEventId, (error as Error).message);

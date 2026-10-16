@@ -27,6 +27,10 @@ export class WebhookIngestionService {
     const gateway = this.gateways.get(provider);
     const event = gateway.verifyWebhook(rawBody, headers);
 
+    if (!event.resource) {
+      return null;
+    }
+
     // Postgres primeiro: é a fonte da verdade. A constraint única descarta a duplicata
     const id = await this.webhookEvents.insertIfAbsent({
       provider: gateway.provider,

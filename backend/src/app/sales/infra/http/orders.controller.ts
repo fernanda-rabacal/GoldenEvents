@@ -101,7 +101,9 @@ export class OrdersController {
     return new MessageResponse(
       charge.status === 'succeeded'
         ? 'Pagamento aprovado. Os ingressos serão emitidos em instantes.'
-        : 'Pague o Pix para confirmar o pedido.',
+        : charge.method === 'card'
+          ? 'Confirme o pagamento com o seu banco.'
+          : 'Pague o Pix para confirmar o pedido.',
       charge,
     );
   }

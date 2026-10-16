@@ -267,6 +267,7 @@ enum ChargeStatus {
 
 enum PaymentProvider {
   fake
+  stripe
 
   @@map("payment_provider")
 }
