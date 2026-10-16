@@ -26,10 +26,24 @@ describe('UserController', () => {
 
   const http = () => request(app.getHttpServer());
 
-  async function login(credentials = { email: data.email, password: data.password }) {
-    const res = await http().post('/login').send(credentials).expect(200);
+  async function startSession(
+    credentials = { email: data.email, password: data.password },
+    keepConnected = false,
+  ) {
+    const res = await http()
+      .post('/login')
+      .send({ ...credentials, keepConnected })
+      .expect(200);
 
-    return res.body.token as string;
+    return res.body as { token: string; refreshToken: string; keepConnected: boolean };
+  }
+
+  async function login(credentials = { email: data.email, password: data.password }) {
+    return (await startSession(credentials)).token;
+  }
+
+  function refresh(refreshToken: string) {
+    return http().post('/refresh').send({ refreshToken });
   }
 
   function decode(token: string) {
@@ -103,23 +117,53 @@ describe('UserController', () => {
   });
 
   describe('POST /login', () => {
-    it('should login with a 1 hour token, or a 30 days one to keep connected', async () => {
+    it('should login with a 15 minutes access token and a refresh token', async () => {
       const res = await http()
         .post('/login')
         .send({ email: data.email, password: data.password })
         .expect(200);
 
-      expect(res.body.type).toBeDefined();
+      expect(res.body.type).toBe('bearer');
+      expect(res.body.refreshToken).toEqual(expect.any(String));
+      expect(res.body.keepConnected).toBe(false);
 
       const token = decode(res.body.token);
-      expect(token.exp - token.iat).toBe(60 * 60);
+      expect(token.exp - token.iat).toBe(15 * 60);
 
-      const kept = await http()
-        .post('/login')
-        .send({ email: data.email, password: data.password, keepConnected: true })
-        .expect(200);
-      const keptToken = decode(kept.body.token);
-      expect(keptToken.exp - keptToken.iat).toBe(60 * 60 * 24 * 30);
+      const kept = await startSession(undefined, true);
+      const keptToken = decode(kept.token);
+      expect(keptToken.exp - keptToken.iat).toBe(15 * 60);
+      expect(kept.keepConnected).toBe(true);
+    });
+
+    it('should keep only the hash of the refresh token, expiring in 1 day or 30 days', async () => {
+      const prisma = new PrismaClient();
+      const before = Date.now();
+
+      try {
+        for (const [keepConnected, days] of [
+          [false, 1],
+          [true, 30],
+        ] as const) {
+          const { refreshToken } = await startSession(undefined, keepConnected);
+          const [stored] = await prisma.refreshToken.findMany({
+            where: { user_id: testUser().id },
+            orderBy: { created_at: 'desc' },
+            take: 1,
+          });
+
+          expect(stored.token_hash).not.toBe(refreshToken);
+          expect(stored.keep_connected).toBe(keepConnected);
+          expect(stored.expires_at.getTime() - before).toBeGreaterThanOrEqual(
+            days * 86_400_000,
+          );
+          expect(stored.expires_at.getTime() - before).toBeLessThan(
+            days * 86_400_000 + 60_000,
+          );
+        }
+      } finally {
+        await prisma.$disconnect();
+      }
     });
 
     it('should send the helmet security headers', async () => {
@@ -161,6 +205,55 @@ describe('UserController', () => {
         .expect(401);
 
       expect(res.body.message).toBe('Credenciais Inválidas.');
+    });
+  });
+
+  describe('POST /refresh', () => {
+    it('should rotate the refresh token and return a working access token', async () => {
+      const session = await startSession(undefined, true);
+
+      const res = await refresh(session.refreshToken).expect(200);
+
+      expect(res.body.refreshToken).not.toBe(session.refreshToken);
+      expect(res.body.keepConnected).toBe(true);
+      await http()
+        .get('/users/token')
+        .auth(res.body.token, { type: 'bearer' })
+        .expect(200);
+      await refresh(res.body.refreshToken).expect(200);
+    });
+
+    it('should reject an unknown refresh token', async () => {
+      await refresh('nao-existe').expect(401);
+      await http().post('/refresh').send({}).expect(400);
+    });
+
+    it('should end the whole session when an old refresh token is reused', async () => {
+      const session = await startSession();
+      const rotated = await refresh(session.refreshToken).expect(200);
+
+      // Fora da tolerância para requisições paralelas
+      const prisma = new PrismaClient();
+      await prisma.refreshToken.updateMany({
+        where: { rotated_at: { not: null } },
+        data: { rotated_at: new Date(Date.now() - 60_000) },
+      });
+      await prisma.$disconnect();
+
+      await refresh(session.refreshToken).expect(401);
+      await refresh(rotated.body.refreshToken).expect(401);
+    });
+
+    it('should end the session on logout', async () => {
+      const session = await startSession();
+
+      await http()
+        .post('/logout')
+        .send({ refreshToken: session.refreshToken })
+        .expect(204);
+
+      await refresh(session.refreshToken).expect(401);
+      await http().post('/logout').send({ refreshToken: 'nao-existe' }).expect(204);
     });
   });
 
@@ -312,7 +405,7 @@ describe('UserController', () => {
     });
 
     it('should deactivate user, and end their session at once', async () => {
-      const userToken = await login();
+      const { token: userToken, refreshToken } = await startSession();
       const adminToken = await login(ADMIN);
 
       const res = await http()
@@ -325,6 +418,7 @@ describe('UserController', () => {
       expect(res.body.data.id).toEqual(testUser().id);
 
       await http().get('/users/token').auth(userToken, { type: 'bearer' }).expect(401);
+      await refresh(refreshToken).expect(401);
       await http()
         .post('/login')
         .send({ email: data.email, password: data.password })
@@ -371,7 +465,7 @@ describe('UserController', () => {
     });
 
     it('should change the password and end the sessions started before it', async () => {
-      const oldToken = await login();
+      const { token: oldToken, refreshToken } = await startSession(undefined, true);
       // iat tem precisão de segundos: o token antigo precisa ser de um segundo anterior
       await new Promise(resolve => setTimeout(resolve, 1100));
 
@@ -382,6 +476,7 @@ describe('UserController', () => {
         .expect(200);
 
       await http().get('/users/token').auth(oldToken, { type: 'bearer' }).expect(401);
+      await refresh(refreshToken).expect(401);
       await http()
         .post('/login')
         .send({ email: data.email, password: data.password })

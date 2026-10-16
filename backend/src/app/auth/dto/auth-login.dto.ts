@@ -12,7 +12,7 @@ export class AuthLoginDto {
   @ApiProperty()
   password: string;
 
-  // Token de 30 dias em vez de 1 hora
+  // Refresh token de 30 dias em vez de 1 dia
   @IsOptional()
   @IsBoolean()
   @ApiProperty({ required: false })

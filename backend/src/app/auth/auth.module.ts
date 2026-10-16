@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
-import { SESSION_TTL_SECONDS } from '@golden-events/shared';
+import { ACCESS_TOKEN_TTL_SECONDS } from '@golden-events/shared';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
+import { RefreshTokenRepository } from './repositories/refresh-token.repository.js';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { LocalStrategy } from './strategy/local.strategy.js';
@@ -22,12 +23,12 @@ import { RateLimitModule } from '../../shared/rate-limit/rate-limit.module.js';
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         secret: config.getOrThrow<string>('SECRET'),
-        signOptions: { expiresIn: SESSION_TTL_SECONDS.default },
+        signOptions: { expiresIn: ACCESS_TOKEN_TTL_SECONDS },
       }),
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, LocalStrategy, JwtStrategy],
+  providers: [AuthService, RefreshTokenRepository, LocalStrategy, JwtStrategy],
   exports: [JwtModule],
 })
 export class AuthModule {}

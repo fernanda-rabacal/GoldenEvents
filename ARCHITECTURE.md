@@ -121,13 +121,25 @@ The order keeps the reserved quantity and price, and the page shows the time lef
 
 ### Authentication
 
-1. `LoginForm` calls the `signIn` Server Action (`services/auth-actions.ts`), which posts to `/login`. On success it sets the auth cookie on the server and redirects to the requested page. The cookie name is `AUTH_COOKIE` from `utils/auth_cookie.ts`. The cookie is `httpOnly` and `sameSite=lax` (`secure` in production), and lasts 1 hour, or 30 days with "keep connected". `signIn` sends `keepConnected` to the API, so the JWT expires together with the cookie (`SESSION_TTL_SECONDS` in `packages/shared`). Client-side JavaScript cannot read the token. `RegisterForm` uses the `signUp` Server Action the same way.
-2. `src/proxy.page.ts` is the Next.js 16 proxy (formerly middleware). It only checks that the cookie exists, and redirects to `/login?redirect=...` when it is missing. It covers `/organizador/*`, `/meus-ingressos`, `/perfil` and `/checkout`.
+1. `LoginForm` calls the `signIn` Server Action (`services/auth-actions.ts`). It posts to `/login` with `keepConnected`, sets two cookies on the server and redirects to the requested page:
+   - `AUTH_COOKIE` (`golden_token`) holds the 15-minute access token.
+   - `REFRESH_COOKIE` (`golden_refresh`) holds the refresh token.
+
+   Both are `httpOnly` and `sameSite=lax` (`secure` in production), and client-side JavaScript cannot read them. `sessionCookies()` in `utils/auth_cookie.ts` builds them:
+   - With "keep connected", the refresh cookie lasts 30 days.
+   - Without it, both are browser-session cookies, cleared when the browser closes.
+
+   `RegisterForm` uses the `signUp` Server Action the same way.
+2. `src/proxy.page.ts` is the Next.js 16 proxy (formerly middleware). It runs on every page and Server Action, and keeps the session alive. Server Components cannot set cookies, so this is the only place that can renew it before a page renders.
+   - When the access token is missing or expires within 60 seconds and there is a refresh cookie, it calls `POST /refresh` (`services/session-refresh.ts`). It writes the new cookies to the response, and also to the forwarded request, so the current render already sees the new token.
+   - A refused refresh token clears both cookies.
+   - If the API is unreachable, the cookies stay as they are.
+   - `/organizador/*`, `/meus-ingressos`, `/perfil` and `/checkout` redirect to `/login?redirect=...` when there is no session.
 3. Pages validate the token against the API through `services/auth.ts`:
    - `getCurrentUser()` calls `GET /users/token`.
    - `requireUser(redirectTo)` redirects to login when there is no valid user.
    - `requireOrganizer(redirectTo)` also redirects to `/seja-organizador` when `canManageEvents()` is false.
-4. `signOut` in `services/auth-actions.ts` deletes the cookie. `utils/auth_redirect.ts` (`getSafeRedirect`) prevents open redirects.
+4. `signOut` in `services/auth-actions.ts` calls `POST /logout`, so the refresh token stops working even if it leaked, and then deletes both cookies. `utils/auth_redirect.ts` (`getSafeRedirect`) prevents open redirects.
 
 `next.config.js` sends security headers on every page: a CSP with `frame-ancestors 'none'`, `base-uri`, `form-action` and `object-src` (no `script-src`, which would need a nonce and dynamic rendering on every page), `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, and HSTS in production. `X-Powered-By` is off.
 
@@ -206,7 +218,17 @@ Prisma errors are converted first (`handleDatabaseErrors`, for example P2002 bec
 
 ### Auth and permissions
 
-- `POST /login` uses `LocalAuthGuard` (passport-local, email and password checked with bcrypt) and returns a JWT signed with the `SECRET` env var. The payload is `{ id, name, email }`. The token lasts 1 hour, or 30 days with `keepConnected: true`.
+- `POST /login` uses `LocalAuthGuard` (passport-local, email and password checked with bcrypt). It returns `{ token, type, refreshToken, keepConnected }`:
+  - `token` is a 15-minute JWT signed with the `SECRET` env var. Its payload is `{ id, name, email }`.
+  - `refreshToken` is an opaque random token.
+
+  The lifetimes are `ACCESS_TOKEN_TTL_SECONDS` and `REFRESH_TOKEN_TTL_SECONDS` in `packages/shared`.
+- Refresh tokens live in the `refresh_token` table, and only their SHA-256 hash is stored. Each login starts a family (`family_id`).
+  - `POST /refresh` marks the token as rotated (`rotated_at`) and returns a new pair in the same family. The new token expires 1 day, or 30 days with `keepConnected`, after this renewal, so an active session never ends.
+  - Reusing a rotated token deletes the whole family, because it means the token was copied. The exception is reuse within `REFRESH_REUSE_GRACE_MS` (30 s), which is accepted: parallel requests from the browser renew with the same token.
+  - `POST /logout` deletes the family. Ending a session always deletes the tokens instead of marking them, because a marked token would still pass the grace window.
+  - A password change deletes all of the user's refresh tokens in the same update. A deactivated user's refresh is refused.
+  - Each login deletes that user's expired tokens.
 - Deactivated users cannot log in. When the email does not exist, bcrypt still runs against a dummy hash, so the response time does not reveal which emails have an account.
 - Protected routes use `JwtAuthGuard` (passport-jwt, `Bearer` header). On every request, `AuthService.validateSession` rejects the token if the user was deactivated or changed the password after the token was issued (`User.password_changed_at`, compared with `iat` in seconds).
 - Passwords have 8 to 72 characters (`PASSWORD_MIN_LENGTH` / `PASSWORD_MAX_LENGTH`; bcrypt ignores anything past 72 bytes). Changing it requires `currentPassword`, and only the user can change their own password.
@@ -224,6 +246,7 @@ Prisma errors are converted first (`handleDatabaseErrors`, for example P2002 bec
 |---|---|---|---|---|
 | `login-ip` | `@RateLimit` on `POST /login` | IP | 20 / minute | Every attempt, before bcrypt runs |
 | `login-failures` | `AuthService.authenticate` | Email | 5 / 15 minutes | Wrong passwords only. A successful login clears it |
+| `refresh-ip` | `@RateLimit` on `POST /refresh` | IP | 60 / minute | Every attempt. The proxy forwards the browser's IP |
 | `signup` | `@RateLimit` on `POST /users` | IP | 10 / hour | Every attempt |
 | `orders-create` | `@RateLimit` on `POST /orders` | User | 10 / minute | Every attempt, refused ones included |
 | `orders-pay` | `@RateLimit` on `POST /orders/:id/pay` | User | 10 / minute | Every attempt |
@@ -259,6 +282,7 @@ Per host:
 | Method | Path | Auth |
 |---|---|---|
 | POST | `/login` | Email and password |
+| POST | `/refresh`, `/logout` | Refresh token in the body |
 | POST | `/users` | Public (signup) |
 | GET | `/users/types` | Public |
 | GET | `/users` | JWT (admin) |
@@ -283,7 +307,7 @@ The full contract is in Swagger (`/docs`) and in `goldenevents-api-insominia-doc
 
 ### Database
 
-- Schema: `backend/prisma/schema.prisma`. Models: `User`, `UserType`, `Event`, `Sector`, `Lot`, `EventCategory`, `PaymentMethod`, `Ticket`, and for payments `Order`, `OrderItem`, `Charge`, `Refund`, `Dispute`, `WebhookEvent`, `OutboxMessage`, `ProcessedMessage`. Tables and columns are snake_case. Payment tables use UUID keys.
+- Schema: `backend/prisma/schema.prisma`. Models: `User`, `UserType`, `RefreshToken`, `Event`, `Sector`, `Lot`, `EventCategory`, `PaymentMethod`, `Ticket`, and for payments `Order`, `OrderItem`, `Charge`, `Refund`, `Dispute`, `WebhookEvent`, `OutboxMessage`, `ProcessedMessage`. Tables and columns are snake_case. Payment tables use UUID keys.
 - Fields with a fixed set of values (order, charge, refund, dispute and ticket status, charge method, provider) are native PostgreSQL enums declared in the Prisma schema.
 - Money is always an integer in cents: `Lot.price`, `Ticket.price` and `OrderItem.unit_price_cents` (the lot price frozen at purchase), the order and charge `*_cents` columns, `Event.min_price` and the revenue metric. Organizer metrics ignore cancelled tickets.
 - Tickets are sold by lot. Each event has sectors, and each sector has lots in order (`position`). Only one lot per sector is on sale: the first one with tickets left whose sales have not ended. If that lot has a future `sales_start`, the sector waits. `Event.capacity`, `quantity_left` and `min_price` are totals of the lots, recalculated in the same transaction as every write; writes lock the event row so concurrent purchases do not compute them from stale reads.
@@ -390,7 +414,7 @@ E2E tests run in band, and tests inside a file depend on the order they run in.
 
 Payment confirmation is asynchronous, so those tests poll the database with `waitFor`.
 
-`user.e2e-spec.ts` covers the admin-only routes, the token lifetime, sessions ended by a deactivation or a password change, and the helmet headers.
+`user.e2e-spec.ts` covers the admin-only routes, the token lifetimes, refresh token rotation, reuse and logout, sessions ended by a deactivation or a password change, and the helmet headers.
 
 ### Browser E2E
 
@@ -404,11 +428,11 @@ Payment confirmation is asynchronous, so those tests poll the database with `wai
 
 The servers write their output to `e2e/.logs/`. Everything is stopped at the end, and new containers are created on each run.
 
-Each test creates its own users and events through the API, so the tests run in parallel without sharing state. Logged-in tests set the `golden_token` cookie directly. `auth.spec.ts` goes through the real signup and login forms.
+Each test creates its own users and events through the API, so the tests run in parallel without sharing state. Logged-in tests set only the `golden_token` cookie, which lasts long enough for one test. `auth.spec.ts` goes through the real signup and login forms.
 
 | Spec | Covers |
 |---|---|
-| `auth.spec.ts` | Signup, login, the redirect back to a protected page, and a wrong password |
+| `auth.spec.ts` | Signup, login, the redirect back to a protected page, a wrong password, the cookie lifetimes with and without "keep connected", renewal of an expired session, and that a refresh token stops working after logout |
 | `checkout-card.spec.ts` | Approved card through to Meus ingressos, a declined card followed by a new attempt, and card validation in the browser |
 | `checkout-pix.spec.ts` | Pix paid through the simulator, and switching from Pix to card |
 | `checkout-order.spec.ts` | Resuming an open order, cancelling it, and a free event |

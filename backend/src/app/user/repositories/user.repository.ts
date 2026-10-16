@@ -118,6 +118,7 @@ export class UserRepository {
     if (updateUserDto.password) {
       data.password = await encryptData(updateUserDto.password);
       data.password_changed_at = new Date();
+      data.refresh_tokens = { deleteMany: {} };
     }
     if (updateUserDto.userTypeId) {
       data.user_type = {

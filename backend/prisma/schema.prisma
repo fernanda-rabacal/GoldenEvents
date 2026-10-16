@@ -344,10 +344,30 @@ model User {
 
   user_type UserType @relation(fields: [user_type_id], references: [id])
 
-  events  Event[]
-  tickets Ticket[]
+  events         Event[]
+  tickets        Ticket[]
+  refresh_tokens RefreshToken[]
 
   @@map("user")
+}
+
+// Guarda só o hash. Cada renovação marca o token como rotacionado e cria o próximo na mesma
+// família (um login). Encerrar a sessão apaga a família inteira
+model RefreshToken {
+  id             String    @id @default(uuid()) @db.Uuid
+  user_id        Int
+  family_id      String    @db.Uuid
+  token_hash     String    @unique
+  keep_connected Boolean
+  expires_at     DateTime
+  rotated_at     DateTime?
+  created_at     DateTime  @default(now())
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, expires_at])
+  @@index([family_id])
+  @@map("refresh_token")
 }
 
 model UserType {
