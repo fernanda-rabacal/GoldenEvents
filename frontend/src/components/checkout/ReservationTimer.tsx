@@ -46,7 +46,7 @@ export function ReservationTimer({
   const seconds = String(remaining % 60).padStart(2, '0');
 
   return (
-    <p className='mt-4 flex items-center gap-2 rounded-2xl bg-accent px-4 py-3 text-body-sm font-bold text-accent-foreground'>
+    <p className='mt-4 flex items-center gap-2 rounded-2xl bg-green-100 px-4 py-3 text-body-sm font-bold text-green-600'>
       <Clock className='size-4 shrink-0' />
       Ingressos reservados por {minutes}:{seconds}
     </p>

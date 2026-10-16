@@ -13,6 +13,7 @@ test('compra dois ingressos com cartão aprovado', async ({ page, buyer, event }
   await startCheckout(page, event, 2);
 
   await expect(page.getByText('Ingressos (2x)')).toBeVisible();
+  await expect(page.getByText(/Ingressos reservados por/)).toBeVisible();
   await fillCard(page);
   await page.getByRole('button', { name: 'Confirmar compra' }).click();
 
@@ -40,12 +41,16 @@ test('mostra a recusa do cartão e aceita uma nova tentativa', async ({ page, bu
   await expectTicketsInMyTickets(page, event, /Código/);
 });
 
-test('valida o cartão no navegador antes de criar o pedido', async ({ page, buyer, event }) => {
+test('valida o cartão no navegador antes de enviar o pagamento', async ({ page, buyer, event }) => {
   await startCheckout(page, event);
+  await expect(page.getByText(/Ingressos reservados por/)).toBeVisible();
 
   await fillCard(page, '1234 5678 9012 3456');
   await page.getByRole('button', { name: 'Confirmar compra' }).click();
 
   await expect(toast(page, 'Número do cartão inválido.')).toBeVisible();
-  expect(await getMyOrders(buyer.token)).toHaveLength(0);
+
+  const orders = await getMyOrders(buyer.token);
+  expect(orders).toHaveLength(1);
+  expect(orders[0].status).toBe('awaiting_payment');
 });

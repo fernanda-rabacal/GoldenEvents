@@ -55,7 +55,7 @@ export default async function EventDetailsPage({
         <ArrowLeft className='size-4' /> Voltar para eventos
       </Link>
 
-      <div className='mt-7 grid gap-10 lg:grid-cols-[1.35fr_.85fr] lg:items-start'>
+      <div className='mt-7 grid gap-x-10 lg:grid-cols-[1.35fr_.85fr] lg:grid-rows-[auto_1fr] lg:items-start'>
         <div>
           <div className='overflow-hidden rounded-4xl bg-primary shadow-sm'>
             <img
@@ -86,7 +86,15 @@ export default async function EventDetailsPage({
               </p>
             )}
           </div>
+        </div>
 
+        <EventPurchaseCard
+          event={event}
+          paymentMethods={paymentMethods}
+          unavailableReason={getUnavailableReason(event)}
+        />
+
+        <div>
           <DetailsSection title='Sobre o evento'>
             <EventDescription markdown={event.description} />
           </DetailsSection>
@@ -105,12 +113,6 @@ export default async function EventDetailsPage({
             <EventPolicy />
           </DetailsSection>
         </div>
-
-        <EventPurchaseCard
-          event={event}
-          paymentMethods={paymentMethods}
-          unavailableReason={getUnavailableReason(event)}
-        />
       </div>
     </main>
   );
