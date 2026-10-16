@@ -61,11 +61,6 @@ export function EventPurchaseCard({
           <p className='mt-1 text-h3 text-primary'>
             {formatTicketPrice(event.min_price)}
           </p>
-          {!unavailableReason && (
-            <p className='mt-1 text-caption text-muted-foreground'>
-              {event.quantity_left} disponíveis
-            </p>
-          )}
         </div>
         <Ticket className='size-7 text-orange-500' />
       </div>
