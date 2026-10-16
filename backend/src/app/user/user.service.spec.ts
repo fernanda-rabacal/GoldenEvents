@@ -252,7 +252,10 @@ describe('UserService', () => {
     expect(user).toStrictEqual(publicUser);
     expect(prisma.user.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ password_changed_at: expect.any(Date) }),
+        data: expect.objectContaining({
+          password_changed_at: expect.any(Date),
+          refresh_tokens: { deleteMany: {} },
+        }),
       }),
     );
   });
