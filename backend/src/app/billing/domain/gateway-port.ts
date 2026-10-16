@@ -12,7 +12,8 @@ export type WebhookResource = 'charge' | 'refund' | 'dispute';
 export type WebhookEvent = {
   id: string;
   type: string;
-  resource: WebhookResource;
+  // null: evento que o sistema não acompanha, confirmado sem ser gravado
+  resource: WebhookResource | null;
   resourceId: string;
   payload: Record<string, unknown>;
 };
@@ -30,9 +31,13 @@ export type CreateGatewayChargeInput = {
 // O domínio nunca importa o SDK do provedor: cada provedor é um adaptador desta porta
 export interface PaymentGateway {
   readonly provider: PaymentProvider;
-  createCharge(
-    input: CreateGatewayChargeInput,
-  ): Promise<{ providerChargeId: string; status: ChargeStatus; pixQrCode?: string }>;
+  createCharge(input: CreateGatewayChargeInput): Promise<{
+    providerChargeId: string;
+    status: ChargeStatus;
+    pixQrCode?: string;
+    // O pagador ainda precisa agir no navegador, como no 3D Secure do cartão
+    clientSecret?: string;
+  }>;
   getCharge(providerChargeId: string): Promise<{ status: ChargeStatus }>;
   cancelCharge(providerChargeId: string): Promise<void>;
   refund(input: {

@@ -8,6 +8,11 @@ import { PAYMENT_GATEWAYS } from './domain/gateway-port.js';
 import { BillingRepository } from './infra/billing.repository.js';
 import { FakeGateway } from './infra/gateways/fake.gateway.js';
 import { GatewayRegistry } from './infra/gateways/gateway-registry.js';
+import {
+  STRIPE_CLIENT,
+  StripeGateway,
+  createStripeClient,
+} from './infra/gateways/stripe.gateway.js';
 import { FakeGatewayController } from './infra/http/fake-gateway.controller.js';
 import { WebhookController } from './infra/http/webhook.controller.js';
 import { WebhookEventsRepository } from './infra/webhook-events.repository.js';
@@ -27,10 +32,12 @@ import { RateLimitModule } from '../../shared/rate-limit/rate-limit.module.js';
     WebhookEventsRepository,
     GatewayRegistry,
     FakeGateway,
+    StripeGateway,
+    { provide: STRIPE_CLIENT, useFactory: createStripeClient },
     {
       provide: PAYMENT_GATEWAYS,
-      useFactory: (fake: FakeGateway) => [fake],
-      inject: [FakeGateway],
+      useFactory: (fake: FakeGateway, stripe: StripeGateway) => [fake, stripe],
+      inject: [FakeGateway, StripeGateway],
     },
   ],
   exports: [BillingService],

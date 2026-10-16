@@ -3,6 +3,7 @@
 import {
   useEffect,
   useEffectEvent,
+  useRef,
   useState,
   useTransition,
   type FormEvent,
@@ -22,6 +23,7 @@ import type {
   Sector,
 } from '@golden-events/shared';
 import { createCardToken } from '@/lib/card-token';
+import { getStripe } from '@/lib/stripe';
 import { toastNotify } from '@/lib/toastify';
 import {
   cancelOrder,
@@ -39,6 +41,7 @@ import { getPaymentOptions } from './payment-options';
 import { PixChargePanel } from './PixChargePanel';
 import { PixPaymentForm } from './PixPaymentForm';
 import { ReservationTimer } from './ReservationTimer';
+import { StripeCardForm, type StripeCardHandle } from './StripeCardForm';
 
 const POLL_INTERVAL_MS = 2000;
 
@@ -63,6 +66,8 @@ type CheckoutFormProps = {
   maxQuantity: number;
   openOrder?: Order;
   canSimulatePix: boolean;
+  // Sem a chave, o cartão usa o formulário do provedor fake
+  stripePublishableKey?: string;
   children: ReactNode;
 };
 
@@ -75,9 +80,11 @@ export function CheckoutForm({
   maxQuantity,
   openOrder,
   canSimulatePix,
+  stripePublishableKey,
   children,
 }: CheckoutFormProps) {
   const router = useRouter();
+  const stripeCard = useRef<StripeCardHandle>(null);
   const [isPending, startTransition] = useTransition();
   const [quantity, setQuantity] = useState(initialQuantity);
   const [order, setOrder] = useState(openOrder ?? null);
@@ -168,15 +175,19 @@ export function CheckoutForm({
     }
   }
 
-  function getPaymentInput(
+  async function getPaymentInput(
     form: HTMLFormElement,
     method: ChargeMethod,
-  ): PayOrderInput | null {
+  ): Promise<PayOrderInput | null> {
     if (method === 'pix') {
       return { method };
     }
 
-    const card = createCardToken(readCardData(form));
+    const card = stripePublishableKey
+      ? ((await stripeCard.current?.createToken()) ?? {
+          error: 'O formulário de pagamento ainda está carregando.',
+        })
+      : createCardToken(readCardData(form));
 
     if ('error' in card) {
       toastNotify('error', card.error);
@@ -198,26 +209,52 @@ export function CheckoutForm({
     toastNotify('error', message);
   }
 
+  // 3D Secure: o banco do comprador confirma o cartão numa janela da Stripe
+  async function confirmWithBank(orderId: string, clientSecret: string) {
+    const stripe =
+      stripePublishableKey && (await getStripe(stripePublishableKey));
+
+    if (!stripe) {
+      toastNotify('error', 'Não foi possível abrir a confirmação do banco.');
+      return false;
+    }
+
+    const { error } = await stripe.handleNextAction({ clientSecret });
+
+    if (error) {
+      await handlePaymentError(
+        orderId,
+        error.message ?? 'O banco não confirmou o pagamento.',
+      );
+      return false;
+    }
+
+    return true;
+  }
+
   function handleSubmit(formEvent: FormEvent<HTMLFormElement>) {
     formEvent.preventDefault();
 
-    let paymentInput: PayOrderInput | null = null;
+    const form = formEvent.currentTarget;
+    const method = selectedMethod;
 
-    if (!isFree) {
-      if (!selectedMethod) {
-        toastNotify('error', 'Escolha uma forma de pagamento.');
-        return;
-      }
-
-      // Antes de qualquer chamada: o cartão vira token aqui e só o token sai do navegador
-      paymentInput = getPaymentInput(formEvent.currentTarget, selectedMethod);
-
-      if (!paymentInput) {
-        return;
-      }
+    if (!isFree && !method) {
+      toastNotify('error', 'Escolha uma forma de pagamento.');
+      return;
     }
 
     startTransition(async () => {
+      let paymentInput: PayOrderInput | null = null;
+
+      if (!isFree && method) {
+        // Antes de qualquer chamada à API: o cartão vira token aqui e só o token sai do navegador
+        paymentInput = await getPaymentInput(form, method);
+
+        if (!paymentInput) {
+          return;
+        }
+      }
+
       let current = order;
 
       if (!current) {
@@ -251,6 +288,13 @@ export function CheckoutForm({
 
       if (!charge.success) {
         await handlePaymentError(current.id, charge.message);
+        return;
+      }
+
+      if (
+        charge.data.client_secret &&
+        !(await confirmWithBank(current.id, charge.data.client_secret))
+      ) {
         return;
       }
 
@@ -347,7 +391,16 @@ export function CheckoutForm({
                 />
               </div>
               <div className='mt-6'>
-                {selectedMethod === 'card' && <CardPaymentForm />}
+                {selectedMethod === 'card' &&
+                  (stripePublishableKey ? (
+                    <StripeCardForm
+                      ref={stripeCard}
+                      publishableKey={stripePublishableKey}
+                      amount={total}
+                    />
+                  ) : (
+                    <CardPaymentForm />
+                  ))}
                 {selectedMethod === 'pix' && <PixPaymentForm />}
               </div>
             </>

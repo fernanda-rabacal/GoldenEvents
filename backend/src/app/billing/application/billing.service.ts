@@ -329,7 +329,10 @@ export class BillingService {
       );
     }
 
-    return summary;
+    // Só vai na resposta para o navegador concluir a ação: nunca é gravado
+    return summary.status === 'pending' && result.clientSecret
+      ? { ...summary, client_secret: result.clientSecret }
+      : summary;
   }
 
   private async callProvider<T>(call: () => Promise<T>) {

@@ -44,6 +44,8 @@ export interface Charge {
   pix_qr_code: string | null;
   expires_at: string | null;
   created_at: string;
+  // Só na resposta do pagamento, quando o banco pede confirmação (3D Secure)
+  client_secret?: string;
 }
 
 export interface Order {

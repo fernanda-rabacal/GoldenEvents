@@ -55,16 +55,16 @@ services:
       dockerfile: backend/Dockerfile
     env_file:
       - path: ./backend/.env
-        required: false
+        required: true
+    # Só o que muda dentro do Compose. O resto, como PAYMENT_PROVIDER e as chaves da Stripe, vem do .env
     environment:
+      # O .env aponta para localhost; aqui são os serviços da rede do Compose
       DATABASE_URL: 'postgresql://postgres:password@db:5432/golden_events?schema=public'
       REDIS_URL: 'redis://redis:6379'
       # Igual à do web: com ela a API aceita o IP do navegador que o Next informa
       INTERNAL_API_KEY: 'dev-internal-key'
       # A imagem roda como produção, que recusa o provedor fake. Aqui é desenvolvimento
       NODE_ENV: 'development'
-      PAYMENT_PROVIDER: 'fake'
-      FAKE_GATEWAY_SIMULATOR: 'on'
     depends_on:
       db:
         condition: service_healthy
@@ -80,12 +80,15 @@ services:
     build:
       context: .
       dockerfile: frontend/Dockerfile
+    # O mesmo arquivo do bun run dev: STRIPE_PUBLISHABLE_KEY e FAKE_GATEWAY_SIMULATOR vêm dele
+    env_file:
+      - path: ./frontend/.env.local
+        required: false
     environment:
       API_URL: 'http://api:8080'
       INTERNAL_API_KEY: 'dev-internal-key'
       # As datas dos eventos são formatadas no servidor (SSR)
       TZ: 'America/Sao_Paulo'
-      FAKE_GATEWAY_SIMULATOR: 'on'
     depends_on:
       - api
       - db
