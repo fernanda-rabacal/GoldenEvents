@@ -38,12 +38,16 @@ export type ApiResponse<T> = {
 // A API limita o login e o cadastro por IP. Sem informar o IP do navegador, todo mundo
 // chegaria lá com o IP deste servidor e dividiria o mesmo limite. A chave prova à API que
 // o IP veio daqui
-async function getClientIpHeaders() {
+export function buildClientIpHeaders(forwardedFor: string | null) {
   const key = process.env.INTERNAL_API_KEY;
   // O proxy na frente do Next (Vercel, nginx) sobrescreve o header ou acrescenta no fim: o último é o real
-  const ip = (await headers()).get('x-forwarded-for')?.split(',').pop()?.trim();
+  const ip = forwardedFor?.split(',').pop()?.trim();
 
   return key && ip ? { 'X-Internal-Key': key, 'X-Client-IP': ip } : undefined;
+}
+
+async function getClientIpHeaders() {
+  return buildClientIpHeaders((await headers()).get('x-forwarded-for'));
 }
 
 // Só para server actions, que têm uma requisição do navegador para repassar.

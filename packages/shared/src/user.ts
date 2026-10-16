@@ -15,9 +15,11 @@ export interface User {
   updated_at: string;
 }
 
-// O JWT e o cookie expiram juntos
-export const SESSION_TTL_SECONDS = {
-  default: 60 * 60,
+export const ACCESS_TOKEN_TTL_SECONDS = 15 * 60;
+
+// Contado a partir da última renovação: quem usa o site dentro do prazo não cai
+export const REFRESH_TOKEN_TTL_SECONDS = {
+  default: 60 * 60 * 24,
   keepConnected: 60 * 60 * 24 * 30,
 };
 
