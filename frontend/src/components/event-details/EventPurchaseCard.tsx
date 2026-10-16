@@ -28,7 +28,7 @@ export function EventPurchaseCard({
   );
 
   return (
-    <aside className='rounded-xl border border-border bg-card p-6 shadow-xl shadow-primary/5 lg:sticky lg:top-6'>
+    <aside className='mt-8 rounded-xl border border-border bg-card p-6 shadow-xl shadow-primary/5 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:mt-0'>
       <div className='flex items-start justify-between gap-4'>
         <div>
           <p className='text-body-sm font-bold tracking-eyebrow text-orange-500 uppercase'>
