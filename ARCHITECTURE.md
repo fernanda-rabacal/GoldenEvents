@@ -295,7 +295,8 @@ Per host:
 | POST | `/events` | JWT |
 | PATCH / DELETE | `/events/:id` | JWT |
 | GET / POST | `/orders` | JWT |
-| GET | `/orders/organizer?event_id=&days=&status=&search=&skip=&take=`, `/orders/organizer/summary?event_id=&days=` | JWT (organizer; only orders of their own events) |
+| GET | `/orders/organizer?event_id=&days=&status=&search=&buyer_id=&skip=&take=`, `/orders/organizer/summary?event_id=&days=` | JWT (organizer; only orders of their own events) |
+| GET | `/orders/organizer/audience?event_id=&search=&segment=&sort=&skip=&take=`, `/orders/organizer/audience/summary?event_id=` | JWT (organizer; one row per buyer with a paid order in their events) |
 | GET | `/orders/:id` | JWT (buyer or admin) |
 | POST | `/orders/:id/pay`, `/orders/:id/cancel` | JWT (buyer) |
 | POST | `/webhooks/:provider` | Provider signature |
