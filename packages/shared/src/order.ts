@@ -109,3 +109,33 @@ export interface OrganizerOrder {
   paid_at: string | null;
   items: OrganizerOrderItem[];
 }
+
+export const AUDIENCE_SEGMENT_OPTIONS = ['returning', 'new'] as const;
+
+export type AudienceSegment = (typeof AUDIENCE_SEGMENT_OPTIONS)[number];
+
+export const AUDIENCE_SORT_OPTIONS = ['recent', 'spent', 'events'] as const;
+
+export type AudienceSort = (typeof AUDIENCE_SORT_OPTIONS)[number];
+
+// "Novo" no público: primeira compra paga dentro desta janela
+export const NEW_BUYER_WINDOW_DAYS = 30;
+
+// Uma pessoa do público: só pedidos pagos nos eventos do produtor
+export interface OrganizerAudienceMember {
+  buyer: { id: number; name: string; email: string };
+  events_count: number;
+  orders_count: number;
+  tickets_count: number;
+  tickets_used: number;
+  total_cents: number;
+  first_purchase_at: string;
+  last_purchase_at: string;
+}
+
+export interface OrganizerAudienceSummary {
+  buyers: number;
+  returningBuyers: number;
+  newBuyers: number;
+  averageSpentCents: number;
+}

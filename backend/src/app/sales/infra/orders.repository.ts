@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, type OrderItem, type OrderStatus } from '@prisma/client';
+import type { AudienceSegment, AudienceSort } from '@golden-events/shared';
 import { randomBytes } from 'crypto';
 import { PrismaService } from '../../../db/prisma.service.js';
 import type { PricedItem } from '../domain/purchase-policy.js';
@@ -35,6 +36,47 @@ function organizerOrderWhere({
     status,
     created_at: { gte: createdSince },
   };
+}
+
+export type AudienceFilters = {
+  eventIds: number[];
+  buyerIds?: number[];
+  segment?: AudienceSegment;
+  newSince: Date;
+};
+
+type AudienceRow = {
+  buyer_id: number;
+  orders_count: number;
+  events_count: number;
+  total_cents: bigint;
+  first_purchase_at: Date;
+  last_purchase_at: Date;
+  total: number;
+};
+
+const AUDIENCE_ORDER: Record<AudienceSort, Prisma.Sql> = {
+  recent: Prisma.sql`last_purchase_at DESC`,
+  spent: Prisma.sql`total_cents DESC`,
+  events: Prisma.sql`events_count DESC, last_purchase_at DESC`,
+};
+
+function paidOrdersWhere({ eventIds, buyerIds }: AudienceFilters) {
+  return Prisma.sql`status = 'paid' AND event_id IN (${Prisma.join(eventIds)})${
+    buyerIds ? Prisma.sql` AND buyer_id IN (${Prisma.join(buyerIds)})` : Prisma.empty
+  }`;
+}
+
+function audienceHaving({ segment, newSince }: AudienceFilters) {
+  if (segment === 'returning') {
+    return Prisma.sql`HAVING COUNT(DISTINCT event_id) > 1`;
+  }
+
+  if (segment === 'new') {
+    return Prisma.sql`HAVING MIN(COALESCE(paid_at, created_at)) >= ${newSince}`;
+  }
+
+  return Prisma.empty;
 }
 
 // Código aleatório que vai no QR code do ingresso
@@ -237,6 +279,99 @@ export class OrdersRepository {
       ticketsSold: items._sum.quantity ?? 0,
       refundedOrders,
     };
+  }
+
+  // SQL cru: o groupBy do Prisma não faz COUNT(DISTINCT) nem HAVING
+  async findAudiencePage(
+    filters: AudienceFilters,
+    sort: AudienceSort,
+    skip: number,
+    take: number,
+  ) {
+    const rows = await this.prisma.$queryRaw<AudienceRow[]>`
+      SELECT buyer_id,
+             COUNT(*)::int AS orders_count,
+             COUNT(DISTINCT event_id)::int AS events_count,
+             SUM(total_cents)::bigint AS total_cents,
+             MIN(COALESCE(paid_at, created_at)) AS first_purchase_at,
+             MAX(COALESCE(paid_at, created_at)) AS last_purchase_at,
+             COUNT(*) OVER ()::int AS total
+      FROM "order"
+      WHERE ${paidOrdersWhere(filters)}
+      GROUP BY buyer_id
+      ${audienceHaving(filters)}
+      ORDER BY ${AUDIENCE_ORDER[sort]}, buyer_id
+      OFFSET ${skip} LIMIT ${take}`;
+
+    return {
+      total: rows[0]?.total ?? 0,
+      members: rows.map(row => ({
+        buyer_id: row.buyer_id,
+        orders_count: row.orders_count,
+        events_count: row.events_count,
+        total_cents: Number(row.total_cents),
+        first_purchase_at: row.first_purchase_at,
+        last_purchase_at: row.last_purchase_at,
+      })),
+    };
+  }
+
+  async summarizeAudience(filters: AudienceFilters) {
+    const [row] = await this.prisma.$queryRaw<
+      {
+        buyers: number;
+        returning_buyers: number;
+        new_buyers: number;
+        total_cents: bigint;
+      }[]
+    >`
+      SELECT COUNT(*)::int AS buyers,
+             COUNT(*) FILTER (WHERE events_count > 1)::int AS returning_buyers,
+             COUNT(*) FILTER (WHERE first_purchase_at >= ${filters.newSince})::int AS new_buyers,
+             COALESCE(SUM(total_cents), 0)::bigint AS total_cents
+      FROM (
+        SELECT COUNT(DISTINCT event_id) AS events_count,
+               MIN(COALESCE(paid_at, created_at)) AS first_purchase_at,
+               SUM(total_cents) AS total_cents
+        FROM "order"
+        WHERE ${paidOrdersWhere(filters)}
+        GROUP BY buyer_id
+      ) AS audience`;
+
+    return {
+      buyers: row.buyers,
+      returningBuyers: row.returning_buyers,
+      newBuyers: row.new_buyers,
+      totalCents: Number(row.total_cents),
+    };
+  }
+
+  async countTicketsByBuyer(eventIds: number[], buyerIds: number[]) {
+    const groups = await this.prisma.ticket.groupBy({
+      by: ['user_id', 'status'],
+      where: {
+        event_id: { in: eventIds },
+        user_id: { in: buyerIds },
+        status: { in: ['valid', 'used'] },
+      },
+      _count: { _all: true },
+    });
+
+    const counts = new Map<number, { tickets: number; used: number }>();
+
+    for (const { user_id, status, _count } of groups) {
+      const current = counts.get(user_id) ?? { tickets: 0, used: 0 };
+
+      current.tickets += _count._all;
+
+      if (status === 'used') {
+        current.used += _count._all;
+      }
+
+      counts.set(user_id, current);
+    }
+
+    return counts;
   }
 
   async findOpenByEvent(eventId: number, take: number, cursor?: string) {

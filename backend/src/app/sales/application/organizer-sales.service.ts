@@ -1,6 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { canManageEvents, type OrganizerSalesSummary } from '@golden-events/shared';
 import {
+  NEW_BUYER_WINDOW_DAYS,
+  canManageEvents,
+  type OrganizerAudienceMember,
+  type OrganizerAudienceSummary,
+  type OrganizerSalesSummary,
+  type Page,
+} from '@golden-events/shared';
+import {
+  QueryOrganizerAudienceDto,
+  QueryOrganizerAudienceSummaryDto,
   QueryOrganizerOrdersDto,
   QueryOrganizerSummaryDto,
 } from '../infra/http/dto/query-organizer-sales.dto.js';
@@ -17,6 +26,10 @@ function sinceDays(days?: number) {
   return days ? new Date(Date.now() - days * DAY_MS) : undefined;
 }
 
+function newBuyerSince() {
+  return new Date(Date.now() - NEW_BUYER_WINDOW_DAYS * DAY_MS);
+}
+
 // Vendas vistas por quem organiza: só pedidos dos próprios eventos
 @Injectable()
 export class OrganizerSalesService {
@@ -29,8 +42,10 @@ export class OrganizerSalesService {
 
   async listOrders(requester: Requester, query: QueryOrganizerOrdersDto) {
     const { events, eventIds } = await this.resolveScope(requester, query.event_id);
-    const search = query.search?.trim();
-    const buyerIds = search ? await this.users.findIdsMatching(search) : undefined;
+    const buyerIds =
+      query.buyer_id === undefined
+        ? await this.findBuyerIds(query.search)
+        : [query.buyer_id];
 
     if (eventIds.length === 0 || buyerIds?.length === 0) {
       return new OffsetPagination(0, 0, query.skip, query.take).buildPage([]);
@@ -126,6 +141,89 @@ export class OrganizerSalesService {
         totals.paidOrders > 0 ? Math.round(totals.totalCents / totals.paidOrders) : 0,
       refundedOrders: totals.refundedOrders,
     };
+  }
+
+  async listAudience(
+    requester: Requester,
+    query: QueryOrganizerAudienceDto,
+  ): Promise<Page<OrganizerAudienceMember>> {
+    const { eventIds } = await this.resolveScope(requester, query.event_id);
+    const buyerIds = await this.findBuyerIds(query.search);
+
+    if (eventIds.length === 0 || buyerIds?.length === 0) {
+      return new OffsetPagination(0, 0, query.skip, query.take).buildPage([]);
+    }
+
+    const { skip, take } = new OffsetPagination(
+      0,
+      0,
+      query.skip,
+      query.take,
+    ).filterProps();
+    const { total, members } = await this.repository.findAudiencePage(
+      { eventIds, buyerIds, segment: query.segment, newSince: newBuyerSince() },
+      query.sort ?? 'recent',
+      skip,
+      take,
+    );
+
+    if (members.length === 0) {
+      return new OffsetPagination(total, total, query.skip, query.take).buildPage([]);
+    }
+
+    const memberIds = members.map(({ buyer_id }) => buyer_id);
+    const [buyers, tickets] = await Promise.all([
+      this.users.findContacts(memberIds),
+      this.repository.countTicketsByBuyer(eventIds, memberIds),
+    ]);
+    const buyersById = new Map(buyers.map(buyer => [buyer.id, buyer]));
+
+    return new OffsetPagination(total, total, query.skip, query.take).buildPage(
+      members.map(member => ({
+        buyer: buyersById.get(member.buyer_id) ?? {
+          id: member.buyer_id,
+          name: 'Conta removida',
+          email: '',
+        },
+        events_count: member.events_count,
+        orders_count: member.orders_count,
+        tickets_count: tickets.get(member.buyer_id)?.tickets ?? 0,
+        tickets_used: tickets.get(member.buyer_id)?.used ?? 0,
+        total_cents: member.total_cents,
+        first_purchase_at: member.first_purchase_at.toISOString(),
+        last_purchase_at: member.last_purchase_at.toISOString(),
+      })),
+    );
+  }
+
+  async summarizeAudience(
+    requester: Requester,
+    query: QueryOrganizerAudienceSummaryDto,
+  ): Promise<OrganizerAudienceSummary> {
+    const { eventIds } = await this.resolveScope(requester, query.event_id);
+
+    if (eventIds.length === 0) {
+      return { buyers: 0, returningBuyers: 0, newBuyers: 0, averageSpentCents: 0 };
+    }
+
+    const totals = await this.repository.summarizeAudience({
+      eventIds,
+      newSince: newBuyerSince(),
+    });
+
+    return {
+      buyers: totals.buyers,
+      returningBuyers: totals.returningBuyers,
+      newBuyers: totals.newBuyers,
+      averageSpentCents:
+        totals.buyers > 0 ? Math.round(totals.totalCents / totals.buyers) : 0,
+    };
+  }
+
+  private async findBuyerIds(search?: string) {
+    const term = search?.trim();
+
+    return term ? this.users.findIdsMatching(term) : undefined;
   }
 
   private async resolveScope(requester: Requester, eventId?: number) {

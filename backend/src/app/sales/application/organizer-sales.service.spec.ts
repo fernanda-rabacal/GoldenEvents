@@ -105,6 +105,103 @@ describe('OrganizerSalesService', () => {
     expect(repository.findPageForEvents).not.toHaveBeenCalled();
   });
 
+  it('filters the orders by a single buyer, for the audience history', async () => {
+    repository.findPageForEvents.mockResolvedValue([0, []] as never);
+
+    await service.listOrders(ORGANIZER, { buyer_id: 9, search: 'ignorado' });
+
+    expect(users.findIdsMatching).not.toHaveBeenCalled();
+    expect(repository.findPageForEvents).toHaveBeenCalledWith(
+      expect.objectContaining({ buyerIds: [9] }),
+      0,
+      10,
+    );
+  });
+
+  it('rejects a buyer account from the audience', async () => {
+    await expect(service.listAudience(BUYER, {})).rejects.toBeInstanceOf(ForbiddenError);
+    expect(repository.findAudiencePage).not.toHaveBeenCalled();
+  });
+
+  it('lists the audience with contacts and ticket check-ins', async () => {
+    const paidAt = new Date('2026-09-01T12:00:00.000Z');
+
+    repository.findAudiencePage.mockResolvedValue({
+      total: 1,
+      members: [
+        {
+          buyer_id: 9,
+          orders_count: 3,
+          events_count: 2,
+          total_cents: 25000,
+          first_purchase_at: paidAt,
+          last_purchase_at: paidAt,
+        },
+      ],
+    });
+    repository.countTicketsByBuyer.mockResolvedValue(
+      new Map([[9, { tickets: 4, used: 1 }]]),
+    );
+    users.findContacts.mockResolvedValue([
+      { id: 9, name: 'Mariana Oliveira', email: 'mariana@email.com' },
+    ]);
+
+    const page = await service.listAudience(ORGANIZER, {
+      segment: 'returning',
+      sort: 'spent',
+      skip: 1,
+      take: 10,
+    });
+
+    expect(repository.findAudiencePage).toHaveBeenCalledWith(
+      expect.objectContaining({ eventIds: [10, 11], segment: 'returning' }),
+      'spent',
+      10,
+      10,
+    );
+    expect(page.totalFiltered).toBe(1);
+    expect(page.content[0]).toEqual({
+      buyer: { id: 9, name: 'Mariana Oliveira', email: 'mariana@email.com' },
+      events_count: 2,
+      orders_count: 3,
+      tickets_count: 4,
+      tickets_used: 1,
+      total_cents: 25000,
+      first_purchase_at: paidAt.toISOString(),
+      last_purchase_at: paidAt.toISOString(),
+    });
+  });
+
+  it('returns an empty audience without querying when no buyer matches the search', async () => {
+    users.findIdsMatching.mockResolvedValue([]);
+
+    const page = await service.listAudience(ORGANIZER, { search: 'ninguém' });
+
+    expect(page.content).toEqual([]);
+    expect(repository.findAudiencePage).not.toHaveBeenCalled();
+  });
+
+  it('summarizes the audience with the average spent per person', async () => {
+    repository.summarizeAudience.mockResolvedValue({
+      buyers: 4,
+      returningBuyers: 1,
+      newBuyers: 2,
+      totalCents: 30000,
+    });
+
+    await expect(service.summarizeAudience(ORGANIZER, { event_id: 11 })).resolves.toEqual(
+      {
+        buyers: 4,
+        returningBuyers: 1,
+        newBuyers: 2,
+        averageSpentCents: 7500,
+      },
+    );
+    expect(repository.summarizeAudience).toHaveBeenCalledWith(
+      expect.objectContaining({ eventIds: [11] }),
+    );
+  });
+
   it('summarizes net revenue and the average order', async () => {
     repository.summarizeForEvents.mockResolvedValue({
       paidOrders: 3,

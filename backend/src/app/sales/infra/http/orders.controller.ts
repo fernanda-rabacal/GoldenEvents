@@ -15,6 +15,8 @@ import { Request } from 'express';
 import { CreateOrderDto } from './dto/create-order.dto.js';
 import { PayOrderDto } from './dto/pay-order.dto.js';
 import {
+  QueryOrganizerAudienceDto,
+  QueryOrganizerAudienceSummaryDto,
   QueryOrganizerOrdersDto,
   QueryOrganizerSummaryDto,
 } from './dto/query-organizer-sales.dto.js';
@@ -75,6 +77,19 @@ export class OrdersController {
     @Req() req: Request,
   ) {
     return this.organizerSales.summarize(req.user as Requester, query);
+  }
+
+  @Get('/organizer/audience')
+  async listAudience(@Query() query: QueryOrganizerAudienceDto, @Req() req: Request) {
+    return this.organizerSales.listAudience(req.user as Requester, query);
+  }
+
+  @Get('/organizer/audience/summary')
+  async summarizeAudience(
+    @Query() query: QueryOrganizerAudienceSummaryDto,
+    @Req() req: Request,
+  ) {
+    return this.organizerSales.summarizeAudience(req.user as Requester, query);
   }
 
   @Get('/:id')
