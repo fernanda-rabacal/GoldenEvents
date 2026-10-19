@@ -159,6 +159,41 @@ export function CheckoutForm({
     };
   }, [orderId, isWaitingConfirmation]);
 
+  async function reserveTickets() {
+    const created = await createOrder({
+      slug: event.slug,
+      lotId: lot.id,
+      quantity,
+    });
+
+    if (!created.success) {
+      toastNotify('error', created.message);
+      return null;
+    }
+
+    setOrder(created.data);
+    return created.data;
+  }
+
+  // O evento gratuito já sai pago ao criar o pedido: só reserva ao entrar quem ainda vai pagar.
+  // A ref segura a segunda execução do efeito no StrictMode
+  const reservationRequested = useRef(false);
+
+  const reserveOnEnter = useEffectEvent(() => {
+    if (reservationRequested.current || order || isFree) {
+      return;
+    }
+
+    reservationRequested.current = true;
+    startTransition(async () => {
+      await reserveTickets();
+    });
+  });
+
+  useEffect(() => {
+    reserveOnEnter();
+  }, []);
+
   function handleQuantityChange(value: number) {
     setQuantity(value);
     window.history.replaceState(
@@ -255,22 +290,10 @@ export function CheckoutForm({
         }
       }
 
-      let current = order;
+      const current = order ?? (await reserveTickets());
 
       if (!current) {
-        const created = await createOrder({
-          slug: event.slug,
-          lotId: lot.id,
-          quantity,
-        });
-
-        if (!created.success) {
-          toastNotify('error', created.message);
-          return;
-        }
-
-        current = created.data;
-        setOrder(current);
+        return;
       }
 
       if (current.status === 'paid') {
