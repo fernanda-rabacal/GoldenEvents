@@ -1,5 +1,6 @@
-export function formatMoney(value: number) {
-  const formattedValue = value.toLocaleString('pt-BR', {
+// Os valores chegam da API em centavos
+export function formatMoney(cents: number) {
+  const formattedValue = (cents / 100).toLocaleString('pt-BR', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
@@ -7,11 +8,11 @@ export function formatMoney(value: number) {
   return 'R$ ' + formattedValue;
 }
 
-export function formatTicketPrice(price: number) {
-  return price > 0 ? formatMoney(price) : 'Entrada gratuita';
+export function formatTicketPrice(cents: number) {
+  return cents > 0 ? formatMoney(cents) : 'Entrada gratuita';
 }
 
 // "R$ 48.920", sem centavos, para os indicadores do painel
-export function formatWholeMoney(value: number) {
-  return 'R$ ' + Math.round(value).toLocaleString('pt-BR');
+export function formatWholeMoney(cents: number) {
+  return 'R$ ' + Math.round(cents / 100).toLocaleString('pt-BR');
 }

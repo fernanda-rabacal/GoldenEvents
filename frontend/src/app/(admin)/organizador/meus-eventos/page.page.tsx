@@ -58,7 +58,7 @@ export default async function MyEventsPage({
     getEventCategories(),
   ]);
 
-  const events = result?.content ?? [];
+  const events = result.content;
 
   function buildPageHref(targetPage: number) {
     const query = new URLSearchParams();
@@ -93,11 +93,7 @@ export default async function MyEventsPage({
 
       <MyEventsFilters categories={categories} />
 
-      {!result ? (
-        <p className='rounded-xl border border-border bg-card p-10 text-center text-body text-destructive'>
-          Não foi possível carregar os eventos.
-        </p>
-      ) : events.length === 0 ? (
+      {events.length === 0 ? (
         <p className='rounded-xl border border-dashed border-input bg-card p-10 text-center text-body text-muted-foreground'>
           Nenhum evento encontrado.
         </p>
@@ -146,8 +142,8 @@ export default async function MyEventsPage({
                         className={cn(
                           'rounded-full px-2.5 py-1 text-caption font-bold',
                           event.active
-                            ? 'bg-accent text-accent-foreground'
-                            : 'bg-muted text-muted-foreground',
+                            ? 'bg-green-100 text-green-600'
+                            : 'bg-red-100 text-red-500',
                         )}
                       >
                         {event.active ? 'Sim' : 'Não'}
@@ -199,7 +195,7 @@ export default async function MyEventsPage({
 
       <TablePagination
         page={page}
-        totalPages={result?.totalPages ?? 0}
+        totalPages={result.totalPages}
         buildHref={buildPageHref}
       />
     </>

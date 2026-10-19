@@ -4,19 +4,23 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { setupApp } from './setup-app.js';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  // rawBody: a assinatura dos webhooks é calculada sobre os bytes originais do corpo
+  const app = await NestFactory.create(AppModule, { rawBody: true });
   setupApp(app);
+  // Fecha os workers da fila antes de sair, sem abandonar jobs no meio
+  app.enableShutdownHooks();
 
-  // Swagger Documentation
-  const docConfig = new DocumentBuilder()
-    .setTitle('Golden Events API')
-    .setDescription('Api para disponibilizar os serviços do golden events.')
-    .addBearerAuth()
-    .build();
+  // Fora de produção: o mapa completo da API não precisa estar à vista de qualquer um
+  if (process.env.NODE_ENV !== 'production') {
+    const docConfig = new DocumentBuilder()
+      .setTitle('Golden Events API')
+      .setDescription('Api para disponibilizar os serviços do golden events.')
+      .addBearerAuth()
+      .build();
 
-  const document = SwaggerModule.createDocument(app, docConfig);
-  SwaggerModule.setup('/docs', app, document);
-  app.enableCors();
+    const document = SwaggerModule.createDocument(app, docConfig);
+    SwaggerModule.setup('/docs', app, document);
+  }
 
   await app.listen(process.env.PORT || 8080);
 }

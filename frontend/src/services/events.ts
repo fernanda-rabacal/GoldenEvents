@@ -6,8 +6,9 @@ import type {
   OrganizerMetrics,
   Page,
   PaymentMethod,
+  SectorSales,
 } from '@golden-events/shared';
-import { fetchFromApi } from './api';
+import { ApiError, fetchFromApi } from './api';
 import { fetchWithAuth } from './authenticated-api';
 
 const REVALIDATE_SECONDS = 60;
@@ -43,41 +44,44 @@ export async function getUpcomingEvents({
     params.set('sort', sort);
   }
 
-  const page = await fetchFromApi<Page<Event> | null>(
-    `/events?${params}`,
-    null,
-    { next: { revalidate: REVALIDATE_SECONDS } },
-  );
-
-  const events = page?.content ?? [];
-  const total = page?.totalRecords ?? 0;
+  const page = await fetchFromApi<Page<Event>>(`/events?${params}`, {
+    next: { revalidate: REVALIDATE_SECONDS },
+  });
 
   return {
-    events,
-    total,
-    hasMore: total > events.length,
+    events: page.content,
+    total: page.totalRecords,
+    hasMore: page.totalRecords > page.content.length,
   };
 }
 
 export function getEventCategories() {
-  return fetchFromApi<EventCategory[]>('/events/categories', [], {
+  return fetchFromApi<EventCategory[]>('/events/categories', {
     next: { revalidate: REVALIDATE_SECONDS },
   });
 }
 
-export function getEventBySlug(
+export async function getEventBySlug(
   slug: string,
   init: RequestInit = { next: { revalidate: REVALIDATE_SECONDS } },
 ) {
-  return fetchFromApi<Event | null>(
-    `/events/slug/${encodeURIComponent(slug)}`,
-    null,
-    init,
-  );
+  try {
+    return await fetchFromApi<Event>(
+      `/events/slug/${encodeURIComponent(slug)}`,
+      init,
+    );
+  } catch (error) {
+    // Só o 404 vira notFound() na página; as outras falhas vão para a tela de erro
+    if (error instanceof ApiError && error.status === 404) {
+      return null;
+    }
+
+    throw error;
+  }
 }
 
 export function getPaymentMethods() {
-  return fetchFromApi<PaymentMethod[]>('/events/payment-methods', [], {
+  return fetchFromApi<PaymentMethod[]>('/events/payment-methods', {
     next: { revalidate: REVALIDATE_SECONDS },
   });
 }
@@ -120,12 +124,13 @@ export function getMyEvents({
     params.set('start_date', startDate);
   }
 
-  return fetchWithAuth<Page<Event> | null>(`/events/me?${params}`, null);
+  return fetchWithAuth<Page<Event>>(`/events/me?${params}`);
 }
 
 export function getMyMetrics(days: MetricsPeriod) {
-  return fetchWithAuth<OrganizerMetrics | null>(
-    `/events/me/metrics?days=${days}`,
-    null,
-  );
+  return fetchWithAuth<OrganizerMetrics>(`/events/me/metrics?days=${days}`);
+}
+
+export function getEventLotSales(eventId: number) {
+  return fetchWithAuth<SectorSales[]>(`/events/${eventId}/lots/sales`);
 }

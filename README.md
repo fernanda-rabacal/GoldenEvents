@@ -6,6 +6,7 @@ This is a collaborative full stack project of a website where you can see the la
 
 #### Doing:
 - Ticket payment process
+- Plans for users and organizers
 
 ### How to run:
 
@@ -29,6 +30,8 @@ To use this code without Docker, you need to have Node.js 22+ and Bun installed.
   Other commands available on the root folder: `bun run build`, `bun run lint`, `bun run typecheck`, `bun run test` and `bun run test:e2e`. To run a task in a single package, use `bunx turbo run <task> --filter=<package>`.
 
   - Docker
+
+  Copy `backend/.env.example` to `backend/.env` and fill it in (`PAYMENT_PROVIDER=fake` with `FAKE_GATEWAY_SIMULATOR=on` for local payments, or the Stripe keys). For the site, optionally copy `frontend/.env.example` to `frontend/.env.local`. Compose only overrides what differs inside the containers (database and Redis hosts, `API_URL`, `INTERNAL_API_KEY` and `NODE_ENV`).
 
   On the root folder, run `docker compose build` to build the containers. After, just run `docker compose up` to start the containers (PostgreSQL, Redis, API and web). The API applies the Prisma migrations on startup. If you like, use the flag `-d` on this command to detach the docker log off the terminal.
 

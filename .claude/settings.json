@@ -22,7 +22,9 @@
       "Bash(npx prettier *)",
       "Bash(node verify.js)",
       "Bash(sed -i \"s/waitForTimeout\\(5000\\)/waitForTimeout\\(1500\\)/\" verify.js)",
-      "PowerShell($p = \\(Get-NetTCPConnection -LocalPort 3001 -State Listen -ErrorAction SilentlyContinue\\).OwningProcess | Select-Object -Unique; foreach \\($id in $p\\) { Stop-Process -Id $id -Force -Confirm:$false }; \"stopped: $p\")"
+      "PowerShell($p = \\(Get-NetTCPConnection -LocalPort 3001 -State Listen -ErrorAction SilentlyContinue\\).OwningProcess | Select-Object -Unique; foreach \\($id in $p\\) { Stop-Process -Id $id -Force -Confirm:$false }; \"stopped: $p\")",
+      "WebSearch",
+      "mcp__plugin_stripe_stripe__search_stripe_documentation"
     ]
   }
 }

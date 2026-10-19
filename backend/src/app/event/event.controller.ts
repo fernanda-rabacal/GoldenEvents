@@ -9,6 +9,7 @@ import {
   Body,
   Req,
   Patch,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { EventService } from './event.service.js';
 import { CreateEventDto } from './dto/create-event.dto.js';
@@ -21,7 +22,6 @@ import { JwtAuthGuard } from '../auth/guard/jwt.guard.js';
 import { Request } from 'express';
 import { MessageResponse } from '../../response/message.response.js';
 import { CategoryService } from './category.service.js';
-import { BuyEventTicketDto } from './dto/buy-ticket.dto.js';
 import { PaymentMethodService } from './payment-method.service.js';
 
 @ApiTags('Event')
@@ -77,6 +77,13 @@ export class EventController {
     return this.eventService.findById(+id);
   }
 
+  @Get('/:id/lots/sales')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  async getLotSales(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
+    return this.eventService.getLotSales(req.user as Requester, id);
+  }
+
   @Post()
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
@@ -86,21 +93,6 @@ export class EventController {
     const event = await this.eventService.create(req.user as Requester, createEventDto);
 
     return new MessageResponse('Evento cadastrado com sucesso.', event);
-  }
-
-  @Post('/:id/buy-ticket')
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
-  async buyTicket(
-    @Param('id') id: string,
-    @Req() req: Request,
-    @Body() buyTicketDto: BuyEventTicketDto,
-  ) {
-    buyTicketDto.userId = req.user['id'];
-    buyTicketDto.eventId = +id;
-
-    await this.eventService.buyTicket(buyTicketDto);
-    return new MessageResponse('Ingresso(s) comprado(s) com sucesso.');
   }
 
   @Patch('/:id')

@@ -61,7 +61,7 @@ export function TicketDialog({
           </div>
 
           <ul className='flex flex-col divide-y divide-border overflow-y-auto px-6'>
-            {tickets.map(({ id }, index) => {
+            {tickets.map(({ id, lot }, index) => {
               const code = formatTicketCode(id);
 
               return (
@@ -73,6 +73,9 @@ export function TicketDialog({
                   )}
                   <TicketQrCode code={code} size={200} />
                   <p className='text-h4 text-foreground'>{code}</p>
+                  <p className='-mt-2 text-body-sm text-muted-foreground'>
+                    {lot.sector.name} · {lot.name}
+                  </p>
                   <Button
                     variant='outline'
                     size='lg'

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import type { Lot, Sector } from '@prisma/client';
 import {
   canManageEvents,
   type MetricsPeriod,
@@ -6,10 +7,12 @@ import {
 } from '@golden-events/shared';
 import { CreateEventDto } from './dto/create-event.dto.js';
 import { UpdateEventDto } from './dto/update-event.dto.js';
+import { CreateLotDto } from './dto/lot.dto.js';
+import { UpdateSectorDto } from './dto/sector.dto.js';
 import { QueryEventDto } from './dto/query-event.dto.js';
-import { BuyEventTicketDto } from './dto/buy-ticket.dto.js';
 import { CategoryRepository } from './repositories/categories.repository.js';
 import { EventRepository } from './repositories/events.repository.js';
+import { buildSectorSales } from './lot-sales.js';
 import { BusinessRuleError } from '../common/errors/types/BusinessRuleError.js';
 import { ForbiddenError } from '../common/errors/types/ForbiddenError.js';
 import { NotFoundError } from '../common/errors/types/NotFoundError.js';
@@ -44,6 +47,67 @@ function percentChange(current: number, previous: number) {
   return Math.round(((current - previous) / previous) * 1000) / 10;
 }
 
+type SalesWindow = Pick<CreateLotDto, 'name' | 'salesStart' | 'salesEnd'>;
+
+function validateSalesWindows(sectors: { lots: SalesWindow[] }[], eventStart: Date) {
+  for (const { name, salesStart, salesEnd } of sectors.flatMap(({ lots }) => lots)) {
+    if (salesStart && salesEnd && salesEnd <= salesStart) {
+      throw new BusinessRuleError(
+        `O fim das vendas do lote "${name}" precisa ser depois do início.`,
+      );
+    }
+
+    if (salesEnd && salesEnd > eventStart) {
+      throw new BusinessRuleError(
+        `As vendas do lote "${name}" não podem terminar depois do início do evento.`,
+      );
+    }
+  }
+}
+
+function validateSectorChanges(
+  saved: (Sector & { lots: Lot[] })[],
+  sectors: UpdateSectorDto[],
+) {
+  const savedSectorIds = new Set(saved.map(({ id }) => id));
+  const savedLots = new Map(saved.flatMap(({ lots }) => lots).map(lot => [lot.id, lot]));
+  const keptLotIds = new Set<number>();
+
+  for (const sector of sectors) {
+    if (sector.id && !savedSectorIds.has(sector.id)) {
+      throw new NotFoundError('Setor não encontrado.');
+    }
+
+    for (const lot of sector.lots.filter(({ id }) => id)) {
+      const savedLot = savedLots.get(lot.id);
+
+      if (!savedLot) {
+        throw new NotFoundError('Lote não encontrado.');
+      }
+
+      const sold = savedLot.quantity - savedLot.quantity_left;
+
+      if (lot.quantity < sold) {
+        throw new BusinessRuleError(
+          `O lote "${savedLot.name}" já vendeu ${sold} ingressos e não pode ter uma quantidade menor que isso.`,
+        );
+      }
+
+      keptLotIds.add(lot.id);
+    }
+  }
+
+  const removedSoldLot = [...savedLots.values()].find(
+    lot => !keptLotIds.has(lot.id) && lot.quantity_left < lot.quantity,
+  );
+
+  if (removedSoldLot) {
+    throw new BusinessRuleError(
+      `O lote "${removedSoldLot.name}" já tem ingressos vendidos e não pode ser removido.`,
+    );
+  }
+}
+
 @Injectable()
 export class EventService {
   constructor(
@@ -61,6 +125,8 @@ export class EventService {
     if (!category) {
       throw new NotFoundError('Categoria não encontrada.');
     }
+
+    validateSalesWindows(createEventDto.sectors, new Date(createEventDto.startDateTime));
 
     return this.repository.create(createEventDto);
   }
@@ -100,42 +166,28 @@ export class EventService {
     return event;
   }
 
-  async buyTicket(buyEventTicket: BuyEventTicketDto) {
-    const { active, start_date, quantity_left } = await this.findById(
-      buyEventTicket.eventId,
-    );
-
-    if (!active) {
-      throw new BusinessRuleError('As vendas deste evento estão encerradas.');
-    }
-
-    if (start_date <= new Date()) {
-      throw new BusinessRuleError(
-        'Não é possível comprar ingressos para um evento que já começou.',
-      );
-    }
-
-    if (buyEventTicket.quantity > quantity_left) {
-      throw new BusinessRuleError(
-        'Não há ingressos suficientes disponíveis para esta compra.',
-      );
-    }
-
-    return this.repository.buyTicket(buyEventTicket);
-  }
-
   async update(id: number, userId: number, updateEventDto: UpdateEventDto) {
-    const { user_id, capacity, quantity_left } = await this.findById(id);
+    const event = await this.findById(id);
 
-    const ticketsPurchased = capacity - quantity_left;
-
-    if (userId !== user_id) {
+    if (userId !== event.user_id) {
       throw new ForbiddenError('Você não pode editar um evento que não é seu.');
     }
 
-    if (ticketsPurchased > updateEventDto.capacity) {
-      throw new BusinessRuleError(
-        'A capacidade do evento não pode ser menor do que a quantidade de ingressos já comprados.',
+    if (updateEventDto.sectors) {
+      validateSectorChanges(event.sectors, updateEventDto.sectors);
+    }
+
+    if (updateEventDto.sectors || updateEventDto.startDateTime) {
+      validateSalesWindows(
+        updateEventDto.sectors ??
+          event.sectors.map(({ lots }) => ({
+            lots: lots.map(({ name, sales_start, sales_end }) => ({
+              name,
+              salesStart: sales_start,
+              salesEnd: sales_end,
+            })),
+          })),
+        new Date(updateEventDto.startDateTime ?? event.start_date),
       );
     }
 
@@ -153,13 +205,28 @@ export class EventService {
   }
 
   async delete(id: number, userId: number) {
-    const { user_id } = await this.findById(id);
+    const { user_id, active, start_date } = await this.findById(id);
 
     if (userId !== user_id) {
       throw new ForbiddenError('Você não pode deletar um evento que não é seu.');
     }
 
-    return this.repository.delete(id);
+    // Só um evento que ainda não aconteceu é cancelado (com estorno dos pedidos);
+    // apagar um evento passado apenas o esconde
+    return this.repository.delete(id, active && start_date > new Date());
+  }
+
+  async getLotSales(requester: Requester, eventId: number) {
+    const event = await this.findById(eventId);
+
+    if (event.user_id !== requester.id) {
+      throw new ForbiddenError('Você só pode ver as vendas dos seus eventos.');
+    }
+
+    return buildSectorSales(
+      event.sectors,
+      await this.repository.getTicketStatsByLot(eventId),
+    );
   }
 
   async getOrganizerMetrics(

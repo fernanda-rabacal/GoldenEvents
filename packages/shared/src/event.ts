@@ -1,3 +1,4 @@
+import type { Sector } from './lot.js';
 import type { User } from './user.js';
 
 export interface EventCategory {
@@ -15,7 +16,8 @@ export interface Event {
   start_date: string;
   end_date: string;
   photo: string;
-  price: number;
+  // Menor preço entre os lotes com estoque, em centavos
+  min_price: number;
   category_id: number;
   user_id: number;
   location: string;
@@ -25,6 +27,7 @@ export interface Event {
   created_at: string;
   category?: EventCategory;
   user?: Pick<User, 'id' | 'name'>;
+  sectors?: Sector[];
 }
 
 export interface PaymentMethod {

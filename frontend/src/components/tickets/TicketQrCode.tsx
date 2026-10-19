@@ -5,13 +5,18 @@ import QRCode from 'qrcode';
 type TicketQrCodeProps = {
   code: string;
   size: number;
+  label?: string;
 };
 
-export function TicketQrCode({ code, size }: TicketQrCodeProps) {
+export function TicketQrCode({
+  code,
+  size,
+  label = `QR code do ingresso ${code}`,
+}: TicketQrCodeProps) {
   return (
     <canvas
       role='img'
-      aria-label={`QR code do ingresso ${code}`}
+      aria-label={label}
       width={size}
       height={size}
       className='rounded-lg'

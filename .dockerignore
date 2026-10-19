@@ -3,6 +3,7 @@
 **/.next
 **/coverage
 **/.env
+**/.env*.local
 **/*.tsbuildinfo
 .turbo
 **/.turbo

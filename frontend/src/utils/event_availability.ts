@@ -1,7 +1,27 @@
 import dayjs from 'dayjs';
-import type { Event } from '@golden-events/shared';
+import {
+  getCurrentLot,
+  type Event,
+  type Lot,
+  type LotStatus,
+  type Sector,
+} from '@golden-events/shared';
 
 const MAX_TICKETS_PER_ORDER = 10;
+const LOW_STOCK_THRESHOLD = 10;
+
+export type SectorOffer = {
+  sector: Sector;
+  lot: Lot | null;
+  status: LotStatus;
+};
+
+export function getSectorOffers(event: Event): SectorOffer[] {
+  return (event.sectors ?? []).map((sector) => ({
+    sector,
+    ...getCurrentLot(sector.lots),
+  }));
+}
 
 export function getUnavailableReason(event: Event) {
   if (!event.active) {
@@ -12,11 +32,55 @@ export function getUnavailableReason(event: Event) {
     return 'Evento encerrado';
   }
 
-  if (event.quantity_left <= 0) {
-    return 'Esgotado';
+  const offers = getSectorOffers(event);
+
+  if (offers.some(({ status }) => status === 'on_sale')) {
+    return undefined;
   }
+
+  return offers.some(({ status }) => status === 'not_started')
+    ? 'Vendas em breve'
+    : 'Esgotado';
 }
 
-export function getMaxTicketQuantity(event: Event) {
-  return Math.max(0, Math.min(event.quantity_left, MAX_TICKETS_PER_ORDER));
+// Só o lote da vez de cada setor pode ser comprado
+export function findOfferOnSale(event: Event, lotId: number) {
+  return getSectorOffers(event).find(
+    ({ lot, status }) => status === 'on_sale' && lot?.id === lotId,
+  );
+}
+
+// Qualquer lote, à venda ou não: é o caso do lote que o próprio pedido em aberto esgotou
+export function findLot(event: Event, lotId: number) {
+  for (const sector of event.sectors ?? []) {
+    const lot = sector.lots.find(({ id }) => id === lotId);
+
+    if (lot) {
+      return { sector, lot };
+    }
+  }
+
+  return undefined;
+}
+
+// O estoque só aparece quando está acabando. Com outro lote na fila, o setor não esgota: só este preço
+export function getLowStockWarning({ sector, lot, status }: SectorOffer) {
+  if (status !== 'on_sale' || !lot || lot.quantity_left > LOW_STOCK_THRESHOLD) {
+    return null;
+  }
+
+  const remaining =
+    lot.quantity_left === 1
+      ? 'Resta apenas 1 ingresso'
+      : `Restam apenas ${lot.quantity_left} ingressos`;
+  const hasNextLot = sector.lots.some(
+    ({ position, quantity_left }) =>
+      position > lot.position && quantity_left > 0,
+  );
+
+  return hasNextLot ? `${remaining} neste lote` : remaining;
+}
+
+export function getMaxTicketQuantity(lot: Pick<Lot, 'quantity_left'>) {
+  return Math.max(0, Math.min(lot.quantity_left, MAX_TICKETS_PER_ORDER));
 }

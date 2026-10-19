@@ -31,7 +31,7 @@ export function SelectField({
         id={selectId}
         aria-invalid={Boolean(error)}
         aria-describedby={error ? errorId : undefined}
-        className='w-full rounded-2xl border border-input bg-card px-4 py-3.5 text-body text-foreground transition outline-none focus:border-ring focus:ring-2 focus:ring-ring/40 aria-invalid:border-destructive'
+        className='w-full rounded-md border border-input bg-card px-2 py-2.5 text-body-sm text-foreground transition outline-none focus:border-ring focus:ring-2 focus:ring-ring/40 aria-invalid:border-destructive'
         {...selectProps}
       >
         {children}

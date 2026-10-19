@@ -6,18 +6,18 @@ export type ActionResult = {
   message: string;
 };
 
+export type DataActionResult<T> =
+  | { success: true; message: string; data: T }
+  | { success: false; message: string };
+
 const SESSION_EXPIRED_MESSAGE = 'Sua sessão expirou. Entre novamente.';
 
 // Leitura autenticada para server components: sempre atualizada, sem cache
-export async function fetchWithAuth<T>(path: string, fallback: T) {
+export async function fetchWithAuth<T>(path: string) {
   const token = await getAuthToken();
 
-  if (!token) {
-    return fallback;
-  }
-
-  return fetchFromApi<T>(path, fallback, {
-    headers: { Authorization: `Bearer ${token}` },
+  return fetchFromApi<T>(path, {
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     cache: 'no-store',
   });
 }
@@ -29,13 +29,30 @@ export async function sendWithAuth(
   body: object | undefined,
   fallbackMessage: string,
 ): Promise<ActionResult> {
+  const { success, message } = await sendWithAuthForData(
+    path,
+    method,
+    body,
+    fallbackMessage,
+  );
+
+  return { success, message };
+}
+
+// Como sendWithAuth, mas também devolve o data da resposta: só para o que o navegador precisa ver
+export async function sendWithAuthForData<T>(
+  path: string,
+  method: 'POST' | 'PATCH' | 'DELETE',
+  body: object | undefined,
+  fallbackMessage: string,
+): Promise<DataActionResult<T>> {
   const token = await getAuthToken();
 
   if (!token) {
     return { success: false, message: SESSION_EXPIRED_MESSAGE };
   }
 
-  const response = await sendToApi(path, method, body, token);
+  const response = await sendToApi<{ data: T }>(path, method, body, token);
 
   if (!response) {
     return { success: false, message: SERVER_UNREACHABLE_MESSAGE };
@@ -51,5 +68,9 @@ export async function sendWithAuth(
     };
   }
 
-  return { success: true, message: response.message ?? fallbackMessage };
+  return {
+    success: true,
+    message: response.message ?? fallbackMessage,
+    data: response.data.data,
+  };
 }
