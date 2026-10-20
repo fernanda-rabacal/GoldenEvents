@@ -21,4 +21,21 @@ export default tseslint.config(
       'prettier/prettier': ['error', { endOfLine: 'auto' }],
     },
   },
+  {
+    files: ['src/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              regex: '^(\\.\\.?/)+(app/)?(auth|user|event|sales|billing)/(?!index\\.js$)',
+              message:
+                'Importe outro módulo só pelo index.ts dele (ver "Module boundaries" no ARCHITECTURE.md).',
+            },
+          ],
+        },
+      ],
+    },
+  },
 );

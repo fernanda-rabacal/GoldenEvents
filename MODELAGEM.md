@@ -689,7 +689,7 @@ Uma funcionalidade nova deve entrar adicionando código, não editando o que já
 3. **Consumidores idempotentes.** Todo consumidor grava `(consumer, message_id)` em `processed_messages` na mesma transação do seu efeito. Reentregar uma mensagem nunca causa efeito duplo.
 4. **Snapshot de tudo que vira dinheiro.** Preço unitário, descontos e taxa são gravados no pedido. Regras podem mudar; o passado não.
 5. **Perguntar pela capacidade, nunca pelo nome do plano.** `has('presale_access')`, e não `plan.name === 'Ouro'`. Planos mudam de nome; capacidades permanecem.
-6. **Módulo dono dos próprios dados.** Cada módulo expõe uma fachada (`billing/index.ts`) e é proibido importar de `billing/infra` ou ler as tabelas dele. Ferramentas como `dependency-cruiser` ou `eslint-plugin-boundaries` validam isso no CI.
+6. **Módulo dono dos próprios dados.** Cada módulo expõe uma fachada (`billing/index.ts`) e é proibido importar de `billing/infra` ou ler as tabelas dele. No backend, a regra `no-restricted-imports` do `eslint.config.mjs` valida os imports no CI. A leitura das tabelas de outro módulo não tem verificação automática e fica para a revisão de código.
 
 ### Estrutura de pastas por módulo
 

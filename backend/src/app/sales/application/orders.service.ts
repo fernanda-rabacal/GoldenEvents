@@ -18,12 +18,12 @@ import { OrdersRepository } from '../infra/orders.repository.js';
 import { OrderExpirationService } from './order-expiration.service.js';
 import { OrderLifecycle, ORDER_TX_OPTIONS } from './order-lifecycle.service.js';
 import { BillingService } from '../../billing/index.js';
-import { TicketInventoryService } from '../../event/ticket-inventory.service.js';
+import { TicketInventoryService } from '../../event/index.js';
 import { BusinessRuleError } from '../../common/errors/types/BusinessRuleError.js';
 import { ConflictError } from '../../common/errors/types/ConflictError.js';
 import { ForbiddenError } from '../../common/errors/types/ForbiddenError.js';
 import { NotFoundError } from '../../common/errors/types/NotFoundError.js';
-import type { Requester } from '../../user/user.service.js';
+import type { Requester } from '../../common/auth/requester.js';
 import { PrismaService } from '../../../db/prisma.service.js';
 
 const STATUS_CHANGED = 'O status do pedido acabou de mudar. Atualize a página.';

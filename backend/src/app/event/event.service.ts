@@ -17,7 +17,7 @@ import { BusinessRuleError } from '../common/errors/types/BusinessRuleError.js';
 import { ForbiddenError } from '../common/errors/types/ForbiddenError.js';
 import { NotFoundError } from '../common/errors/types/NotFoundError.js';
 import { OffsetPagination } from '../../response/pagination.response.js';
-import type { Requester } from '../user/user.service.js';
+import type { Requester } from '../common/auth/requester.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const COMPARISON_DAYS = 30;

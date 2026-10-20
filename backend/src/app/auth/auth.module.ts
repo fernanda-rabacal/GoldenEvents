@@ -7,7 +7,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { LocalStrategy } from './strategy/local.strategy.js';
 import { JwtStrategy } from './strategy/jwt.strategy.js';
-import { UserModule } from '../user/user.module.js';
+import { UserModule } from '../user/index.js';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { RateLimitModule } from '../../shared/rate-limit/rate-limit.module.js';
 

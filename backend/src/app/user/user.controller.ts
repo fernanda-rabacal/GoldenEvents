@@ -8,12 +8,13 @@ import {
   UseGuards,
   Req,
 } from '@nestjs/common';
-import { UserService, type Requester } from './user.service.js';
+import { UserService } from './user.service.js';
+import type { Requester } from '../common/auth/requester.js';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
 import { MessageResponse } from '../../response/message.response.js';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guard/jwt.guard.js';
+import { JwtAuthGuard } from '../common/auth/jwt.guard.js';
 import { Request } from 'express';
 import { RateLimit } from '../../shared/rate-limit/rate-limit.guard.js';
 

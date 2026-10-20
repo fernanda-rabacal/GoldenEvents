@@ -1,7 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { OrderLifecycle } from './order-lifecycle.service.js';
 import { OrdersRepository } from '../infra/orders.repository.js';
-import { EVENT_CANCELLED, type EventCancelledPayload } from '../../event/event.events.js';
+import { EVENT_CANCELLED, type EventCancelledPayload } from '../../event/index.js';
 import {
   DomainEventBus,
   type DomainEventConsumer,

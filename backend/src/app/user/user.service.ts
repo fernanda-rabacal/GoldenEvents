@@ -5,15 +5,13 @@ import { UserRepository } from './repositories/user.repository.js';
 import { BusinessRuleError } from '../common/errors/types/BusinessRuleError.js';
 import { ForbiddenError } from '../common/errors/types/ForbiddenError.js';
 import { NotFoundError } from '../common/errors/types/NotFoundError.js';
+import type { Requester } from '../common/auth/requester.js';
 import { UserTypeEnum } from './entities/user.entity.js';
 import { compareEncrypedData } from '../../util/crypt.js';
 import {
   RateLimitService,
   type RateLimitRule,
 } from '../../shared/rate-limit/rate-limit.service.js';
-
-// Usuário autenticado (req.user)
-export type Requester = { id: number; user_type_id: number };
 
 // Com um token roubado, a senha atual é a última barreira: não pode ser adivinhada à vontade
 export const CURRENT_PASSWORD_FAILURES: RateLimitRule = {
