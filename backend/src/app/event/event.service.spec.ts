@@ -135,7 +135,6 @@ describe('EventService', () => {
     name: 'Teste evento',
     description: 'teste unitário',
     startDateTime: new Date(Date.now() + 30 * DAY_MS).toISOString(),
-    userId: 1,
     categoryId: 1,
     location: 'Rua do limoeiro, 12',
     sectors: [
@@ -156,6 +155,16 @@ describe('EventService', () => {
     const event = await service.create(organizer, createEventData);
 
     expect(event).toStrictEqual(expectedOutputEvent);
+  });
+
+  it('should save the event under the requester', async () => {
+    prisma.event.create.mockResolvedValueOnce(expectedOutputEvent);
+
+    await service.create({ ...organizer, id: 7 }, createEventData);
+
+    expect(prisma.event.create.mock.calls[0][0].data).toEqual(
+      expect.objectContaining({ user_id: 7 }),
+    );
   });
 
   it('should create the sectors and lots with the event totals', async () => {
@@ -273,7 +282,7 @@ describe('EventService', () => {
     prisma.event.findFirst.mockResolvedValueOnce(expectedOutputEvent);
     prisma.event.update.mockResolvedValueOnce(expectedOutputEvent);
 
-    await service.update(1, 1, { subtitle });
+    await service.update(organizer, 1, { subtitle });
 
     expect(prisma.event.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ subtitle: saved }) }),
@@ -284,7 +293,7 @@ describe('EventService', () => {
     prisma.event.findFirst.mockResolvedValueOnce(expectedOutputEvent);
     prisma.event.update.mockResolvedValueOnce(expectedOutputEvent);
 
-    await service.update(1, 1, { name: 'Outro nome' });
+    await service.update(organizer, 1, { name: 'Outro nome' });
 
     expect(prisma.event.update.mock.calls[0][0].data).not.toHaveProperty('subtitle');
   });
@@ -298,7 +307,7 @@ describe('EventService', () => {
     prisma.event.findFirst.mockResolvedValueOnce(expectedOutputEvent);
     prisma.event.update.mockResolvedValueOnce(newUpdatedEvent);
 
-    const updatedEvent = await service.update(1, 1, updateEventData);
+    const updatedEvent = await service.update(organizer, 1, updateEventData);
 
     expect(updatedEvent).toStrictEqual(newUpdatedEvent);
     expect(prisma.sector.deleteMany).not.toHaveBeenCalled();
@@ -307,7 +316,9 @@ describe('EventService', () => {
   it('should throw a ForbiddenError on different user_id for update event', async () => {
     prisma.event.findFirst.mockResolvedValueOnce(expectedOutputEvent);
 
-    await expect(service.update(1, 2, updateEventData)).rejects.toThrow(
+    await expect(
+      service.update({ ...organizer, id: 2 }, 1, updateEventData),
+    ).rejects.toThrow(
       new ForbiddenError('Você não pode editar um evento que não é seu.'),
     );
   });
@@ -348,7 +359,7 @@ describe('EventService', () => {
     });
 
     async function updateSectors(sectors: UpdateSectorDto[]) {
-      return service.update(1, 1, { sectors });
+      return service.update(organizer, 1, { sectors });
     }
 
     beforeEach(() => {
@@ -466,7 +477,7 @@ describe('EventService', () => {
       });
 
       await expect(
-        service.update(1, 1, {
+        service.update(organizer, 1, {
           startDateTime: new Date(Date.now() + 5 * DAY_MS).toISOString(),
         }),
       ).rejects.toThrow(
@@ -490,7 +501,7 @@ describe('EventService', () => {
 
     prisma.event.findFirst.mockResolvedValueOnce(expectedOutputEvent);
 
-    await expect(service.update(1, 1, wrongEndDatePayload)).rejects.toThrow(
+    await expect(service.update(organizer, 1, wrongEndDatePayload)).rejects.toThrow(
       new BusinessRuleError(
         'A data final do evento não pode ser antes da data de início.',
       ),
@@ -501,7 +512,7 @@ describe('EventService', () => {
     prisma.event.findFirst.mockResolvedValueOnce(expectedOutputEvent);
     prisma.event.update.mockResolvedValue({ ...expectedOutputEvent, active: false });
 
-    const event = await service.delete(1, 1);
+    const event = await service.delete(organizer, 1);
 
     expect(event).toHaveProperty('active', false);
     expect(prisma.outboxMessage.create).not.toHaveBeenCalled();
@@ -511,7 +522,7 @@ describe('EventService', () => {
     prisma.event.findFirst.mockResolvedValueOnce(upcomingEvent());
     prisma.event.update.mockResolvedValue({ ...expectedOutputEvent, active: false });
 
-    await service.delete(1, 1);
+    await service.delete(organizer, 1);
 
     expect(prisma.outboxMessage.create).toHaveBeenCalledWith({
       data: { event_type: EVENT_CANCELLED, payload: { eventId: 1 } },
@@ -521,7 +532,7 @@ describe('EventService', () => {
   it('should throw a ForbiddenError on delete an event', async () => {
     prisma.event.findFirst.mockResolvedValueOnce(expectedOutputEvent);
 
-    await expect(service.delete(1, 2)).rejects.toThrow(
+    await expect(service.delete({ ...organizer, id: 2 }, 1)).rejects.toThrow(
       new ForbiddenError('Você não pode deletar um evento que não é seu.'),
     );
   });

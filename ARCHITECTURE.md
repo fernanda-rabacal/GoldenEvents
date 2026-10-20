@@ -177,7 +177,7 @@ backend/src/
 │   ├── sales/           orders, tickets, expiration (domain/, application/, infra/, index.ts)
 │   ├── billing/         charges, refunds, disputes, webhooks, gateways (same layout)
 │   └── common/
-│       ├── auth/        JwtAuthGuard, Requester type
+│       ├── auth/        JwtAuthGuard, @CurrentUser(), Requester type, admin policies
 │       └── errors/      domain error types, DomainErrorFilter, Prisma error helpers
 ├── shared/              outbox, BullMQ queues, domain event bus, maintenance sweeps,
 │                        rate limit, state machine helper
@@ -212,7 +212,7 @@ backend/src/
 - Services (`application/` in sales and billing) hold business rules and permission checks. Pure rules with no I/O go in `domain/` when the module has one.
 - **The service owns the transaction.** When a use case writes several things atomically, the service opens `prisma.$transaction` and passes `tx` to the repositories and to other modules' facades (for example `TicketInventoryService.reserve(tx, ...)`). Repositories run the queries and are the only layer that builds Prisma queries.
 - **Domain events are emitted by services.** `outbox.add(tx, ...)` is called from the service, in the same transaction as the change it announces, never from a repository.
-- Permission checks take a `Requester` (`{ id, user_type_id }`, from `app/common/auth/`), not a bare user id.
+- Permission checks take a `Requester` (`{ id, user_type_id }`, from `app/common/auth/`), not a bare user id. Controllers read it with `@CurrentUser()`, never from `req.user`.
 
 Each provider is declared in exactly one module. Declaring it again in another module's `providers` creates a second instance:
 
@@ -253,7 +253,7 @@ Prisma errors are converted first (`handleDatabaseErrors`, for example P2002 bec
 - Deactivated users cannot log in. When the email does not exist, bcrypt still runs against a dummy hash, so the response time does not reveal which emails have an account.
 - Protected routes use `JwtAuthGuard` (passport-jwt, `Bearer` header). On every request, `AuthService.validateSession` rejects the token if the user was deactivated or changed the password after the token was issued (`User.password_changed_at`, compared with `iat` in seconds).
 - Passwords have 8 to 72 characters (`PASSWORD_MIN_LENGTH` / `PASSWORD_MAX_LENGTH`; bcrypt ignores anything past 72 bytes). Changing it requires `currentPassword`, and only the user can change their own password.
-- There is no roles guard. Services receive a `Requester` (`{ id, user_type_id }`) and check permissions themselves. For example:
+- There is no roles guard. Controllers get the `Requester` (`{ id, user_type_id }`) with `@CurrentUser()`. The decorator copies only those two fields from `req.user`, and answers 401 when the route has no `JwtAuthGuard`. Services receive it and check permissions themselves, using `isAdmin` / `assertAdmin` from `app/common/auth/policies.ts` and `canManageEvents` from `packages/shared`. For example:
   - Users can only read or edit their own profile unless they are admins.
   - Only admins can list the users (`GET /users` returns emails and CPFs) and activate or deactivate accounts. Admins cannot deactivate themselves.
   - Only admins can grant the admin type.
@@ -502,4 +502,3 @@ On a failure, Playwright keeps a trace and a screenshot in `e2e/test-results/` a
   - `EventRepository` (organizer metrics, lot sales) and `UserRepository` (`GET /users/me/tickets`) read the `ticket` table, which belongs to sales.
   - `EventRepository.delete` writes `events.event_cancelled` to the outbox.
   - Repositories in `user` and `event` receive DTOs, and so do the sales services `OrdersService` and `OrganizerSalesService`.
-  - `EventService.update` and `delete` take a user id instead of a `Requester`.

@@ -1,13 +1,4 @@
-import {
-  Get,
-  Post,
-  Body,
-  Param,
-  Controller,
-  Patch,
-  UseGuards,
-  Req,
-} from '@nestjs/common';
+import { Get, Post, Body, Param, Controller, Patch, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service.js';
 import type { Requester } from '../common/auth/requester.js';
 import { CreateUserDto } from './dto/create-user.dto.js';
@@ -15,7 +6,7 @@ import { UpdateUserDto } from './dto/update-user.dto.js';
 import { MessageResponse } from '../../response/message.response.js';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../common/auth/jwt.guard.js';
-import { Request } from 'express';
+import { CurrentUser } from '../common/auth/current-user.decorator.js';
 import { RateLimit } from '../../shared/rate-limit/rate-limit.guard.js';
 
 @ApiTags('User')
@@ -26,15 +17,15 @@ export class UserController {
   @Get()
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  async findAll(@Req() req: Request) {
-    return await this.userService.findAll(req.user as Requester);
+  async findAll(@CurrentUser() requester: Requester) {
+    return await this.userService.findAll(requester);
   }
 
   @Get('/token')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  async getMe(@Req() req: Request) {
-    return await this.userService.findById((req.user as { id: number }).id);
+  async getMe(@CurrentUser() requester: Requester) {
+    return await this.userService.findById(requester.id);
   }
 
   @Get('/types')
@@ -45,15 +36,15 @@ export class UserController {
   @Get('/me/tickets')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  async getMyTickets(@Req() req: Request) {
-    return await this.userService.getUserTickets((req.user as Requester).id);
+  async getMyTickets(@CurrentUser() requester: Requester) {
+    return await this.userService.getUserTickets(requester.id);
   }
 
   @Get('/:id')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  async findById(@Param('id') id: string, @Req() req: Request) {
-    return await this.userService.findProfile(req.user as Requester, +id);
+  async findById(@Param('id') id: string, @CurrentUser() requester: Requester) {
+    return await this.userService.findProfile(requester, +id);
   }
 
   @Post()
@@ -74,20 +65,20 @@ export class UserController {
   async update(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
-    @Req() req: Request,
+    @CurrentUser() requester: Requester,
   ) {
-    return await this.userService.update(req.user as Requester, +id, updateUserDto);
+    return await this.userService.update(requester, +id, updateUserDto);
   }
 
   @Patch('/:id/active')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  async toggleActiveUser(@Param('id') id: string, @Req() req: Request) {
+  async toggleActiveUser(@Param('id') id: string, @CurrentUser() requester: Requester) {
     const activeMessage = {
       true: 'ativado',
       false: 'desativado',
     };
-    const user = await this.userService.toggleActiveUser(req.user as Requester, +id);
+    const user = await this.userService.toggleActiveUser(requester, +id);
 
     return new MessageResponse(
       `Usuário ${activeMessage[String(user.active)]} com sucesso.`,

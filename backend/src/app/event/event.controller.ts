@@ -7,7 +7,6 @@ import {
   Post,
   UseGuards,
   Body,
-  Req,
   Patch,
   ParseIntPipe,
 } from '@nestjs/common';
@@ -19,7 +18,7 @@ import { QueryMetricsDto } from './dto/query-metrics.dto.js';
 import type { Requester } from '../common/auth/requester.js';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../common/auth/jwt.guard.js';
-import { Request } from 'express';
+import { CurrentUser } from '../common/auth/current-user.decorator.js';
 import { MessageResponse } from '../../response/message.response.js';
 import { CategoryService } from './category.service.js';
 import { PaymentMethodService } from './payment-method.service.js';
@@ -51,15 +50,18 @@ export class EventController {
   @Get('/me')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  async findMine(@Query() query: QueryEventDto, @Req() req: Request) {
-    return await this.eventService.findAll(query, req.user['id']);
+  async findMine(@Query() query: QueryEventDto, @CurrentUser() requester: Requester) {
+    return await this.eventService.findAll(query, requester.id);
   }
 
   @Get('/me/metrics')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  async getMyMetrics(@Query() query: QueryMetricsDto, @Req() req: Request) {
-    return await this.eventService.getOrganizerMetrics(req.user as Requester, query.days);
+  async getMyMetrics(
+    @Query() query: QueryMetricsDto,
+    @CurrentUser() requester: Requester,
+  ) {
+    return await this.eventService.getOrganizerMetrics(requester, query.days);
   }
 
   @Get('/payment-methods')
@@ -80,17 +82,21 @@ export class EventController {
   @Get('/:id/lots/sales')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  async getLotSales(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
-    return this.eventService.getLotSales(req.user as Requester, id);
+  async getLotSales(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() requester: Requester,
+  ) {
+    return this.eventService.getLotSales(requester, id);
   }
 
   @Post()
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  async create(@Req() req: Request, @Body() createEventDto: CreateEventDto) {
-    createEventDto.userId = req.user['id'];
-
-    const event = await this.eventService.create(req.user as Requester, createEventDto);
+  async create(
+    @CurrentUser() requester: Requester,
+    @Body() createEventDto: CreateEventDto,
+  ) {
+    const event = await this.eventService.create(requester, createEventDto);
 
     return new MessageResponse('Evento cadastrado com sucesso.', event);
   }
@@ -101,18 +107,17 @@ export class EventController {
   async update(
     @Param('id') id: string,
     @Body() updateEventDto: UpdateEventDto,
-    @Req() req: Request,
+    @CurrentUser() requester: Requester,
   ) {
-    const userId = req.user['id'];
-    const event = await this.eventService.update(+id, userId, updateEventDto);
+    const event = await this.eventService.update(requester, +id, updateEventDto);
+
     return new MessageResponse('Evento atualizado com sucesso.', event);
   }
 
   @Delete('/:id')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  async delete(@Param('id') id: number, @Req() req: Request) {
-    const userId = req.user['id'];
-    return this.eventService.delete(+id, userId);
+  async delete(@Param('id') id: number, @CurrentUser() requester: Requester) {
+    return this.eventService.delete(requester, +id);
   }
 }

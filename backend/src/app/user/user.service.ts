@@ -6,6 +6,7 @@ import { BusinessRuleError } from '../common/errors/types/BusinessRuleError.js';
 import { ForbiddenError } from '../common/errors/types/ForbiddenError.js';
 import { NotFoundError } from '../common/errors/types/NotFoundError.js';
 import type { Requester } from '../common/auth/requester.js';
+import { assertAdmin, isAdmin } from '../common/auth/policies.js';
 import { UserTypeEnum } from './entities/user.entity.js';
 import { compareEncrypedData } from '../../util/crypt.js';
 import {
@@ -20,16 +21,6 @@ export const CURRENT_PASSWORD_FAILURES: RateLimitRule = {
   windowMs: 15 * 60_000,
   message: 'Muitas tentativas com a senha atual errada.',
 };
-
-function isAdmin(requester: Requester) {
-  return requester.user_type_id === UserTypeEnum.ADMIN;
-}
-
-function assertAdmin(requester: Requester) {
-  if (!isAdmin(requester)) {
-    throw new ForbiddenError('Somente administradores podem fazer isso.');
-  }
-}
 
 @Injectable()
 export class UserService {

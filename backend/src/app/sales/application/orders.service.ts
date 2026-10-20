@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { UserTypeEnum } from '@golden-events/shared';
 import {
   calculatePrice,
   checkBuyerCancellation,
@@ -24,6 +23,7 @@ import { ConflictError } from '../../common/errors/types/ConflictError.js';
 import { ForbiddenError } from '../../common/errors/types/ForbiddenError.js';
 import { NotFoundError } from '../../common/errors/types/NotFoundError.js';
 import type { Requester } from '../../common/auth/requester.js';
+import { isAdmin } from '../../common/auth/policies.js';
 import { PrismaService } from '../../../db/prisma.service.js';
 
 const STATUS_CHANGED = 'O status do pedido acabou de mudar. Atualize a página.';
@@ -183,9 +183,7 @@ export class OrdersService {
       throw new NotFoundError('Pedido não encontrado.');
     }
 
-    const isAdmin = requester.user_type_id === UserTypeEnum.ADMIN;
-
-    if (order.buyer_id !== requester.id && !(adminCanRead && isAdmin)) {
+    if (order.buyer_id !== requester.id && !(adminCanRead && isAdmin(requester))) {
       throw new ForbiddenError('Você só pode acessar os seus próprios pedidos.');
     }
 
