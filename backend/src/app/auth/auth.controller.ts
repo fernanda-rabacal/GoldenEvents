@@ -10,9 +10,9 @@ import {
 import { Request } from 'express';
 import { AuthLoginDto } from './dto/auth-login.dto.js';
 import { AuthService } from './auth.service.js';
-import { AuthTokenDto } from './dto/auth-token.dto.js';
+import { TokenPayload } from './token-payload.js';
 import { RefreshTokenDto } from './dto/refresh-token.dto.js';
-import { TokenResponse } from '../../response/token.response.js';
+import { TokenResponse } from '../common/http/token.response.js';
 import { ApiTags } from '@nestjs/swagger';
 import { LocalAuthGuard } from './guard/local.guard.js';
 import { RateLimit } from '../../shared/rate-limit/rate-limit.guard.js';
@@ -35,7 +35,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async login(@Req() req: Request, @Body() { keepConnected }: AuthLoginDto) {
     const session = await this.authService.startSession(
-      req.user as AuthTokenDto,
+      req.user as TokenPayload,
       keepConnected,
     );
 

@@ -3,8 +3,8 @@ import {
   MAX_TICKETS_PER_BUYER_PER_EVENT,
   MAX_TICKETS_PER_ORDER,
 } from '@golden-events/shared';
-import { BusinessRuleError } from '../../common/errors/types/BusinessRuleError.js';
-import { NotFoundError } from '../../common/errors/types/NotFoundError.js';
+import { BusinessRuleError } from '../../common/errors/types/business-rule.error.js';
+import { NotFoundError } from '../../common/errors/types/not-found.error.js';
 
 export const NOT_ENOUGH_TICKETS =
   'Não há ingressos suficientes disponíveis para esta compra.';

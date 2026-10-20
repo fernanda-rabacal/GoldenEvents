@@ -4,7 +4,7 @@ import { IsIn } from 'class-validator';
 import { WebhookIngestionService } from '../../application/webhook-ingestion.service.js';
 import { BillingRepository } from '../billing.repository.js';
 import { FakeGateway } from '../gateways/fake.gateway.js';
-import { NotFoundError } from '../../../common/errors/types/NotFoundError.js';
+import { NotFoundError } from '../../../common/errors/types/not-found.error.js';
 
 class CloseDisputeDto {
   @ApiProperty({ enum: ['won', 'lost'] })

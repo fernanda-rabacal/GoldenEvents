@@ -3,7 +3,7 @@ import { UserService } from './user.service.js';
 import type { Requester } from '../common/auth/requester.js';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
-import { MessageResponse } from '../../response/message.response.js';
+import { MessageResponse } from '../common/http/message.response.js';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../common/auth/jwt.guard.js';
 import { CurrentUser } from '../common/auth/current-user.decorator.js';

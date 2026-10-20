@@ -1,6 +1,6 @@
 import { UserTypeEnum } from '@golden-events/shared';
 import { assertAdmin, isAdmin } from './policies.js';
-import { ForbiddenError } from '../errors/types/ForbiddenError.js';
+import { ForbiddenError } from '../errors/types/forbidden.error.js';
 
 describe('policies', () => {
   const admin = { id: 1, user_type_id: UserTypeEnum.ADMIN };

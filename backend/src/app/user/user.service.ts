@@ -1,14 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto.js';
-import { UpdateUserDto } from './dto/update-user.dto.js';
+import type { CreateUserInput, UpdateUserInput } from './user-inputs.js';
 import { UserRepository } from './repositories/user.repository.js';
-import { BusinessRuleError } from '../common/errors/types/BusinessRuleError.js';
-import { ForbiddenError } from '../common/errors/types/ForbiddenError.js';
-import { NotFoundError } from '../common/errors/types/NotFoundError.js';
+import { BusinessRuleError } from '../common/errors/types/business-rule.error.js';
+import { ForbiddenError } from '../common/errors/types/forbidden.error.js';
+import { NotFoundError } from '../common/errors/types/not-found.error.js';
 import type { Requester } from '../common/auth/requester.js';
 import { assertAdmin, isAdmin } from '../common/auth/policies.js';
-import { UserTypeEnum } from './entities/user.entity.js';
-import { compareEncrypedData } from '../../util/crypt.js';
+import { UserTypeEnum } from '@golden-events/shared';
+import { compareEncrypedData } from '../common/utils/crypt.util.js';
 import {
   RateLimitService,
   type RateLimitRule,
@@ -29,8 +28,8 @@ export class UserService {
     private readonly rateLimit: RateLimitService,
   ) {}
 
-  async create(createUserDto: CreateUserDto) {
-    return this.repository.create(createUserDto);
+  async create(input: CreateUserInput) {
+    return this.repository.create(input);
   }
 
   // Devolve e-mail e CPF de todo mundo: só para administradores
@@ -84,20 +83,20 @@ export class UserService {
     return this.findById(userId);
   }
 
-  async update(requester: Requester, userId: number, updateUserDto: UpdateUserDto) {
+  async update(requester: Requester, userId: number, input: UpdateUserInput) {
     this.assertCanAccessUser(requester, userId);
 
-    if (updateUserDto.userTypeId === UserTypeEnum.ADMIN && !isAdmin(requester)) {
+    if (input.userTypeId === UserTypeEnum.ADMIN && !isAdmin(requester)) {
       throw new ForbiddenError(
         'Somente administradores podem conceder o perfil de administrador.',
       );
     }
 
-    if (updateUserDto.password !== undefined) {
-      await this.assertCurrentPassword(requester, userId, updateUserDto.currentPassword);
+    if (input.password !== undefined) {
+      await this.assertCurrentPassword(requester, userId, input.currentPassword);
     }
 
-    return this.repository.update(userId, updateUserDto);
+    return this.repository.update(userId, input);
   }
 
   async toggleActiveUser(requester: Requester, id: number) {

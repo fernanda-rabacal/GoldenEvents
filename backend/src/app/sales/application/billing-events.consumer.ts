@@ -1,12 +1,12 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
-import { OrderLifecycle, ORDER_TX_OPTIONS } from './order-lifecycle.service.js';
+import { OrderLifecycle, ORDER_TX_OPTIONS } from './order-lifecycle.js';
 import { BILLING_EVENTS, type ChargeEventPayload } from '../../billing/index.js';
 import { PrismaService } from '../../../db/prisma.service.js';
 import {
   DomainEventBus,
   type DomainEventConsumer,
-} from '../../../shared/messaging/domain-event-bus.service.js';
+} from '../../../shared/messaging/domain-event-bus.js';
 import {
   OutboxService,
   type OutboxMessage,

@@ -1,7 +1,7 @@
 import type { ExecutionContext } from '@nestjs/common';
 import { ROUTE_ARGS_METADATA } from '@nestjs/common/constants.js';
 import { CurrentUser } from './current-user.decorator.js';
-import { UnauthorizedError } from '../errors/types/UnauthorizedError.js';
+import { UnauthorizedError } from '../errors/types/unauthorized.error.js';
 
 function currentUserFactory() {
   class Controller {

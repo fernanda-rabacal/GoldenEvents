@@ -7,7 +7,7 @@ import { INestApplication } from '@nestjs/common';
 import { CreateUserDto } from '../src/app/user/dto/create-user.dto.js';
 import request from 'supertest';
 import { PrismaClient } from '@prisma/client';
-import { UserTypeEnum } from '../src/app/user/entities/user.entity.js';
+import { UserTypeEnum } from '@golden-events/shared';
 import {
   PostgreSqlContainer,
   StartedPostgreSqlContainer,

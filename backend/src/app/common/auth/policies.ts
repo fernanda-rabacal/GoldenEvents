@@ -1,6 +1,6 @@
 import { UserTypeEnum } from '@golden-events/shared';
 import type { Requester } from './requester.js';
-import { ForbiddenError } from '../errors/types/ForbiddenError.js';
+import { ForbiddenError } from '../errors/types/forbidden.error.js';
 
 export function isAdmin(requester: Requester) {
   return requester.user_type_id === UserTypeEnum.ADMIN;

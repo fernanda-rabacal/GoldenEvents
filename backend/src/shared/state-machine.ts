@@ -1,4 +1,4 @@
-import { InvalidTransitionError } from '../app/common/errors/types/InvalidTransitionError.js';
+import { InvalidTransitionError } from '../app/common/errors/types/invalid-transition.error.js';
 
 export type Transitions<S extends string> = Record<S, readonly S[]>;
 

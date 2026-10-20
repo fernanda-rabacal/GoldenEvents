@@ -18,8 +18,14 @@ import {
   type AudienceSort,
   type SalesPeriod,
 } from '@golden-events/shared';
+import type {
+  OrganizerAudienceQuery,
+  OrganizerAudienceSummaryQuery,
+  OrganizerOrdersQuery,
+  OrganizerSummaryQuery,
+} from '../../../application/sales-inputs.js';
 
-export class QueryOrganizerSummaryDto {
+export class QueryOrganizerSummaryDto implements OrganizerSummaryQuery {
   @ApiPropertyOptional()
   @IsOptional()
   @Type(() => Number)
@@ -34,7 +40,10 @@ export class QueryOrganizerSummaryDto {
   days?: SalesPeriod;
 }
 
-export class QueryOrganizerOrdersDto extends QueryOrganizerSummaryDto {
+export class QueryOrganizerOrdersDto
+  extends QueryOrganizerSummaryDto
+  implements OrganizerOrdersQuery
+{
   @ApiPropertyOptional({ enum: OrderStatus })
   @IsOptional()
   @IsEnum(OrderStatus)
@@ -68,7 +77,7 @@ export class QueryOrganizerOrdersDto extends QueryOrganizerSummaryDto {
   take?: number = 10;
 }
 
-export class QueryOrganizerAudienceSummaryDto {
+export class QueryOrganizerAudienceSummaryDto implements OrganizerAudienceSummaryQuery {
   @ApiPropertyOptional()
   @IsOptional()
   @Type(() => Number)
@@ -76,7 +85,10 @@ export class QueryOrganizerAudienceSummaryDto {
   event_id?: number;
 }
 
-export class QueryOrganizerAudienceDto extends QueryOrganizerAudienceSummaryDto {
+export class QueryOrganizerAudienceDto
+  extends QueryOrganizerAudienceSummaryDto
+  implements OrganizerAudienceQuery
+{
   // Nome ou e-mail do comprador
   @ApiPropertyOptional()
   @IsOptional()

@@ -171,24 +171,26 @@ backend/src/
 ├── app/
 │   ├── app.module.ts
 │   ├── auth/            controller, service, dto, guard/ (local), strategy/ (jwt, local), index.ts
-│   ├── user/            controller, service, dto, entities, repositories, index.ts
-│   ├── event/           controller, event/category/payment-method services, dto, repositories,
-│   │                    TicketInventoryService (lot stock and event data for sales), index.ts
+│   ├── user/            controller, service, dto, repositories, index.ts
+│   ├── event/           events, sectors, lots, categories, payment methods (same layout as sales);
+│   │                    TicketInventoryService (lot stock and event data for sales)
 │   ├── sales/           orders, tickets, expiration, organizer metrics
 │   │                    (domain/, application/, infra/, index.ts)
 │   ├── billing/         charges, refunds, disputes, webhooks, gateways (same layout)
 │   └── common/
 │       ├── auth/        JwtAuthGuard, @CurrentUser(), Requester type, admin policies
-│       └── errors/      domain error types, DomainErrorFilter, Prisma error helpers
+│       ├── errors/      domain error types, DomainErrorFilter, Prisma error helpers
+│       ├── http/        message, pagination and token response classes
+│       └── utils/       bcrypt helpers, slug generator
 ├── shared/              outbox, BullMQ queues, domain event bus, maintenance sweeps,
 │                        rate limit, state machine helper
 ├── db/                  PrismaService, global PrismaModule, Prisma mock type for tests
-├── setup-app.ts         global pipe and filter, shared by main.ts and e2e tests
-├── response/            message, pagination and token response classes
-└── util/                bcrypt helpers, slug generator
+└── setup-app.ts         global pipe and filter, shared by main.ts and e2e tests
 ```
 
-`user`, `event` and `auth` follow **Controller → Service → Repository → PrismaService**. `sales` and `billing` follow the layout from `MODELAGEM.md`: `domain/` (rules with no I/O), `application/` (use cases, consumers, workers) and `infra/` (repositories, controllers, gateways). The folder layout may differ between modules. The rules below apply to all of them.
+File names are the exported name in kebab-case plus the Nest role (`order-lifecycle.ts` exports `OrderLifecycle`, `orders.service.ts` exports `OrdersService`, `not-found.error.ts` exports `NotFoundError`). Only classes named `...Service` live in `*.service.ts`.
+
+`user` and `auth` follow **Controller → Service → Repository → PrismaService**. They have almost no domain rules, so the extra folders would not help. `event`, `sales` and `billing` follow the layout from `MODELAGEM.md`: `domain/` (rules with no I/O), `application/` (use cases, consumers, workers) and `infra/` (repositories, controllers, gateways). The folder layout may differ between modules. The rules below apply to all of them.
 
 #### Module boundaries
 
@@ -203,15 +205,15 @@ backend/src/
   | `billing` | `BillingModule`, `BillingService`, `BILLING_EVENTS` |
 
 - A module never reads or writes another module's tables. To combine data from several modules, call the other module's facade, as `OrganizerSalesService` does with `UserService.findContacts` and `TicketInventoryService.findLotLabels`.
-- Code shared by every module lives in `app/common/` (auth guard, `Requester`, errors) or `src/shared/` (outbox, queues, rate limit). It never imports a feature module.
+- Code shared by every module never imports a feature module. Plain helpers and types (auth guard, `Requester`, errors, response classes, utils) go in `app/common/`. Infrastructure with its own Nest module (outbox, queues, messaging, rate limit) goes in `src/shared/`.
 - `no-restricted-imports` in `backend/eslint.config.mjs` fails the lint when a file under `src/` imports another module's internal files. Tests under `test/` are white-box and may import internal files.
 
 #### Layers
 
 - Controllers handle HTTP concerns only: they validate the DTO, read the authenticated user and call a service.
-- **DTOs stay at the HTTP edge.** Services and repositories receive plain input types, not `class-validator` classes. A DTO can `implements` the matching type from `packages/shared`.
+- **DTOs stay at the HTTP edge.** Services and repositories receive plain input types, not `class-validator` classes: `event/application/event-inputs.ts`, `user/user-inputs.ts`, `sales/application/sales-inputs.ts`, or the shared `CreateOrderInput` / `PayOrderInput`. Each DTO `implements` its input type, so the compiler catches a DTO that drifts from what the service expects.
 - Services (`application/` in sales and billing) hold business rules and permission checks. Pure rules with no I/O go in `domain/` when the module has one.
-- **The service owns the transaction.** When a use case writes several things atomically, the service opens `prisma.$transaction` and passes `tx` to the repositories and to other modules' facades (for example `TicketInventoryService.reserve(tx, ...)`). Repositories run the queries and are the only layer that builds Prisma queries.
+- **The service owns the transaction.** When a use case writes through several repositories or modules, or emits an outbox event, the service opens `prisma.$transaction` and passes `tx` to the repositories and to other modules' facades (for example `TicketInventoryService.reserve(tx, ...)`). A repository may open its own transaction only for a write that stays in its own tables, such as `EventRepository.update` locking the event while it syncs sectors and lots. Repositories run the queries and are the only layer that builds Prisma queries.
 - **Domain events are emitted by services.** `outbox.add(tx, ...)` is called from the service, in the same transaction as the change it announces, never from a repository.
 - Permission checks take a `Requester` (`{ id, user_type_id }`, from `app/common/auth/`), not a bare user id. Controllers read it with `@CurrentUser()`, never from `req.user`.
 
@@ -501,6 +503,3 @@ On a failure, Playwright keeps a trace and a screenshot in `e2e/test-results/` a
 - On Railway, `TRUST_PROXY=true` relies on the edge overwriting `X-Forwarded-For`. Railway staff confirm it, but the docs do not promise it. It only affects direct calls to the API: requests from the site use `X-Client-IP`.
 - `POST /users` answers 409 for an email or CPF that is already registered, which tells a visitor that the account exists. The signup rate limit slows this down. Fixing it needs email confirmation, which the project does not have yet.
 - The site's CSP has no `script-src`: restricting scripts needs a per-request nonce, which turns every page into dynamic rendering.
-- Some code still breaks the rules in [Modules](#modules):
-  - `EventRepository.delete` writes `events.event_cancelled` to the outbox.
-  - Repositories in `user` and `event` receive DTOs, and so do the sales services `OrdersService` and `OrganizerSalesService`.

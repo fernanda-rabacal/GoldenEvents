@@ -1,6 +1,6 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { PAYMENT_GATEWAYS, type PaymentGateway } from '../../domain/gateway-port.js';
-import { NotFoundError } from '../../../common/errors/types/NotFoundError.js';
+import { NotFoundError } from '../../../common/errors/types/not-found.error.js';
 
 // Um novo provedor é só mais um adaptador na lista de PAYMENT_GATEWAYS
 @Injectable()

@@ -1,19 +1,19 @@
-import { UniqueConstraintError } from './../common/errors/types/UniqueConstraintError.js';
+import { UniqueConstraintError } from '../common/errors/types/unique-constraint.error.js';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaClient } from '@prisma/client';
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
 import { UserService } from './user.service.js';
 import { CreateUserDto } from './dto/create-user.dto.js';
-import { encryptData } from '../../util/crypt.js';
-import { UserTypeEnum } from './entities/user.entity.js';
+import { encryptData } from '../common/utils/crypt.util.js';
+import { UserTypeEnum } from '@golden-events/shared';
 import { UserRepository } from './repositories/user.repository.js';
 import { PrismaService } from '../../db/prisma.service.js';
 import { PrismaClientMock } from '../../db/prisma.mock.js';
-import { PrismaClientError } from '../common/errors/types/PrismaClientError.js';
+import { PrismaClientError } from '../common/errors/types/prisma-client.error.js';
 import { PrismaErrors } from '../common/errors/utils/handle-database-errors.util.js';
-import { NotFoundError } from '../common/errors/types/NotFoundError.js';
-import { ForbiddenError } from '../common/errors/types/ForbiddenError.js';
-import { BusinessRuleError } from '../common/errors/types/BusinessRuleError.js';
+import { NotFoundError } from '../common/errors/types/not-found.error.js';
+import { ForbiddenError } from '../common/errors/types/forbidden.error.js';
+import { BusinessRuleError } from '../common/errors/types/business-rule.error.js';
 import { RateLimitService } from '../../shared/rate-limit/rate-limit.service.js';
 
 const ADMIN = { id: 2, user_type_id: UserTypeEnum.ADMIN };

@@ -15,7 +15,7 @@ import {
   FakeGateway,
 } from '../src/app/billing/infra/gateways/fake.gateway.js';
 import { EventModule } from '../src/app/event/event.module.js';
-import { EVENT_CANCELLED } from '../src/app/event/event.events.js';
+import { EVENT_CANCELLED } from '../src/app/event/domain/events.js';
 import { EventCancellationConsumer } from '../src/app/sales/application/event-cancellation.consumer.js';
 import { OrderExpirationService } from '../src/app/sales/application/order-expiration.service.js';
 import { OPEN_ORDER_EXISTS } from '../src/app/sales/domain/purchase-policy.js';

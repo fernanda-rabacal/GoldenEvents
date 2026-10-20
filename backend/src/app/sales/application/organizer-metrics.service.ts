@@ -9,8 +9,8 @@ import { buildOrganizerMetrics, metricsWindows } from '../domain/organizer-metri
 import { TicketsRepository } from '../infra/tickets.repository.js';
 import { TicketInventoryService } from '../../event/index.js';
 import type { Requester } from '../../common/auth/requester.js';
-import { ForbiddenError } from '../../common/errors/types/ForbiddenError.js';
-import { NotFoundError } from '../../common/errors/types/NotFoundError.js';
+import { ForbiddenError } from '../../common/errors/types/forbidden.error.js';
+import { NotFoundError } from '../../common/errors/types/not-found.error.js';
 
 // Painel de quem organiza: ingressos vendidos nos próprios eventos
 @Injectable()
