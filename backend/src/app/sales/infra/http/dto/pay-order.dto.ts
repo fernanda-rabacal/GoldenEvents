@@ -1,8 +1,9 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ChargeMethod } from '@prisma/client';
 import { IsEnum, IsNotEmpty, IsString, ValidateIf } from 'class-validator';
+import type { PayOrderInput } from '@golden-events/shared';
 
-export class PayOrderDto {
+export class PayOrderDto implements PayOrderInput {
   @ApiProperty({ enum: ChargeMethod })
   @IsEnum(ChargeMethod)
   method: ChargeMethod;

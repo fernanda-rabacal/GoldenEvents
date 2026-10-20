@@ -1,8 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsDate, IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
+import type { LotInput } from '../../../application/event-inputs.js';
 
-export class CreateLotDto {
+export class CreateLotDto implements LotInput {
   @IsString()
   @IsNotEmpty()
   @ApiProperty()

@@ -9,7 +9,7 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
-import { MAX_TICKETS_PER_ORDER } from '@golden-events/shared';
+import { MAX_TICKETS_PER_ORDER, type CreateOrderInput } from '@golden-events/shared';
 
 export class OrderItemDto {
   @ApiProperty()
@@ -23,7 +23,7 @@ export class OrderItemDto {
   quantity: number;
 }
 
-export class CreateOrderDto {
+export class CreateOrderDto implements CreateOrderInput {
   @ApiProperty({ type: [OrderItemDto] })
   @IsArray()
   @ArrayMinSize(1)

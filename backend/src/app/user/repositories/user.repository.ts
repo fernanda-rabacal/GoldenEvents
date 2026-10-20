@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../db/prisma.service.js';
-import { CreateUserDto } from '../dto/create-user.dto.js';
 import { encryptData } from '../../../util/crypt.js';
 import { UserTypeEnum } from '../entities/user.entity.js';
-import { UpdateUserDto } from '../dto/update-user.dto.js';
+import type { CreateUserInput, UserChanges } from '../user-inputs.js';
 import { Prisma } from '@prisma/client';
 
 function normalizeEmail(email: string) {
@@ -23,16 +22,16 @@ function removePassword<T extends { password: string; password_changed_at: Date 
 export class UserRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(createUserDto: CreateUserDto) {
+  async create(input: CreateUserInput) {
     const user = await this.prisma.user.create({
       data: {
-        name: createUserDto.name,
-        email: normalizeEmail(createUserDto.email),
-        password: await encryptData(createUserDto.password),
-        document: createUserDto.document,
+        name: input.name,
+        email: normalizeEmail(input.email),
+        password: await encryptData(input.password),
+        document: input.document,
         user_type: {
           connect: {
-            id: createUserDto.isOrganizer ? UserTypeEnum.ORGANIZER : UserTypeEnum.USER,
+            id: input.isOrganizer ? UserTypeEnum.ORGANIZER : UserTypeEnum.USER,
           },
         },
       },
@@ -133,19 +132,19 @@ export class UserRepository {
     return userTypes;
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto) {
+  async update(id: number, changes: UserChanges) {
     const data: Prisma.UserUpdateInput = {};
 
-    if (updateUserDto.name) data.name = updateUserDto.name;
-    if (updateUserDto.password) {
-      data.password = await encryptData(updateUserDto.password);
+    if (changes.name) data.name = changes.name;
+    if (changes.password) {
+      data.password = await encryptData(changes.password);
       data.password_changed_at = new Date();
       data.refresh_tokens = { deleteMany: {} };
     }
-    if (updateUserDto.userTypeId) {
+    if (changes.userTypeId) {
       data.user_type = {
         connect: {
-          id: updateUserDto.userTypeId,
+          id: changes.userTypeId,
         },
       };
     }

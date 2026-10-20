@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { canManageEvents } from '@golden-events/shared';
-import { CreateEventDto } from '../infra/http/dto/create-event.dto.js';
-import { UpdateEventDto } from '../infra/http/dto/update-event.dto.js';
-import { QueryEventDto } from '../infra/http/dto/query-event.dto.js';
+import type {
+  CreateEventInput,
+  EventListQuery,
+  UpdateEventInput,
+} from './event-inputs.js';
 import {
   validateEventDates,
   validateSalesWindows,
@@ -27,23 +29,23 @@ export class EventService {
     private readonly outbox: OutboxService,
   ) {}
 
-  async create(requester: Requester, createEventDto: CreateEventDto) {
+  async create(requester: Requester, input: CreateEventInput) {
     if (!canManageEvents(requester.user_type_id)) {
       throw new ForbiddenError('Apenas organizadores podem criar eventos.');
     }
 
-    const category = await this.categoryRepository.findById(createEventDto.categoryId);
+    const category = await this.categoryRepository.findById(input.categoryId);
 
     if (!category) {
       throw new NotFoundError('Categoria não encontrada.');
     }
 
-    validateSalesWindows(createEventDto.sectors, new Date(createEventDto.startDateTime));
+    validateSalesWindows(input.sectors, new Date(input.startDateTime));
 
-    return this.repository.create(requester.id, createEventDto);
+    return this.repository.create(requester.id, input);
   }
 
-  async findAll(query: QueryEventDto, userId?: number) {
+  async findAll(query: EventListQuery, userId?: number) {
     const pagination = OffsetPagination.fromQuery(query);
     const { skip, take } = pagination.filterProps();
     const [total, events] = await this.repository.findPage(query, userId, skip, take);
@@ -71,20 +73,20 @@ export class EventService {
     return event;
   }
 
-  async update(requester: Requester, id: number, updateEventDto: UpdateEventDto) {
+  async update(requester: Requester, id: number, input: UpdateEventInput) {
     const event = await this.findById(id);
 
     if (event.user_id !== requester.id) {
       throw new ForbiddenError('Você não pode editar um evento que não é seu.');
     }
 
-    if (updateEventDto.sectors) {
-      validateSectorChanges(event.sectors, updateEventDto.sectors);
+    if (input.sectors) {
+      validateSectorChanges(event.sectors, input.sectors);
     }
 
-    if (updateEventDto.sectors || updateEventDto.startDateTime) {
+    if (input.sectors || input.startDateTime) {
       validateSalesWindows(
-        updateEventDto.sectors ??
+        input.sectors ??
           event.sectors.map(({ lots }) => ({
             lots: lots.map(({ name, sales_start, sales_end }) => ({
               name,
@@ -92,13 +94,13 @@ export class EventService {
               salesEnd: sales_end,
             })),
           })),
-        new Date(updateEventDto.startDateTime ?? event.start_date),
+        new Date(input.startDateTime ?? event.start_date),
       );
     }
 
-    validateEventDates(updateEventDto.startDateTime, updateEventDto.endDateTime);
+    validateEventDates(input.startDateTime, input.endDateTime);
 
-    return this.repository.update(id, updateEventDto);
+    return this.repository.update(id, input);
   }
 
   async delete(requester: Requester, id: number) {

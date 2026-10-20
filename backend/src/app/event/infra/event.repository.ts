@@ -1,11 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../db/prisma.service.js';
-import { CreateEventDto } from './http/dto/create-event.dto.js';
 import { generateSlug } from '../../../util/slug.js';
-import { QueryEventDto } from './http/dto/query-event.dto.js';
-import { UpdateEventDto } from './http/dto/update-event.dto.js';
-import { CreateLotDto } from './http/dto/lot.dto.js';
-import { UpdateSectorDto } from './http/dto/sector.dto.js';
+import type {
+  CreateEventInput,
+  EventListQuery,
+  LotInput,
+  SectorInput,
+  UpdateEventInput,
+} from '../application/event-inputs.js';
 import { Prisma } from '@prisma/client';
 import { summarizeLots, type EventSort } from '@golden-events/shared';
 
@@ -22,7 +24,7 @@ const SECTORS_WITH_LOTS = {
   include: { lots: { orderBy: [{ position: 'asc' }, { id: 'asc' }] } },
 } satisfies Prisma.Event$sectorsArgs;
 
-function toLotData(lot: CreateLotDto, position: number) {
+function toLotData(lot: LotInput, position: number) {
   return {
     name: lot.name,
     price: lot.price,
@@ -37,25 +39,25 @@ function toLotData(lot: CreateLotDto, position: number) {
 export class EventRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(userId: number, createEventDto: CreateEventDto) {
-    const lots = createEventDto.sectors.flatMap(({ lots }) =>
+  async create(userId: number, input: CreateEventInput) {
+    const lots = input.sectors.flatMap(({ lots }) =>
       lots.map(lot => ({ ...lot, quantity_left: lot.quantity, sales_end: lot.salesEnd })),
     );
 
     const event = await this.prisma.event.create({
       data: {
-        name: createEventDto.name,
-        subtitle: createEventDto.subtitle || null,
-        start_date: createEventDto.startDateTime,
-        end_date: createEventDto.endDateTime,
-        description: createEventDto.description,
-        category_id: createEventDto.categoryId,
+        name: input.name,
+        subtitle: input.subtitle || null,
+        start_date: input.startDateTime,
+        end_date: input.endDateTime,
+        description: input.description,
+        category_id: input.categoryId,
         user_id: userId,
-        location: createEventDto.location,
-        slug: generateSlug(createEventDto.name),
+        location: input.location,
+        slug: generateSlug(input.name),
         ...summarizeLots(lots),
         sectors: {
-          create: createEventDto.sectors.map((sector, position) => ({
+          create: input.sectors.map((sector, position) => ({
             name: sector.name,
             position,
             lots: {
@@ -74,7 +76,7 @@ export class EventRepository {
   }
 
   async findPage(
-    query: QueryEventDto,
+    query: EventListQuery,
     userId: number | undefined,
     skip: number,
     take: number,
@@ -254,47 +256,47 @@ export class EventRepository {
     });
   }
 
-  async update(id: number, updateEventDto: UpdateEventDto) {
+  async update(id: number, input: UpdateEventInput) {
     const data: Prisma.EventUpdateInput = {};
 
-    if (updateEventDto.name) {
-      data.name = updateEventDto.name;
+    if (input.name) {
+      data.name = input.name;
     }
 
     // null (ou texto vazio) remove o subtítulo; ausente mantém o atual
-    if (updateEventDto.subtitle !== undefined) {
-      data.subtitle = updateEventDto.subtitle || null;
+    if (input.subtitle !== undefined) {
+      data.subtitle = input.subtitle || null;
     }
 
-    if (updateEventDto.description) {
-      data.description = updateEventDto.description;
+    if (input.description) {
+      data.description = input.description;
     }
 
-    if (updateEventDto.startDateTime) {
-      data.start_date = updateEventDto.startDateTime;
+    if (input.startDateTime) {
+      data.start_date = input.startDateTime;
     }
 
-    if (updateEventDto.endDateTime) {
-      data.end_date = updateEventDto.endDateTime;
+    if (input.endDateTime) {
+      data.end_date = input.endDateTime;
     }
 
-    if (updateEventDto.categoryId) {
+    if (input.categoryId) {
       data.category = {
         connect: {
-          id: updateEventDto.categoryId,
+          id: input.categoryId,
         },
       };
     }
 
-    if (updateEventDto.location) {
-      data.location = updateEventDto.location;
+    if (input.location) {
+      data.location = input.location;
     }
 
     return this.prisma.$transaction(async tx => {
       await this.lockEvent(tx, id);
 
-      if (updateEventDto.sectors) {
-        await this.syncSectors(tx, id, updateEventDto.sectors);
+      if (input.sectors) {
+        await this.syncSectors(tx, id, input.sectors);
       }
 
       return tx.event.update({
@@ -340,7 +342,7 @@ export class EventRepository {
   private async syncSectors(
     tx: Prisma.TransactionClient,
     eventId: number,
-    sectors: UpdateSectorDto[],
+    sectors: SectorInput[],
   ) {
     const savedLots = await tx.lot.findMany({
       where: { sector: { event_id: eventId } },

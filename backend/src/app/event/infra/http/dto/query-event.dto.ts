@@ -2,8 +2,9 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsIn, IsInt, IsOptional, Min } from 'class-validator';
 import { EVENT_SORT_OPTIONS, type EventSort } from '@golden-events/shared';
+import type { EventListQuery } from '../../../application/event-inputs.js';
 
-export class QueryEventDto {
+export class QueryEventDto implements EventListQuery {
   @IsOptional()
   @ApiProperty()
   name?: string;

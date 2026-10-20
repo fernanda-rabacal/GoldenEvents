@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import type { CreateOrderInput, PayOrderInput } from '@golden-events/shared';
 import {
   calculatePrice,
   checkBuyerCancellation,
@@ -11,8 +12,6 @@ import {
   PIX_EXPIRY_MARGIN_MS,
   RESERVATION_MINUTES,
 } from '../domain/purchase-policy.js';
-import { CreateOrderDto } from '../infra/http/dto/create-order.dto.js';
-import { PayOrderDto } from '../infra/http/dto/pay-order.dto.js';
 import { OrdersRepository } from '../infra/orders.repository.js';
 import { OrderExpirationService } from './order-expiration.service.js';
 import { OrderLifecycle, ORDER_TX_OPTIONS } from './order-lifecycle.service.js';
@@ -39,7 +38,7 @@ export class OrdersService {
     private readonly expiration: OrderExpirationService,
   ) {}
 
-  async create(buyerId: number, { items: requested }: CreateOrderDto) {
+  async create(buyerId: number, { items: requested }: CreateOrderInput) {
     checkRequestedItems(requested);
 
     const event = await this.inventory.findEventByLotIds(
@@ -109,7 +108,7 @@ export class OrdersService {
   async pay(
     requester: Requester,
     orderId: string,
-    { method, paymentToken }: PayOrderDto,
+    { method, paymentToken }: PayOrderInput,
   ) {
     const order = await this.findOrder(requester, orderId);
 

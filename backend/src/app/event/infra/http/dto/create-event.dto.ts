@@ -13,8 +13,9 @@ import {
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import { CreateSectorDto } from './sector.dto.js';
+import type { CreateEventInput } from '../../../application/event-inputs.js';
 
-export class CreateEventDto {
+export class CreateEventDto implements CreateEventInput {
   @IsString()
   @IsNotEmpty()
   @ApiProperty()

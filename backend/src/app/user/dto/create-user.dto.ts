@@ -11,9 +11,11 @@ import {
   Matches,
 } from 'class-validator';
 
+import type { CreateUserInput } from '../user-inputs.js';
+
 export const PASSWORD_LENGTH_MESSAGE = `A senha deve ter entre ${PASSWORD_MIN_LENGTH} e ${PASSWORD_MAX_LENGTH} caracteres.`;
 
-export class CreateUserDto {
+export class CreateUserDto implements CreateUserInput {
   @IsString()
   @IsNotEmpty()
   @ApiProperty()

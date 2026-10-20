@@ -209,7 +209,7 @@ backend/src/
 #### Layers
 
 - Controllers handle HTTP concerns only: they validate the DTO, read the authenticated user and call a service.
-- **DTOs stay at the HTTP edge.** Services and repositories receive plain input types, not `class-validator` classes. A DTO can `implements` the matching type from `packages/shared`.
+- **DTOs stay at the HTTP edge.** Services and repositories receive plain input types, not `class-validator` classes: `event/application/event-inputs.ts`, `user/user-inputs.ts`, `sales/application/sales-inputs.ts`, or the shared `CreateOrderInput` / `PayOrderInput`. Each DTO `implements` its input type, so the compiler catches a DTO that drifts from what the service expects.
 - Services (`application/` in sales and billing) hold business rules and permission checks. Pure rules with no I/O go in `domain/` when the module has one.
 - **The service owns the transaction.** When a use case writes through several repositories or modules, or emits an outbox event, the service opens `prisma.$transaction` and passes `tx` to the repositories and to other modules' facades (for example `TicketInventoryService.reserve(tx, ...)`). A repository may open its own transaction only for a write that stays in its own tables, such as `EventRepository.update` locking the event while it syncs sectors and lots. Repositories run the queries and are the only layer that builds Prisma queries.
 - **Domain events are emitted by services.** `outbox.add(tx, ...)` is called from the service, in the same transaction as the change it announces, never from a repository.
@@ -501,5 +501,3 @@ On a failure, Playwright keeps a trace and a screenshot in `e2e/test-results/` a
 - On Railway, `TRUST_PROXY=true` relies on the edge overwriting `X-Forwarded-For`. Railway staff confirm it, but the docs do not promise it. It only affects direct calls to the API: requests from the site use `X-Client-IP`.
 - `POST /users` answers 409 for an email or CPF that is already registered, which tells a visitor that the account exists. The signup rate limit slows this down. Fixing it needs email confirmation, which the project does not have yet.
 - The site's CSP has no `script-src`: restricting scripts needs a per-request nonce, which turns every page into dynamic rendering.
-- Some code still breaks the rules in [Modules](#modules):
-  - Repositories in `user` and `event` receive DTOs, and so do the sales services `OrdersService` and `OrganizerSalesService`.

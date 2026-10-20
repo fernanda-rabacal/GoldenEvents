@@ -10,8 +10,9 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { CreateLotDto, UpdateLotDto } from './lot.dto.js';
+import type { SectorInput } from '../../../application/event-inputs.js';
 
-export class CreateSectorDto {
+export class CreateSectorDto implements SectorInput {
   @IsString()
   @IsNotEmpty()
   @ApiProperty()
@@ -25,7 +26,7 @@ export class CreateSectorDto {
   lots: CreateLotDto[];
 }
 
-export class UpdateSectorDto {
+export class UpdateSectorDto implements SectorInput {
   // Sem id, o setor é criado
   @IsOptional()
   @IsInt()

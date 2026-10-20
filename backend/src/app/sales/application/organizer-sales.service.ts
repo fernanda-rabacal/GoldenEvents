@@ -7,12 +7,12 @@ import {
   type OrganizerSalesSummary,
   type Page,
 } from '@golden-events/shared';
-import {
-  QueryOrganizerAudienceDto,
-  QueryOrganizerAudienceSummaryDto,
-  QueryOrganizerOrdersDto,
-  QueryOrganizerSummaryDto,
-} from '../infra/http/dto/query-organizer-sales.dto.js';
+import type {
+  OrganizerAudienceQuery,
+  OrganizerAudienceSummaryQuery,
+  OrganizerOrdersQuery,
+  OrganizerSummaryQuery,
+} from './sales-inputs.js';
 import { OrdersRepository } from '../infra/orders.repository.js';
 import { BillingService } from '../../billing/index.js';
 import { TicketInventoryService } from '../../event/index.js';
@@ -41,7 +41,7 @@ export class OrganizerSalesService {
     private readonly users: UserService,
   ) {}
 
-  async listOrders(requester: Requester, query: QueryOrganizerOrdersDto) {
+  async listOrders(requester: Requester, query: OrganizerOrdersQuery) {
     const pagination = OffsetPagination.fromQuery(query);
     const { events, eventIds } = await this.resolveScope(requester, query.event_id);
     const buyerIds =
@@ -116,7 +116,7 @@ export class OrganizerSalesService {
 
   async summarize(
     requester: Requester,
-    query: QueryOrganizerSummaryDto,
+    query: OrganizerSummaryQuery,
   ): Promise<OrganizerSalesSummary> {
     const { eventIds } = await this.resolveScope(requester, query.event_id);
     const totals =
@@ -143,7 +143,7 @@ export class OrganizerSalesService {
 
   async listAudience(
     requester: Requester,
-    query: QueryOrganizerAudienceDto,
+    query: OrganizerAudienceQuery,
   ): Promise<Page<OrganizerAudienceMember>> {
     const pagination = OffsetPagination.fromQuery(query);
     const { eventIds } = await this.resolveScope(requester, query.event_id);
@@ -193,7 +193,7 @@ export class OrganizerSalesService {
 
   async summarizeAudience(
     requester: Requester,
-    query: QueryOrganizerAudienceSummaryDto,
+    query: OrganizerAudienceSummaryQuery,
   ): Promise<OrganizerAudienceSummary> {
     const { eventIds } = await this.resolveScope(requester, query.event_id);
 

@@ -3,10 +3,12 @@ import { Type } from 'class-transformer';
 import { ArrayMinSize, IsArray, IsOptional, ValidateNested } from 'class-validator';
 import { CreateEventDto } from './create-event.dto.js';
 import { UpdateSectorDto } from './sector.dto.js';
+import type { UpdateEventInput } from '../../../application/event-inputs.js';
 
-export class UpdateEventDto extends PartialType(
-  OmitType(CreateEventDto, ['sectors'] as const),
-) {
+export class UpdateEventDto
+  extends PartialType(OmitType(CreateEventDto, ['sectors'] as const))
+  implements UpdateEventInput
+{
   // Ausente mantém os setores atuais; enviado, substitui a lista inteira
   @IsOptional()
   @IsArray()
