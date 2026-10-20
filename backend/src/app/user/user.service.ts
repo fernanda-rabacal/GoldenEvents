@@ -132,26 +132,4 @@ export class UserService {
       throw new BusinessRuleError('A senha atual está incorreta.');
     }
   }
-
-  async getUserTickets(userId: number) {
-    const tickets = await this.repository.getUserTickets(userId);
-    const byEvent = new Map<
-      number,
-      {
-        event: (typeof tickets)[number]['event'];
-        quantity: number;
-        tickets: Omit<(typeof tickets)[number], 'event'>[];
-      }
-    >();
-
-    for (const { event, ...ticket } of tickets) {
-      const group = byEvent.get(event.id) ?? { event, quantity: 0, tickets: [] };
-
-      group.quantity += 1;
-      group.tickets.push(ticket);
-      byEvent.set(event.id, group);
-    }
-
-    return [...byEvent.values()];
-  }
 }

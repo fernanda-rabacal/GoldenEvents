@@ -8,13 +8,11 @@ import {
   UseGuards,
   Body,
   Patch,
-  ParseIntPipe,
 } from '@nestjs/common';
 import { EventService } from './event.service.js';
 import { CreateEventDto } from './dto/create-event.dto.js';
 import { UpdateEventDto } from './dto/update-event.dto.js';
 import { QueryEventDto } from './dto/query-event.dto.js';
-import { QueryMetricsDto } from './dto/query-metrics.dto.js';
 import type { Requester } from '../common/auth/requester.js';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../common/auth/jwt.guard.js';
@@ -54,16 +52,6 @@ export class EventController {
     return await this.eventService.findAll(query, requester.id);
   }
 
-  @Get('/me/metrics')
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
-  async getMyMetrics(
-    @Query() query: QueryMetricsDto,
-    @CurrentUser() requester: Requester,
-  ) {
-    return await this.eventService.getOrganizerMetrics(requester, query.days);
-  }
-
   @Get('/payment-methods')
   async findAllPaymentMethods() {
     return this.paymentMethodService.findAll();
@@ -77,16 +65,6 @@ export class EventController {
   @Get('/:id')
   async findById(@Param('id') id: string) {
     return this.eventService.findById(+id);
-  }
-
-  @Get('/:id/lots/sales')
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
-  async getLotSales(
-    @Param('id', ParseIntPipe) id: number,
-    @CurrentUser() requester: Requester,
-  ) {
-    return this.eventService.getLotSales(requester, id);
   }
 
   @Post()

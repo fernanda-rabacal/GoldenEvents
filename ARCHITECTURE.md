@@ -173,8 +173,9 @@ backend/src/
 │   ├── auth/            controller, service, dto, guard/ (local), strategy/ (jwt, local), index.ts
 │   ├── user/            controller, service, dto, entities, repositories, index.ts
 │   ├── event/           controller, event/category/payment-method services, dto, repositories,
-│   │                    TicketInventoryService (lot stock, used by sales), index.ts
-│   ├── sales/           orders, tickets, expiration (domain/, application/, infra/, index.ts)
+│   │                    TicketInventoryService (lot stock and event data for sales), index.ts
+│   ├── sales/           orders, tickets, expiration, organizer metrics
+│   │                    (domain/, application/, infra/, index.ts)
 │   ├── billing/         charges, refunds, disputes, webhooks, gateways (same layout)
 │   └── common/
 │       ├── auth/        JwtAuthGuard, @CurrentUser(), Requester type, admin policies
@@ -322,6 +323,8 @@ Per host:
 | POST | `/orders/:id/pay`, `/orders/:id/cancel` | JWT (buyer) |
 | POST | `/webhooks/:provider` | Provider signature |
 | POST | `/fake-gateway/charges/:chargeId/pay`, `/fake-gateway/charges/:chargeId/dispute`, `/fake-gateway/disputes/:disputeId/close` | None. Only with `PAYMENT_PROVIDER=fake` and `FAKE_GATEWAY_SIMULATOR=on` |
+
+`GET /users/me/tickets`, `GET /events/me/metrics` and `GET /events/:id/lots/sales` are served by the `sales` module (`TicketsController` and `OrganizerMetricsController`), because they read tickets. They kept their paths so the API did not change.
 
 Sectors and lots travel inside the event payload. `POST /events` requires at least one sector with one lot. On `PATCH /events/:id`, `sectors` replaces the whole list: items with `id` are updated, items without `id` are created and missing ones are deleted, all in one transaction. `DELETE /events/:id` deactivates the event; if it has not started yet, it also cancels its sales (see [Payments](#payments)).
 
@@ -499,6 +502,5 @@ On a failure, Playwright keeps a trace and a screenshot in `e2e/test-results/` a
 - `POST /users` answers 409 for an email or CPF that is already registered, which tells a visitor that the account exists. The signup rate limit slows this down. Fixing it needs email confirmation, which the project does not have yet.
 - The site's CSP has no `script-src`: restricting scripts needs a per-request nonce, which turns every page into dynamic rendering.
 - Some code still breaks the rules in [Modules](#modules):
-  - `EventRepository` (organizer metrics, lot sales) and `UserRepository` (`GET /users/me/tickets`) read the `ticket` table, which belongs to sales.
   - `EventRepository.delete` writes `events.event_cancelled` to the outbox.
   - Repositories in `user` and `event` receive DTOs, and so do the sales services `OrdersService` and `OrganizerSalesService`.
