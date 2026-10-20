@@ -1,4 +1,4 @@
-import { PrismaClientError } from '../types/PrismaClientError.js';
+import { PrismaClientError } from '../types/prisma-client.error.js';
 
 export const isPrismaError = (e: PrismaClientError) => {
   return (

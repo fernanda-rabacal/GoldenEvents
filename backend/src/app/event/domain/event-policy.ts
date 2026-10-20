@@ -1,5 +1,5 @@
-import { BusinessRuleError } from '../../common/errors/types/BusinessRuleError.js';
-import { NotFoundError } from '../../common/errors/types/NotFoundError.js';
+import { BusinessRuleError } from '../../common/errors/types/business-rule.error.js';
+import { NotFoundError } from '../../common/errors/types/not-found.error.js';
 
 type SalesWindow = { name: string; salesStart?: Date | null; salesEnd?: Date | null };
 type SavedLot = { id: number; name: string; quantity: number; quantity_left: number };

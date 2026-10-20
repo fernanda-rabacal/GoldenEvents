@@ -7,9 +7,9 @@ import type {
   WebhookEvent,
   WebhookResource,
 } from '../../domain/gateway-port.js';
-import { BusinessRuleError } from '../../../common/errors/types/BusinessRuleError.js';
-import { NotFoundError } from '../../../common/errors/types/NotFoundError.js';
-import { UnauthorizedError } from '../../../common/errors/types/UnauthorizedError.js';
+import { BusinessRuleError } from '../../../common/errors/types/business-rule.error.js';
+import { NotFoundError } from '../../../common/errors/types/not-found.error.js';
+import { UnauthorizedError } from '../../../common/errors/types/unauthorized.error.js';
 
 export const FAKE_DECLINED_CARD_TOKEN = 'tok_declined';
 export const FAKE_SIGNATURE_HEADER = 'x-fake-signature';

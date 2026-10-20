@@ -1,5 +1,5 @@
 import { CHARGE_TRANSITIONS, REFUND_TRANSITIONS } from './charge-state.js';
-import { InvalidTransitionError } from '../../common/errors/types/InvalidTransitionError.js';
+import { InvalidTransitionError } from '../../common/errors/types/invalid-transition.error.js';
 import { checkTransition } from '../../../shared/state-machine.js';
 
 describe('state machines', () => {

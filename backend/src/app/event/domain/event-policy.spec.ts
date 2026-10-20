@@ -3,8 +3,8 @@ import {
   validateSalesWindows,
   validateSectorChanges,
 } from './event-policy.js';
-import { BusinessRuleError } from '../../common/errors/types/BusinessRuleError.js';
-import { NotFoundError } from '../../common/errors/types/NotFoundError.js';
+import { BusinessRuleError } from '../../common/errors/types/business-rule.error.js';
+import { NotFoundError } from '../../common/errors/types/not-found.error.js';
 
 const EVENT_START = new Date('2026-12-01T20:00:00Z');
 

@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import type { CreateUserInput, UpdateUserInput } from './user-inputs.js';
 import { UserRepository } from './repositories/user.repository.js';
-import { BusinessRuleError } from '../common/errors/types/BusinessRuleError.js';
-import { ForbiddenError } from '../common/errors/types/ForbiddenError.js';
-import { NotFoundError } from '../common/errors/types/NotFoundError.js';
+import { BusinessRuleError } from '../common/errors/types/business-rule.error.js';
+import { ForbiddenError } from '../common/errors/types/forbidden.error.js';
+import { NotFoundError } from '../common/errors/types/not-found.error.js';
 import type { Requester } from '../common/auth/requester.js';
 import { assertAdmin, isAdmin } from '../common/auth/policies.js';
-import { UserTypeEnum } from './entities/user.entity.js';
-import { compareEncrypedData } from '../../util/crypt.js';
+import { UserTypeEnum } from '@golden-events/shared';
+import { compareEncrypedData } from '../common/utils/crypt.util.js';
 import {
   RateLimitService,
   type RateLimitRule,

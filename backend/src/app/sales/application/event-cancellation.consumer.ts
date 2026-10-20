@@ -1,11 +1,11 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { OrderLifecycle } from './order-lifecycle.service.js';
+import { OrderLifecycle } from './order-lifecycle.js';
 import { OrdersRepository } from '../infra/orders.repository.js';
 import { EVENT_CANCELLED, type EventCancelledPayload } from '../../event/index.js';
 import {
   DomainEventBus,
   type DomainEventConsumer,
-} from '../../../shared/messaging/domain-event-bus.service.js';
+} from '../../../shared/messaging/domain-event-bus.js';
 import type { OutboxMessage } from '../../../shared/outbox/outbox.service.js';
 
 const BATCH_SIZE = 100;

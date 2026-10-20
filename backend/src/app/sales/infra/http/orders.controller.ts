@@ -23,7 +23,7 @@ import { OrganizerSalesService } from '../../application/organizer-sales.service
 import { JwtAuthGuard } from '../../../common/auth/jwt.guard.js';
 import { CurrentUser } from '../../../common/auth/current-user.decorator.js';
 import type { Requester } from '../../../common/auth/requester.js';
-import { MessageResponse } from '../../../../response/message.response.js';
+import { MessageResponse } from '../../../common/http/message.response.js';
 import { RateLimit } from '../../../../shared/rate-limit/rate-limit.guard.js';
 
 @ApiTags('Order')

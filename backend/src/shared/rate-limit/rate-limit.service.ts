@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { Redis } from 'ioredis';
-import { TooManyRequestsError } from '../../app/common/errors/types/TooManyRequestsError.js';
+import { TooManyRequestsError } from '../../app/common/errors/types/too-many-requests.error.js';
 
 export type RateLimitRule = {
   name: string;

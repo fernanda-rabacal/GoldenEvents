@@ -1,7 +1,7 @@
 import { createParamDecorator, type ExecutionContext } from '@nestjs/common';
 import type { Request } from 'express';
 import type { Requester } from './requester.js';
-import { UnauthorizedError } from '../errors/types/UnauthorizedError.js';
+import { UnauthorizedError } from '../errors/types/unauthorized.error.js';
 
 // Usuário que o JwtAuthGuard pôs em req.user. Sem o guard na rota, req.user fica vazio
 export const CurrentUser = createParamDecorator(

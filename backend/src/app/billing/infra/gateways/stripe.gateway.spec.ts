@@ -1,7 +1,7 @@
 import { mockDeep, type DeepMockProxy } from 'jest-mock-extended';
 import Stripe from 'stripe';
 import { StripeGateway } from './stripe.gateway.js';
-import { UnauthorizedError } from '../../../common/errors/types/UnauthorizedError.js';
+import { UnauthorizedError } from '../../../common/errors/types/unauthorized.error.js';
 
 const card = {
   amountCents: 9000,

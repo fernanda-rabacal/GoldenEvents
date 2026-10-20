@@ -14,13 +14,13 @@ import {
 } from '../domain/purchase-policy.js';
 import { OrdersRepository } from '../infra/orders.repository.js';
 import { OrderExpirationService } from './order-expiration.service.js';
-import { OrderLifecycle, ORDER_TX_OPTIONS } from './order-lifecycle.service.js';
+import { OrderLifecycle, ORDER_TX_OPTIONS } from './order-lifecycle.js';
 import { BillingService } from '../../billing/index.js';
 import { TicketInventoryService } from '../../event/index.js';
-import { BusinessRuleError } from '../../common/errors/types/BusinessRuleError.js';
-import { ConflictError } from '../../common/errors/types/ConflictError.js';
-import { ForbiddenError } from '../../common/errors/types/ForbiddenError.js';
-import { NotFoundError } from '../../common/errors/types/NotFoundError.js';
+import { BusinessRuleError } from '../../common/errors/types/business-rule.error.js';
+import { ConflictError } from '../../common/errors/types/conflict.error.js';
+import { ForbiddenError } from '../../common/errors/types/forbidden.error.js';
+import { NotFoundError } from '../../common/errors/types/not-found.error.js';
 import type { Requester } from '../../common/auth/requester.js';
 import { isAdmin } from '../../common/auth/policies.js';
 import { PrismaService } from '../../../db/prisma.service.js';

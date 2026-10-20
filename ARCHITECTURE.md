@@ -171,7 +171,7 @@ backend/src/
 ├── app/
 │   ├── app.module.ts
 │   ├── auth/            controller, service, dto, guard/ (local), strategy/ (jwt, local), index.ts
-│   ├── user/            controller, service, dto, entities, repositories, index.ts
+│   ├── user/            controller, service, dto, repositories, index.ts
 │   ├── event/           events, sectors, lots, categories, payment methods (same layout as sales);
 │   │                    TicketInventoryService (lot stock and event data for sales)
 │   ├── sales/           orders, tickets, expiration, organizer metrics
@@ -179,14 +179,16 @@ backend/src/
 │   ├── billing/         charges, refunds, disputes, webhooks, gateways (same layout)
 │   └── common/
 │       ├── auth/        JwtAuthGuard, @CurrentUser(), Requester type, admin policies
-│       └── errors/      domain error types, DomainErrorFilter, Prisma error helpers
+│       ├── errors/      domain error types, DomainErrorFilter, Prisma error helpers
+│       ├── http/        message, pagination and token response classes
+│       └── utils/       bcrypt helpers, slug generator
 ├── shared/              outbox, BullMQ queues, domain event bus, maintenance sweeps,
 │                        rate limit, state machine helper
 ├── db/                  PrismaService, global PrismaModule, Prisma mock type for tests
-├── setup-app.ts         global pipe and filter, shared by main.ts and e2e tests
-├── response/            message, pagination and token response classes
-└── util/                bcrypt helpers, slug generator
+└── setup-app.ts         global pipe and filter, shared by main.ts and e2e tests
 ```
+
+File names are the exported name in kebab-case plus the Nest role (`order-lifecycle.ts` exports `OrderLifecycle`, `orders.service.ts` exports `OrdersService`, `not-found.error.ts` exports `NotFoundError`). Only classes named `...Service` live in `*.service.ts`.
 
 `user` and `auth` follow **Controller → Service → Repository → PrismaService**. They have almost no domain rules, so the extra folders would not help. `event`, `sales` and `billing` follow the layout from `MODELAGEM.md`: `domain/` (rules with no I/O), `application/` (use cases, consumers, workers) and `infra/` (repositories, controllers, gateways). The folder layout may differ between modules. The rules below apply to all of them.
 
@@ -203,7 +205,7 @@ backend/src/
   | `billing` | `BillingModule`, `BillingService`, `BILLING_EVENTS` |
 
 - A module never reads or writes another module's tables. To combine data from several modules, call the other module's facade, as `OrganizerSalesService` does with `UserService.findContacts` and `TicketInventoryService.findLotLabels`.
-- Code shared by every module lives in `app/common/` (auth guard, `Requester`, errors) or `src/shared/` (outbox, queues, rate limit). It never imports a feature module.
+- Code shared by every module never imports a feature module. Plain helpers and types (auth guard, `Requester`, errors, response classes, utils) go in `app/common/`. Infrastructure with its own Nest module (outbox, queues, messaging, rate limit) goes in `src/shared/`.
 - `no-restricted-imports` in `backend/eslint.config.mjs` fails the lint when a file under `src/` imports another module's internal files. Tests under `test/` are white-box and may import internal files.
 
 #### Layers

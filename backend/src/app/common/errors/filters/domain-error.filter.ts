@@ -13,15 +13,15 @@ import {
 } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
 import type { Response } from 'express';
-import { BusinessRuleError } from '../types/BusinessRuleError.js';
-import { ConflictError } from '../types/ConflictError.js';
-import { DomainError } from '../types/DomainError.js';
-import { ForbiddenError } from '../types/ForbiddenError.js';
-import { NotFoundError } from '../types/NotFoundError.js';
-import { PaymentProviderError } from '../types/PaymentProviderError.js';
-import { PrismaClientError } from '../types/PrismaClientError.js';
-import { TooManyRequestsError } from '../types/TooManyRequestsError.js';
-import { UnauthorizedError } from '../types/UnauthorizedError.js';
+import { BusinessRuleError } from '../types/business-rule.error.js';
+import { ConflictError } from '../types/conflict.error.js';
+import { DomainError } from '../types/domain.error.js';
+import { ForbiddenError } from '../types/forbidden.error.js';
+import { NotFoundError } from '../types/not-found.error.js';
+import { PaymentProviderError } from '../types/payment-provider.error.js';
+import { PrismaClientError } from '../types/prisma-client.error.js';
+import { TooManyRequestsError } from '../types/too-many-requests.error.js';
+import { UnauthorizedError } from '../types/unauthorized.error.js';
 import { handleDatabaseErrors } from '../utils/handle-database-errors.util.js';
 import { isPrismaError } from '../utils/is-prisma-error.util.js';
 

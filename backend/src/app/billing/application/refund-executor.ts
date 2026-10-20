@@ -2,12 +2,12 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { BILLING_EVENTS, type RefundEventPayload } from '../domain/events.js';
 import { BillingRepository } from '../infra/billing.repository.js';
 import { GatewayRegistry } from '../infra/gateways/gateway-registry.js';
-import { ChargeLifecycle } from './charge-lifecycle.service.js';
+import { ChargeLifecycle } from './charge-lifecycle.js';
 import { PrismaService } from '../../../db/prisma.service.js';
 import {
   DomainEventBus,
   type DomainEventConsumer,
-} from '../../../shared/messaging/domain-event-bus.service.js';
+} from '../../../shared/messaging/domain-event-bus.js';
 import type { OutboxMessage } from '../../../shared/outbox/outbox.service.js';
 
 // Pede o estorno ao provedor. Repetir é seguro: a chave de idempotência do estorno

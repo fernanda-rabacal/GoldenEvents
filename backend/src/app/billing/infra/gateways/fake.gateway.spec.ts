@@ -3,7 +3,7 @@ import {
   FAKE_SIGNATURE_HEADER,
   FakeGateway,
 } from './fake.gateway.js';
-import { UnauthorizedError } from '../../../common/errors/types/UnauthorizedError.js';
+import { UnauthorizedError } from '../../../common/errors/types/unauthorized.error.js';
 
 const card = {
   amountCents: 9000,

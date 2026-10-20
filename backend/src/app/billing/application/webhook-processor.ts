@@ -3,7 +3,7 @@ import type { PaymentGateway, WebhookResource } from '../domain/gateway-port.js'
 import { BillingRepository } from '../infra/billing.repository.js';
 import { GatewayRegistry } from '../infra/gateways/gateway-registry.js';
 import { WebhookEventsRepository } from '../infra/webhook-events.repository.js';
-import { ChargeLifecycle } from './charge-lifecycle.service.js';
+import { ChargeLifecycle } from './charge-lifecycle.js';
 import { WebhookIngestionService } from './webhook-ingestion.service.js';
 import { PrismaService } from '../../../db/prisma.service.js';
 import { MaintenanceService } from '../../../shared/messaging/maintenance.service.js';

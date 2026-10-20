@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { encryptData } from '../../src/util/crypt.js';
+import { encryptData } from '../../src/app/common/utils/crypt.util.js';
 
 export async function createUsers(prisma: PrismaClient) {
   const password = await encryptData('123456');

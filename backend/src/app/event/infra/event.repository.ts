@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../db/prisma.service.js';
-import { generateSlug } from '../../../util/slug.js';
+import { generateSlug } from '../../common/utils/slug.util.js';
 import type {
   CreateEventInput,
   EventListQuery,

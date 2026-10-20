@@ -17,7 +17,7 @@ import type { Requester } from '../../../common/auth/requester.js';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../common/auth/jwt.guard.js';
 import { CurrentUser } from '../../../common/auth/current-user.decorator.js';
-import { MessageResponse } from '../../../../response/message.response.js';
+import { MessageResponse } from '../../../common/http/message.response.js';
 import { CategoryService } from '../../application/category.service.js';
 import { PaymentMethodService } from '../../application/payment-method.service.js';
 

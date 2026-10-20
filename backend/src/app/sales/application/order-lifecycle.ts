@@ -4,7 +4,7 @@ import { ORDER_TRANSITIONS, SALES_EVENTS } from '../domain/order-state.js';
 import { OrdersRepository } from '../infra/orders.repository.js';
 import { BillingService, type ChargeEventPayload } from '../../billing/index.js';
 import { TicketInventoryService } from '../../event/index.js';
-import { BusinessRuleError } from '../../common/errors/types/BusinessRuleError.js';
+import { BusinessRuleError } from '../../common/errors/types/business-rule.error.js';
 import { PrismaService } from '../../../db/prisma.service.js';
 import { OutboxService } from '../../../shared/outbox/outbox.service.js';
 import { checkTransition } from '../../../shared/state-machine.js';

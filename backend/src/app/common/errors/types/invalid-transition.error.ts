@@ -1,4 +1,4 @@
-import { ConflictError } from './ConflictError.js';
+import { ConflictError } from './conflict.error.js';
 
 export class InvalidTransitionError extends ConflictError {
   constructor(

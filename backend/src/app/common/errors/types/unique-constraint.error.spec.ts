@@ -1,5 +1,5 @@
-import { UniqueConstraintError } from './UniqueConstraintError.js';
-import { PrismaClientError } from './PrismaClientError.js';
+import { UniqueConstraintError } from './unique-constraint.error.js';
+import { PrismaClientError } from './prisma-client.error.js';
 import { PrismaErrors } from '../utils/handle-database-errors.util.js';
 
 function prismaUniqueError(target: string | string[]): PrismaClientError {

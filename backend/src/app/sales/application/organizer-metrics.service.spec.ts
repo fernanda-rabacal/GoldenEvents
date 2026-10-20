@@ -3,8 +3,8 @@ import { UserTypeEnum } from '@golden-events/shared';
 import { OrganizerMetricsService } from './organizer-metrics.service.js';
 import { TicketsRepository } from '../infra/tickets.repository.js';
 import { TicketInventoryService } from '../../event/index.js';
-import { ForbiddenError } from '../../common/errors/types/ForbiddenError.js';
-import { NotFoundError } from '../../common/errors/types/NotFoundError.js';
+import { ForbiddenError } from '../../common/errors/types/forbidden.error.js';
+import { NotFoundError } from '../../common/errors/types/not-found.error.js';
 
 const ORGANIZER = { id: 1, user_type_id: UserTypeEnum.ORGANIZER };
 const BUYER = { id: 9, user_type_id: UserTypeEnum.USER };

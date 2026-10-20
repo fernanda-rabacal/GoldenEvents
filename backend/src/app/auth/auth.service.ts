@@ -6,14 +6,14 @@ import {
 import { createHash, randomBytes, randomUUID } from 'crypto';
 import { UserService } from '../user/index.js';
 import { JwtService } from '@nestjs/jwt';
-import { AuthTokenDto } from './dto/auth-token.dto.js';
-import { compareEncrypedData, encryptData } from '../../util/crypt.js';
+import { TokenPayload } from './token-payload.js';
+import { compareEncrypedData, encryptData } from '../common/utils/crypt.util.js';
 import {
   RateLimitService,
   type RateLimitRule,
 } from '../../shared/rate-limit/rate-limit.service.js';
 import { RefreshTokenRepository } from './repositories/refresh-token.repository.js';
-import { UnauthorizedError } from '../common/errors/types/UnauthorizedError.js';
+import { UnauthorizedError } from '../common/errors/types/unauthorized.error.js';
 
 // Conta só as senhas erradas, por e-mail: protege a conta mesmo quando o atacante troca de IP
 export const LOGIN_FAILURES: RateLimitRule = {
@@ -103,13 +103,13 @@ export class AuthService {
     return user;
   }
 
-  createToken({ id, name, email }: AuthTokenDto) {
-    const authTokenDto: AuthTokenDto = { id, name, email };
+  createToken({ id, name, email }: TokenPayload) {
+    const payload: TokenPayload = { id, name, email };
 
-    return this.jwtService.sign(authTokenDto, { expiresIn: ACCESS_TOKEN_TTL_SECONDS });
+    return this.jwtService.sign(payload, { expiresIn: ACCESS_TOKEN_TTL_SECONDS });
   }
 
-  async startSession(user: AuthTokenDto, keepConnected = false, now = new Date()) {
+  async startSession(user: TokenPayload, keepConnected = false, now = new Date()) {
     await this.refreshTokens.deleteExpired(user.id, now);
 
     return this.issueSession(user, randomUUID(), keepConnected, now);
@@ -152,7 +152,7 @@ export class AuthService {
   }
 
   private async issueSession(
-    user: AuthTokenDto,
+    user: TokenPayload,
     familyId: string,
     keepConnected: boolean,
     now: Date,

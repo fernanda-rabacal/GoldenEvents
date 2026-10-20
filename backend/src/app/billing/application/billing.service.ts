@@ -10,13 +10,13 @@ import { ACTIVE_CHARGE_STATUSES, PAID_CHARGE_STATUSES } from '../domain/charge-s
 import { BILLING_EVENTS, chargeEventPayload } from '../domain/events.js';
 import { BillingRepository } from '../infra/billing.repository.js';
 import { GatewayRegistry } from '../infra/gateways/gateway-registry.js';
-import { ChargeLifecycle } from './charge-lifecycle.service.js';
+import { ChargeLifecycle } from './charge-lifecycle.js';
 import { PrismaService } from '../../../db/prisma.service.js';
 import { OutboxService } from '../../../shared/outbox/outbox.service.js';
-import { BusinessRuleError } from '../../common/errors/types/BusinessRuleError.js';
-import { ConflictError } from '../../common/errors/types/ConflictError.js';
-import { DomainError } from '../../common/errors/types/DomainError.js';
-import { PaymentProviderError } from '../../common/errors/types/PaymentProviderError.js';
+import { BusinessRuleError } from '../../common/errors/types/business-rule.error.js';
+import { ConflictError } from '../../common/errors/types/conflict.error.js';
+import { DomainError } from '../../common/errors/types/domain.error.js';
+import { PaymentProviderError } from '../../common/errors/types/payment-provider.error.js';
 import {
   RateLimitService,
   type RateLimitRule,

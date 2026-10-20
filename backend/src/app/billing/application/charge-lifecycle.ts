@@ -21,7 +21,7 @@ import {
   type RefundEventPayload,
 } from '../domain/events.js';
 import { BillingRepository } from '../infra/billing.repository.js';
-import { InvalidTransitionError } from '../../common/errors/types/InvalidTransitionError.js';
+import { InvalidTransitionError } from '../../common/errors/types/invalid-transition.error.js';
 import { OutboxService } from '../../../shared/outbox/outbox.service.js';
 import { checkTransition } from '../../../shared/state-machine.js';
 

@@ -4,7 +4,7 @@ import { OrganizerSalesService } from './organizer-sales.service.js';
 import { OrdersRepository } from '../infra/orders.repository.js';
 import { BillingService } from '../../billing/index.js';
 import { TicketInventoryService } from '../../event/index.js';
-import { ForbiddenError } from '../../common/errors/types/ForbiddenError.js';
+import { ForbiddenError } from '../../common/errors/types/forbidden.error.js';
 import { UserService } from '../../user/index.js';
 
 const ORGANIZER = { id: 1, user_type_id: UserTypeEnum.ORGANIZER };

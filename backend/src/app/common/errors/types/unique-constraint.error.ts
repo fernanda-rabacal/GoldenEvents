@@ -1,5 +1,5 @@
-import { ConflictError } from './ConflictError.js';
-import { PrismaClientError } from './PrismaClientError.js';
+import { ConflictError } from './conflict.error.js';
+import { PrismaClientError } from './prisma-client.error.js';
 
 const UNIQUE_FIELD_MESSAGES: Record<string, string> = {
   email: 'Já existe uma conta cadastrada com este e-mail.',

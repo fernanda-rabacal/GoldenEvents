@@ -1,5 +1,5 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { OrderLifecycle, ORDER_TX_OPTIONS } from './order-lifecycle.service.js';
+import { OrderLifecycle, ORDER_TX_OPTIONS } from './order-lifecycle.js';
 import { OrdersRepository } from '../infra/orders.repository.js';
 import { BillingService } from '../../billing/index.js';
 import { PrismaService } from '../../../db/prisma.service.js';

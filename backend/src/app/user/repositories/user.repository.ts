@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../db/prisma.service.js';
-import { encryptData } from '../../../util/crypt.js';
-import { UserTypeEnum } from '../entities/user.entity.js';
+import { encryptData } from '../../common/utils/crypt.util.js';
+import { UserTypeEnum } from '@golden-events/shared';
 import type { CreateUserInput, UserChanges } from '../user-inputs.js';
 import { Prisma } from '@prisma/client';
 

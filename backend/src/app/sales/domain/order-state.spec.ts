@@ -1,5 +1,5 @@
 import { ORDER_TRANSITIONS } from './order-state.js';
-import { InvalidTransitionError } from '../../common/errors/types/InvalidTransitionError.js';
+import { InvalidTransitionError } from '../../common/errors/types/invalid-transition.error.js';
 import { checkTransition } from '../../../shared/state-machine.js';
 
 describe('order state machine', () => {

@@ -13,10 +13,10 @@ import {
 import { EVENT_CANCELLED } from '../domain/events.js';
 import { CategoryRepository } from '../infra/category.repository.js';
 import { EventRepository } from '../infra/event.repository.js';
-import { ForbiddenError } from '../../common/errors/types/ForbiddenError.js';
-import { NotFoundError } from '../../common/errors/types/NotFoundError.js';
+import { ForbiddenError } from '../../common/errors/types/forbidden.error.js';
+import { NotFoundError } from '../../common/errors/types/not-found.error.js';
 import type { Requester } from '../../common/auth/requester.js';
-import { OffsetPagination } from '../../../response/pagination.response.js';
+import { OffsetPagination } from '../../common/http/pagination.response.js';
 import { OutboxService } from '../../../shared/outbox/outbox.service.js';
 import { PrismaService } from '../../../db/prisma.service.js';
 

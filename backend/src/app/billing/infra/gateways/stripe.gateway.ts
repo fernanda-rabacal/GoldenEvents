@@ -7,7 +7,7 @@ import type {
   WebhookEvent,
   WebhookResource,
 } from '../../domain/gateway-port.js';
-import { UnauthorizedError } from '../../../common/errors/types/UnauthorizedError.js';
+import { UnauthorizedError } from '../../../common/errors/types/unauthorized.error.js';
 
 export const STRIPE_CLIENT = Symbol('STRIPE_CLIENT');
 

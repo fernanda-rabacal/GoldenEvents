@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { BillingEventsConsumer } from './application/billing-events.consumer.js';
 import { EventCancellationConsumer } from './application/event-cancellation.consumer.js';
 import { OrderExpirationService } from './application/order-expiration.service.js';
-import { OrderLifecycle } from './application/order-lifecycle.service.js';
+import { OrderLifecycle } from './application/order-lifecycle.js';
 import { OrdersService } from './application/orders.service.js';
 import { OrganizerMetricsService } from './application/organizer-metrics.service.js';
 import { OrganizerSalesService } from './application/organizer-sales.service.js';

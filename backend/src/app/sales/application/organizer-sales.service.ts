@@ -16,10 +16,10 @@ import type {
 import { OrdersRepository } from '../infra/orders.repository.js';
 import { BillingService } from '../../billing/index.js';
 import { TicketInventoryService } from '../../event/index.js';
-import { ForbiddenError } from '../../common/errors/types/ForbiddenError.js';
+import { ForbiddenError } from '../../common/errors/types/forbidden.error.js';
 import { UserService } from '../../user/index.js';
 import type { Requester } from '../../common/auth/requester.js';
-import { OffsetPagination } from '../../../response/pagination.response.js';
+import { OffsetPagination } from '../../common/http/pagination.response.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
