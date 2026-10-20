@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { CategoryRepository } from './repositories/categories.repository.js';
+import { CategoryRepository } from '../infra/category.repository.js';
 
 @Injectable()
 export class CategoryService {

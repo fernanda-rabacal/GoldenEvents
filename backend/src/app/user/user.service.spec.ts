@@ -1,4 +1,4 @@
-import { UniqueConstraintError } from './../common/errors/types/UniqueConstraintError.js';
+import { UniqueConstraintError } from '../common/errors/types/UniqueConstraintError.js';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaClient } from '@prisma/client';
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';

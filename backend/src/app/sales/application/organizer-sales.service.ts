@@ -42,6 +42,7 @@ export class OrganizerSalesService {
   ) {}
 
   async listOrders(requester: Requester, query: QueryOrganizerOrdersDto) {
+    const pagination = OffsetPagination.fromQuery(query);
     const { events, eventIds } = await this.resolveScope(requester, query.event_id);
     const buyerIds =
       query.buyer_id === undefined
@@ -49,15 +50,10 @@ export class OrganizerSalesService {
         : [query.buyer_id];
 
     if (eventIds.length === 0 || buyerIds?.length === 0) {
-      return new OffsetPagination(0, 0, query.skip, query.take).buildPage([]);
+      return pagination.page(0, []);
     }
 
-    const { skip, take } = new OffsetPagination(
-      0,
-      0,
-      query.skip,
-      query.take,
-    ).filterProps();
+    const { skip, take } = pagination.filterProps();
     const [total, orders] = await this.repository.findPageForEvents(
       {
         eventIds,
@@ -70,7 +66,7 @@ export class OrganizerSalesService {
     );
 
     if (orders.length === 0) {
-      return new OffsetPagination(total, total, query.skip, query.take).buildPage([]);
+      return pagination.page(total, []);
     }
 
     const [buyers, lots, methods] = await Promise.all([
@@ -87,7 +83,8 @@ export class OrganizerSalesService {
     const buyersById = new Map(buyers.map(buyer => [buyer.id, buyer]));
     const lotsById = new Map(lots.map(lot => [lot.id, lot]));
 
-    return new OffsetPagination(total, total, query.skip, query.take).buildPage(
+    return pagination.page(
+      total,
       orders.map(order => ({
         id: order.id,
         status: order.status,
@@ -148,19 +145,15 @@ export class OrganizerSalesService {
     requester: Requester,
     query: QueryOrganizerAudienceDto,
   ): Promise<Page<OrganizerAudienceMember>> {
+    const pagination = OffsetPagination.fromQuery(query);
     const { eventIds } = await this.resolveScope(requester, query.event_id);
     const buyerIds = await this.findBuyerIds(query.search);
 
     if (eventIds.length === 0 || buyerIds?.length === 0) {
-      return new OffsetPagination(0, 0, query.skip, query.take).buildPage([]);
+      return pagination.page(0, []);
     }
 
-    const { skip, take } = new OffsetPagination(
-      0,
-      0,
-      query.skip,
-      query.take,
-    ).filterProps();
+    const { skip, take } = pagination.filterProps();
     const { total, members } = await this.repository.findAudiencePage(
       { eventIds, buyerIds, segment: query.segment, newSince: newBuyerSince() },
       query.sort ?? 'recent',
@@ -169,7 +162,7 @@ export class OrganizerSalesService {
     );
 
     if (members.length === 0) {
-      return new OffsetPagination(total, total, query.skip, query.take).buildPage([]);
+      return pagination.page(total, []);
     }
 
     const memberIds = members.map(({ buyer_id }) => buyer_id);
@@ -179,7 +172,8 @@ export class OrganizerSalesService {
     ]);
     const buyersById = new Map(buyers.map(buyer => [buyer.id, buyer]));
 
-    return new OffsetPagination(total, total, query.skip, query.take).buildPage(
+    return pagination.page(
+      total,
       members.map(member => ({
         buyer: buyersById.get(member.buyer_id) ?? {
           id: member.buyer_id,

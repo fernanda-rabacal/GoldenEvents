@@ -9,17 +9,17 @@ import {
   Body,
   Patch,
 } from '@nestjs/common';
-import { EventService } from './event.service.js';
+import { EventService } from '../../application/event.service.js';
 import { CreateEventDto } from './dto/create-event.dto.js';
 import { UpdateEventDto } from './dto/update-event.dto.js';
 import { QueryEventDto } from './dto/query-event.dto.js';
-import type { Requester } from '../common/auth/requester.js';
+import type { Requester } from '../../../common/auth/requester.js';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../common/auth/jwt.guard.js';
-import { CurrentUser } from '../common/auth/current-user.decorator.js';
-import { MessageResponse } from '../../response/message.response.js';
-import { CategoryService } from './category.service.js';
-import { PaymentMethodService } from './payment-method.service.js';
+import { JwtAuthGuard } from '../../../common/auth/jwt.guard.js';
+import { CurrentUser } from '../../../common/auth/current-user.decorator.js';
+import { MessageResponse } from '../../../../response/message.response.js';
+import { CategoryService } from '../../application/category.service.js';
+import { PaymentMethodService } from '../../application/payment-method.service.js';
 
 @ApiTags('Event')
 @Controller('/events')

@@ -1,22 +1,22 @@
-import { CategoryRepository } from './repositories/categories.repository.js';
+import { CategoryRepository } from '../infra/category.repository.js';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaClient } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 import { EventService } from './event.service.js';
-import { EventRepository } from './repositories/events.repository.js';
-import { PrismaService } from '../../db/prisma.service.js';
-import { PrismaClientMock } from '../../db/prisma.mock.js';
-import { CreateEventDto } from './dto/create-event.dto.js';
-import { UpdateSectorDto } from './dto/sector.dto.js';
-import { NotFoundError } from '../common/errors/types/NotFoundError.js';
-import { BusinessRuleError } from '../common/errors/types/BusinessRuleError.js';
-import { ForbiddenError } from '../common/errors/types/ForbiddenError.js';
+import { EventRepository } from '../infra/event.repository.js';
+import { PrismaService } from '../../../db/prisma.service.js';
+import { PrismaClientMock } from '../../../db/prisma.mock.js';
+import { CreateEventDto } from '../infra/http/dto/create-event.dto.js';
+import { UpdateSectorDto } from '../infra/http/dto/sector.dto.js';
+import { NotFoundError } from '../../common/errors/types/NotFoundError.js';
+import { BusinessRuleError } from '../../common/errors/types/BusinessRuleError.js';
+import { ForbiddenError } from '../../common/errors/types/ForbiddenError.js';
 import { UserTypeEnum } from '@golden-events/shared';
 import { CategoryService } from './category.service.js';
 import { PaymentMethodService } from './payment-method.service.js';
-import { PaymentMethodRepository } from './repositories/payment-methods.repository.js';
-import { OutboxService } from '../../shared/outbox/outbox.service.js';
-import { EVENT_CANCELLED } from './event.events.js';
+import { PaymentMethodRepository } from '../infra/payment-method.repository.js';
+import { OutboxService } from '../../../shared/outbox/outbox.service.js';
+import { EVENT_CANCELLED } from '../domain/events.js';
 
 const DAY_MS = 86_400_000;
 
@@ -122,7 +122,9 @@ describe('EventService', () => {
 
     prisma.eventCategory.findFirst.mockResolvedValueOnce(expectedOutputCategory);
     prisma.eventCategory.findMany.mockResolvedValueOnce([expectedOutputCategory]);
-    prisma.$transaction.mockImplementation((callback: any) => callback(prisma));
+    prisma.$transaction.mockImplementation((arg: any) =>
+      typeof arg === 'function' ? arg(prisma) : Promise.all(arg),
+    );
     prisma.lot.findMany.mockResolvedValue([]);
   });
 
@@ -552,6 +554,21 @@ describe('EventService', () => {
 
     expect(events).toHaveProperty('content');
     expect(events.content).toStrictEqual([returnedEventsData]);
+  });
+
+  it('should paginate the events in the database', async () => {
+    prisma.event.count.mockResolvedValueOnce(25);
+    prisma.event.findMany.mockResolvedValueOnce([]);
+
+    const page = await service.findAll({ skip: 1, take: 10 });
+
+    expect(prisma.event.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ skip: 10, take: 10 }),
+    );
+    expect(prisma.event.count.mock.calls[0][0].where).toEqual(
+      prisma.event.findMany.mock.calls[0][0].where,
+    );
+    expect(page).toMatchObject({ page: 2, totalFiltered: 25, totalPages: 3 });
   });
 
   it('should find only the events created by the user', async () => {

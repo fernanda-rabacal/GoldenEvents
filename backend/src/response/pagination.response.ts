@@ -100,10 +100,16 @@ export class OffsetPagination {
     return page;
   }
 
-  public paginate<T>(items: T[]): Page<T> {
-    const { skip, take } = this.filterProps();
+  static fromQuery(query: { skip?: number; take?: number }) {
+    return new OffsetPagination(0, 0, query.skip, query.take);
+  }
 
-    return this.buildPage(items.slice(skip, skip + take));
+  // `content` já vem cortado pelo banco com o `skip`/`take` de filterProps()
+  public page<T>(total: number, content: T[]): Page<T> {
+    this._total = total;
+    this._totalFiltered = total;
+
+    return this.buildPage(content);
   }
 
   public filterProps() {

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PaymentMethodRepository } from './repositories/payment-methods.repository.js';
+import { PaymentMethodRepository } from '../infra/payment-method.repository.js';
 
 @Injectable()
 export class PaymentMethodService {

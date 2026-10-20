@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
-import { EventRepository, type LotQuantity } from './repositories/events.repository.js';
+import { EventRepository, type LotQuantity } from '../infra/event.repository.js';
 
 // Interface pública de eventos para vendas: estoque dos lotes e os dados de evento que
 // vendas mostra junto dos pedidos e ingressos, sem ler nem escrever nas tabelas de eventos

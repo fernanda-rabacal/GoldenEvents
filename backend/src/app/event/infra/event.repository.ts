@@ -1,15 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../db/prisma.service.js';
-import { CreateEventDto } from '../dto/create-event.dto.js';
+import { CreateEventDto } from './http/dto/create-event.dto.js';
 import { generateSlug } from '../../../util/slug.js';
-import { QueryEventDto } from '../dto/query-event.dto.js';
-import { UpdateEventDto } from '../dto/update-event.dto.js';
-import { CreateLotDto } from '../dto/lot.dto.js';
-import { UpdateSectorDto } from '../dto/sector.dto.js';
+import { QueryEventDto } from './http/dto/query-event.dto.js';
+import { UpdateEventDto } from './http/dto/update-event.dto.js';
+import { CreateLotDto } from './http/dto/lot.dto.js';
+import { UpdateSectorDto } from './http/dto/sector.dto.js';
 import { Prisma } from '@prisma/client';
 import { summarizeLots, type EventSort } from '@golden-events/shared';
-import { OutboxService } from '../../../shared/outbox/outbox.service.js';
-import { EVENT_CANCELLED } from '../event.events.js';
 
 export type LotQuantity = { lotId: number; quantity: number };
 
@@ -37,10 +35,7 @@ function toLotData(lot: CreateLotDto, position: number) {
 
 @Injectable()
 export class EventRepository {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly outbox: OutboxService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async create(userId: number, createEventDto: CreateEventDto) {
     const lots = createEventDto.sectors.flatMap(({ lots }) =>
@@ -78,7 +73,12 @@ export class EventRepository {
     return event;
   }
 
-  async findAll(query: QueryEventDto, userId?: number) {
+  async findPage(
+    query: QueryEventDto,
+    userId: number | undefined,
+    skip: number,
+    take: number,
+  ) {
     let where = {};
 
     if (userId) {
@@ -128,15 +128,16 @@ export class EventRepository {
       };
     }
 
-    const events = await this.prisma.event.findMany({
-      where,
-      orderBy: EVENT_ORDER_BY[query.sort ?? 'start_date'],
-      include: {
-        category: true,
-      },
-    });
-
-    return events;
+    return this.prisma.$transaction([
+      this.prisma.event.count({ where }),
+      this.prisma.event.findMany({
+        where,
+        orderBy: EVENT_ORDER_BY[query.sort ?? 'start_date'],
+        include: { category: true },
+        skip,
+        take,
+      }),
+    ]);
   }
 
   async findById(id: number) {
@@ -306,23 +307,8 @@ export class EventRepository {
     });
   }
 
-  async delete(id: number, cancelSales: boolean) {
-    return this.prisma.$transaction(async tx => {
-      const event = await tx.event.update({
-        data: {
-          active: false,
-        },
-        where: {
-          id: id,
-        },
-      });
-
-      if (cancelSales) {
-        await this.outbox.add(tx, EVENT_CANCELLED, { eventId: id });
-      }
-
-      return event;
-    });
+  async deactivate(tx: Prisma.TransactionClient, id: number) {
+    return tx.event.update({ where: { id }, data: { active: false } });
   }
 
   async countActiveEvents(userId: number, now: Date, createdSince?: Date) {

@@ -2,8 +2,12 @@ import { OffsetPagination } from './pagination.response.js';
 
 const items = Array.from({ length: 25 }, (_, index) => index + 1);
 
+// Simula o banco: corta a lista com o skip/take que a paginação calcula
 function paginate(skip?: number, take?: number) {
-  return new OffsetPagination(items.length, items.length, skip, take).paginate(items);
+  const pagination = OffsetPagination.fromQuery({ skip, take });
+  const { skip: offset, take: limit } = pagination.filterProps();
+
+  return pagination.page(items.length, items.slice(offset, offset + limit));
 }
 
 describe('OffsetPagination', () => {
@@ -74,7 +78,7 @@ describe('OffsetPagination', () => {
   });
 
   it('should return an empty page for an empty list', () => {
-    const page = new OffsetPagination(0, 0, 0, 10).paginate([]);
+    const page = OffsetPagination.fromQuery({ skip: 0, take: 10 }).page(0, []);
 
     expect(page.content).toStrictEqual([]);
     expect(page.totalPages).toBe(0);
