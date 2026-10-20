@@ -22,8 +22,8 @@ import {
 } from './dto/query-organizer-sales.dto.js';
 import { OrdersService } from '../../application/orders.service.js';
 import { OrganizerSalesService } from '../../application/organizer-sales.service.js';
-import { JwtAuthGuard } from '../../../auth/guard/jwt.guard.js';
-import type { Requester } from '../../../user/user.service.js';
+import { JwtAuthGuard } from '../../../common/auth/jwt.guard.js';
+import type { Requester } from '../../../common/auth/requester.js';
 import { MessageResponse } from '../../../../response/message.response.js';
 import { RateLimit } from '../../../../shared/rate-limit/rate-limit.guard.js';
 

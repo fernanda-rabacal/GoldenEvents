@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
 import { AuthService, LOGIN_FAILURES } from './auth.service.js';
-import { UserService } from '../user/user.service.js';
+import { UserService } from '../user/index.js';
 import { encryptData } from '../../util/crypt.js';
 import { TooManyRequestsError } from '../common/errors/types/TooManyRequestsError.js';
 import { RateLimitService } from '../../shared/rate-limit/rate-limit.service.js';

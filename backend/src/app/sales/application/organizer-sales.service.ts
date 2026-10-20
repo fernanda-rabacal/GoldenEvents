@@ -15,9 +15,10 @@ import {
 } from '../infra/http/dto/query-organizer-sales.dto.js';
 import { OrdersRepository } from '../infra/orders.repository.js';
 import { BillingService } from '../../billing/index.js';
-import { TicketInventoryService } from '../../event/ticket-inventory.service.js';
+import { TicketInventoryService } from '../../event/index.js';
 import { ForbiddenError } from '../../common/errors/types/ForbiddenError.js';
-import { UserService, type Requester } from '../../user/user.service.js';
+import { UserService } from '../../user/index.js';
+import type { Requester } from '../../common/auth/requester.js';
 import { OffsetPagination } from '../../../response/pagination.response.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;

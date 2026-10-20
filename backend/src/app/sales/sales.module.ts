@@ -8,8 +8,8 @@ import { OrganizerSalesService } from './application/organizer-sales.service.js'
 import { OrdersController } from './infra/http/orders.controller.js';
 import { OrdersRepository } from './infra/orders.repository.js';
 import { BillingModule } from '../billing/index.js';
-import { EventModule } from '../event/event.module.js';
-import { UserModule } from '../user/user.module.js';
+import { EventModule } from '../event/index.js';
+import { UserModule } from '../user/index.js';
 import { MessagingModule } from '../../shared/messaging/messaging.module.js';
 import { RateLimitModule } from '../../shared/rate-limit/rate-limit.module.js';
 

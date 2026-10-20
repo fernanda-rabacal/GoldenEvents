@@ -4,7 +4,7 @@ import {
   REFRESH_TOKEN_TTL_SECONDS,
 } from '@golden-events/shared';
 import { createHash, randomBytes, randomUUID } from 'crypto';
-import { UserService } from '../user/user.service.js';
+import { UserService } from '../user/index.js';
 import { JwtService } from '@nestjs/jwt';
 import { AuthTokenDto } from './dto/auth-token.dto.js';
 import { compareEncrypedData, encryptData } from '../../util/crypt.js';
