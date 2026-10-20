@@ -33,13 +33,6 @@ export class UserController {
     return await this.userService.getUserTypes();
   }
 
-  @Get('/me/tickets')
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
-  async getMyTickets(@CurrentUser() requester: Requester) {
-    return await this.userService.getUserTickets(requester.id);
-  }
-
   @Get('/:id')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)

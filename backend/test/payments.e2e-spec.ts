@@ -262,8 +262,21 @@ describe('Payments (phase 1)', () => {
         .auth(token, { type: 'bearer' })
         .expect(200);
 
+      expect(myTickets.body).toHaveLength(1);
+      expect(myTickets.body[0]).toMatchObject({
+        event: {
+          id: eventId,
+          location: 'Rua do limoeiro, 12',
+          category: { name: expect.any(String) },
+        },
+        quantity: 2,
+      });
       expect(myTickets.body[0].tickets[0]).toEqual(
-        expect.objectContaining({ status: 'valid', code: tickets[0].code }),
+        expect.objectContaining({
+          status: 'valid',
+          code: tickets[0].code,
+          lot: { name: 'Lote único', sector: { name: 'Pista' } },
+        }),
       );
     });
 
@@ -766,6 +779,20 @@ describe('Payments (phase 1)', () => {
         status: 'on_sale',
       });
 
+      const metrics = await http()
+        .get('/events/me/metrics?days=7')
+        .auth(token, { type: 'bearer' })
+        .expect(200);
+
+      expect(metrics.body).toMatchObject({
+        ticketsSold: { total: 2 },
+        revenue: { total: 9000 },
+        audience: { total: 1 },
+        activeEvents: { total: 1, createdThisMonth: 1 },
+      });
+      expect(metrics.body.dailySales).toHaveLength(7);
+      expect(metrics.body.dailySales.at(-1).tickets).toBe(2);
+
       await http()
         .post('/users')
         .send({ ...OTHER_ORGANIZER, isOrganizer: true })
@@ -790,12 +817,42 @@ describe('Payments (phase 1)', () => {
         .expect(200);
 
       expect(otherOrders.body.content).toEqual([]);
+
+      const otherMetrics = await http()
+        .get('/events/me/metrics')
+        .auth(otherToken, { type: 'bearer' })
+        .expect(200);
+
+      expect(otherMetrics.body).toMatchObject({
+        ticketsSold: { total: 0 },
+        revenue: { total: 0 },
+        activeEvents: { total: 0 },
+      });
     });
 
     it('should not let a buyer read sales', async () => {
       const token = await login();
 
       await http().get('/orders/organizer').auth(token, { type: 'bearer' }).expect(403);
+      await http().get('/events/me/metrics').auth(token, { type: 'bearer' }).expect(403);
+    });
+  });
+
+  describe('My tickets', () => {
+    it('should list no tickets for a buyer without orders', async () => {
+      const token = await login(OTHER_BUYER);
+
+      const res = await http()
+        .get('/users/me/tickets')
+        .auth(token, { type: 'bearer' })
+        .expect(200);
+
+      expect(res.body).toEqual([]);
+    });
+
+    it('should throw an UnauthorizedError', async () => {
+      await http().get('/users/me/tickets').expect(401);
+      await http().get('/events/me/metrics').expect(401);
     });
   });
 });

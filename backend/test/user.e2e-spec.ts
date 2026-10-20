@@ -315,22 +315,6 @@ describe('UserController', () => {
     });
   });
 
-  describe('GET /users/me/tickets', () => {
-    it('should get the tickets of the logged user', async () => {
-      const token = await login();
-
-      const res = await http()
-        .get('/users/me/tickets')
-        .auth(token, { type: 'bearer' })
-        .expect(200);
-      expect(res.body).toEqual([]);
-    });
-
-    it('should throw an UnauthorizedError', async () => {
-      await http().get('/users/me/tickets').expect(401);
-    });
-  });
-
   describe('GET /types', () => {
     it('should get all users types', async () => {
       const res = await http().get(`/users/types`).expect(200);

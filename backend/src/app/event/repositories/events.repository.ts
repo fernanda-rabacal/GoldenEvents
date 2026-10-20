@@ -176,6 +176,22 @@ export class EventRepository {
     });
   }
 
+  async findSummaries(ids: number[]) {
+    return this.prisma.event.findMany({
+      where: { id: { in: ids } },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        photo: true,
+        start_date: true,
+        end_date: true,
+        location: true,
+        category: { select: { name: true } },
+      },
+    });
+  }
+
   async findLotLabels(lotIds: number[]) {
     return this.prisma.lot.findMany({
       where: { id: { in: lotIds } },
@@ -309,29 +325,6 @@ export class EventRepository {
     });
   }
 
-  async getTicketStats(userId: number, from?: Date, to?: Date) {
-    const where: Prisma.TicketWhereInput = {
-      event: { user_id: userId },
-      status: { not: 'cancelled' },
-      created_at: { gte: from, lt: to },
-    };
-
-    const [totals, buyers] = await Promise.all([
-      this.prisma.ticket.aggregate({ where, _count: true, _sum: { price: true } }),
-      this.prisma.ticket.findMany({
-        where,
-        distinct: ['user_id'],
-        select: { user_id: true },
-      }),
-    ]);
-
-    return {
-      tickets: totals._count,
-      revenue: totals._sum.price ?? 0,
-      audience: buyers.length,
-    };
-  }
-
   async countActiveEvents(userId: number, now: Date, createdSince?: Date) {
     return this.prisma.event.count({
       where: {
@@ -341,32 +334,6 @@ export class EventRepository {
         OR: [{ end_date: { gte: now } }, { end_date: null, start_date: { gte: now } }],
       },
     });
-  }
-
-  async findTicketDatesSince(userId: number, since: Date) {
-    return this.prisma.ticket.findMany({
-      where: {
-        event: { user_id: userId },
-        status: { not: 'cancelled' },
-        created_at: { gte: since },
-      },
-      select: { created_at: true },
-    });
-  }
-
-  async getTicketStatsByLot(eventId: number) {
-    const groups = await this.prisma.ticket.groupBy({
-      by: ['lot_id'],
-      where: { event_id: eventId, status: { not: 'cancelled' } },
-      _count: { _all: true },
-      _sum: { price: true },
-    });
-
-    return groups.map(({ lot_id, _count, _sum }) => ({
-      lotId: lot_id,
-      sold: _count._all,
-      revenue: _sum.price ?? 0,
-    }));
   }
 
   // Serializa as escritas de um evento: sem isso, duas compras simultâneas recalculariam os totais com leituras desatualizadas

@@ -24,7 +24,6 @@ describe('UserService', () => {
   let rateLimit: DeepMockProxy<RateLimitService>;
   let expectedOutputUser: any;
   let expectedOutputUserTypes: any;
-  let expectedOutputUserTickets: any;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -62,23 +61,6 @@ describe('UserService', () => {
         id: 2,
         name: 'User',
       },
-    ];
-
-    const event = {
-      id: 1,
-      name: 'Festival de Verão',
-      slug: 'festival-de-verao',
-      photo: 'foto.png',
-      start_date: new Date(),
-      end_date: null,
-      location: 'Parque da Cidade',
-      category: { name: 'Shows' },
-    };
-
-    expectedOutputUserTickets = [
-      { id: 1, created_at: new Date(), event },
-      { id: 2, created_at: new Date(), event },
-      { id: 3, created_at: new Date(), event: { ...event, id: 2 } },
     ];
   });
 
@@ -357,26 +339,5 @@ describe('UserService', () => {
       BusinessRuleError,
     );
     expect(prisma.user.update).not.toHaveBeenCalled();
-  });
-
-  it('should group the user tickets by event', async () => {
-    prisma.ticket.findMany.mockResolvedValueOnce(expectedOutputUserTickets);
-
-    const [first, second] = expectedOutputUserTickets;
-    const tickets = await service.getUserTickets(1);
-
-    expect(prisma.ticket.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { user_id: 1 } }),
-    );
-    expect(tickets).toHaveLength(2);
-    expect(tickets[0]).toStrictEqual({
-      event: first.event,
-      quantity: 2,
-      tickets: [
-        { id: first.id, created_at: first.created_at },
-        { id: second.id, created_at: second.created_at },
-      ],
-    });
-    expect(tickets[1].quantity).toBe(1);
   });
 });

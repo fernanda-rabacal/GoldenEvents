@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 import { EventRepository, type LotQuantity } from './repositories/events.repository.js';
 
-// Interface pública do estoque de lotes: vendas reserva e libera ingressos por aqui,
-// sem ler nem escrever nas tabelas de eventos
+// Interface pública de eventos para vendas: estoque dos lotes e os dados de evento que
+// vendas mostra junto dos pedidos e ingressos, sem ler nem escrever nas tabelas de eventos
 @Injectable()
 export class TicketInventoryService {
   constructor(private readonly repository: EventRepository) {}
@@ -20,8 +20,16 @@ export class TicketInventoryService {
     return this.repository.findNamesByOrganizer(userId);
   }
 
+  async findEventSummaries(eventIds: number[]) {
+    return this.repository.findSummaries(eventIds);
+  }
+
   async findLotLabels(lotIds: number[]) {
     return this.repository.findLotLabels(lotIds);
+  }
+
+  async countActiveEvents(userId: number, now: Date, createdSince?: Date) {
+    return this.repository.countActiveEvents(userId, now, createdSince);
   }
 
   async reserve(tx: Prisma.TransactionClient, eventId: number, items: LotQuantity[]) {

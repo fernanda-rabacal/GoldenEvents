@@ -172,33 +172,4 @@ export class UserRepository {
 
     return removePassword(user);
   }
-
-  async getUserTickets(userId: number) {
-    return this.prisma.ticket.findMany({
-      where: {
-        user_id: userId,
-      },
-      orderBy: { id: 'asc' },
-      select: {
-        id: true,
-        code: true,
-        status: true,
-        used_at: true,
-        created_at: true,
-        lot: { select: { name: true, sector: { select: { name: true } } } },
-        event: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            photo: true,
-            start_date: true,
-            end_date: true,
-            location: true,
-            category: { select: { name: true } },
-          },
-        },
-      },
-    });
-  }
 }

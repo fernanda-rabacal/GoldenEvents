@@ -703,38 +703,4 @@ describe('EventService', () => {
 
     expect(await paymentMethodService.findAll()).toStrictEqual(paymentMethods);
   });
-
-  it('should throw a ForbiddenError when a non-organizer asks for metrics', async () => {
-    await expect(
-      service.getOrganizerMetrics({ id: 1, user_type_id: UserTypeEnum.USER }, 7),
-    ).rejects.toThrow(ForbiddenError);
-  });
-
-  it('should compute the organizer metrics', async () => {
-    prisma.ticket.aggregate
-      .mockResolvedValueOnce({ _count: 12, _sum: { price: 60000 } } as never)
-      .mockResolvedValueOnce({ _count: 6, _sum: { price: 30000 } } as never)
-      .mockResolvedValueOnce({ _count: 4, _sum: { price: 0 } } as never);
-    prisma.ticket.findMany
-      .mockResolvedValueOnce([{ user_id: 1 }, { user_id: 2 }, { user_id: 3 }] as never)
-      .mockResolvedValueOnce([{ user_id: 1 }] as never)
-      .mockResolvedValueOnce([{ user_id: 2 }, { user_id: 3 }] as never)
-      .mockResolvedValueOnce([
-        { created_at: new Date() },
-        { created_at: new Date() },
-      ] as never);
-    prisma.event.count.mockResolvedValueOnce(5).mockResolvedValueOnce(2);
-
-    const metrics = await service.getOrganizerMetrics(
-      { id: 1, user_type_id: UserTypeEnum.ORGANIZER },
-      7,
-    );
-
-    expect(metrics.ticketsSold).toStrictEqual({ total: 12, change: 50 });
-    expect(metrics.revenue).toStrictEqual({ total: 60000, change: null });
-    expect(metrics.audience).toStrictEqual({ total: 3, change: -50 });
-    expect(metrics.activeEvents).toStrictEqual({ total: 5, createdThisMonth: 2 });
-    expect(metrics.dailySales).toHaveLength(7);
-    expect(metrics.dailySales.at(-1).tickets).toBe(2);
-  });
 });
