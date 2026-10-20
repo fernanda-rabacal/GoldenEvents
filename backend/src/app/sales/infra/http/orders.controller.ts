@@ -7,11 +7,9 @@ import {
   ParseUUIDPipe,
   Post,
   Query,
-  Req,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { Request } from 'express';
 import { CreateOrderDto } from './dto/create-order.dto.js';
 import { PayOrderDto } from './dto/pay-order.dto.js';
 import {
@@ -23,6 +21,7 @@ import {
 import { OrdersService } from '../../application/orders.service.js';
 import { OrganizerSalesService } from '../../application/organizer-sales.service.js';
 import { JwtAuthGuard } from '../../../common/auth/jwt.guard.js';
+import { CurrentUser } from '../../../common/auth/current-user.decorator.js';
 import type { Requester } from '../../../common/auth/requester.js';
 import { MessageResponse } from '../../../../response/message.response.js';
 import { RateLimit } from '../../../../shared/rate-limit/rate-limit.guard.js';
@@ -46,11 +45,11 @@ export class OrdersController {
     windowMs: 60_000,
     message: 'Muitas tentativas de compra em pouco tempo.',
   })
-  async create(@Req() req: Request, @Body() createOrderDto: CreateOrderDto) {
-    const order = await this.ordersService.create(
-      (req.user as Requester).id,
-      createOrderDto,
-    );
+  async create(
+    @CurrentUser() requester: Requester,
+    @Body() createOrderDto: CreateOrderDto,
+  ) {
+    const order = await this.ordersService.create(requester.id, createOrderDto);
 
     return new MessageResponse(
       order.status === 'paid'
@@ -61,40 +60,49 @@ export class OrdersController {
   }
 
   @Get()
-  async findMine(@Req() req: Request) {
-    return this.ordersService.findMine((req.user as Requester).id);
+  async findMine(@CurrentUser() requester: Requester) {
+    return this.ordersService.findMine(requester.id);
   }
 
   // Antes de /:id: senão "organizer" seria lido como o id de um pedido
   @Get('/organizer')
-  async findForOrganizer(@Query() query: QueryOrganizerOrdersDto, @Req() req: Request) {
-    return this.organizerSales.listOrders(req.user as Requester, query);
+  async findForOrganizer(
+    @Query() query: QueryOrganizerOrdersDto,
+    @CurrentUser() requester: Requester,
+  ) {
+    return this.organizerSales.listOrders(requester, query);
   }
 
   @Get('/organizer/summary')
   async summarizeForOrganizer(
     @Query() query: QueryOrganizerSummaryDto,
-    @Req() req: Request,
+    @CurrentUser() requester: Requester,
   ) {
-    return this.organizerSales.summarize(req.user as Requester, query);
+    return this.organizerSales.summarize(requester, query);
   }
 
   @Get('/organizer/audience')
-  async listAudience(@Query() query: QueryOrganizerAudienceDto, @Req() req: Request) {
-    return this.organizerSales.listAudience(req.user as Requester, query);
+  async listAudience(
+    @Query() query: QueryOrganizerAudienceDto,
+    @CurrentUser() requester: Requester,
+  ) {
+    return this.organizerSales.listAudience(requester, query);
   }
 
   @Get('/organizer/audience/summary')
   async summarizeAudience(
     @Query() query: QueryOrganizerAudienceSummaryDto,
-    @Req() req: Request,
+    @CurrentUser() requester: Requester,
   ) {
-    return this.organizerSales.summarizeAudience(req.user as Requester, query);
+    return this.organizerSales.summarizeAudience(requester, query);
   }
 
   @Get('/:id')
-  async findOne(@Param('id', ParseUUIDPipe) id: string, @Req() req: Request) {
-    return this.ordersService.findOne(req.user as Requester, id);
+  async findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() requester: Requester,
+  ) {
+    return this.ordersService.findOne(requester, id);
   }
 
   // Cartão responde na hora; Pix devolve o código e é confirmado pelo webhook
@@ -108,10 +116,10 @@ export class OrdersController {
   })
   async pay(
     @Param('id', ParseUUIDPipe) id: string,
-    @Req() req: Request,
+    @CurrentUser() requester: Requester,
     @Body() payOrderDto: PayOrderDto,
   ) {
-    const charge = await this.ordersService.pay(req.user as Requester, id, payOrderDto);
+    const charge = await this.ordersService.pay(requester, id, payOrderDto);
 
     return new MessageResponse(
       charge.status === 'succeeded'
@@ -125,8 +133,11 @@ export class OrdersController {
 
   @Post('/:id/cancel')
   @HttpCode(200)
-  async cancel(@Param('id', ParseUUIDPipe) id: string, @Req() req: Request) {
-    const order = await this.ordersService.cancel(req.user as Requester, id);
+  async cancel(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() requester: Requester,
+  ) {
+    const order = await this.ordersService.cancel(requester, id);
 
     return new MessageResponse(
       order.status === 'refunded'

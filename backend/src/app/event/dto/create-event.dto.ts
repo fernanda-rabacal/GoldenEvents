@@ -10,7 +10,7 @@ import {
   MinDate,
   ValidateNested,
 } from 'class-validator';
-import { ApiProperty, ApiHideProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import { CreateSectorDto } from './sector.dto.js';
 
@@ -58,7 +58,4 @@ export class CreateEventDto {
   @Type(() => CreateSectorDto)
   @ApiProperty({ type: [CreateSectorDto] })
   sectors: CreateSectorDto[];
-
-  @ApiHideProperty()
-  userId: number;
 }

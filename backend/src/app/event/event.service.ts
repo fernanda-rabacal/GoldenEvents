@@ -128,7 +128,7 @@ export class EventService {
 
     validateSalesWindows(createEventDto.sectors, new Date(createEventDto.startDateTime));
 
-    return this.repository.create(createEventDto);
+    return this.repository.create(requester.id, createEventDto);
   }
 
   async findAll(query: QueryEventDto, userId?: number) {
@@ -166,10 +166,10 @@ export class EventService {
     return event;
   }
 
-  async update(id: number, userId: number, updateEventDto: UpdateEventDto) {
+  async update(requester: Requester, id: number, updateEventDto: UpdateEventDto) {
     const event = await this.findById(id);
 
-    if (userId !== event.user_id) {
+    if (event.user_id !== requester.id) {
       throw new ForbiddenError('Você não pode editar um evento que não é seu.');
     }
 
@@ -204,10 +204,10 @@ export class EventService {
     return this.repository.update(id, updateEventDto);
   }
 
-  async delete(id: number, userId: number) {
+  async delete(requester: Requester, id: number) {
     const { user_id, active, start_date } = await this.findById(id);
 
-    if (userId !== user_id) {
+    if (user_id !== requester.id) {
       throw new ForbiddenError('Você não pode deletar um evento que não é seu.');
     }
 

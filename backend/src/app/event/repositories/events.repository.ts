@@ -42,7 +42,7 @@ export class EventRepository {
     private readonly outbox: OutboxService,
   ) {}
 
-  async create(createEventDto: CreateEventDto) {
+  async create(userId: number, createEventDto: CreateEventDto) {
     const lots = createEventDto.sectors.flatMap(({ lots }) =>
       lots.map(lot => ({ ...lot, quantity_left: lot.quantity, sales_end: lot.salesEnd })),
     );
@@ -55,7 +55,7 @@ export class EventRepository {
         end_date: createEventDto.endDateTime,
         description: createEventDto.description,
         category_id: createEventDto.categoryId,
-        user_id: createEventDto.userId,
+        user_id: userId,
         location: createEventDto.location,
         slug: generateSlug(createEventDto.name),
         ...summarizeLots(lots),
