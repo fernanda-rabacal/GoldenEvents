@@ -8,6 +8,10 @@ import { TooManyRequestsError } from '../common/errors/types/too-many-requests.e
 import { RateLimitService } from '../../shared/rate-limit/rate-limit.service.js';
 import { RefreshTokenRepository } from './repositories/refresh-token.repository.js';
 import { UnauthorizedError } from '../common/errors/types/unauthorized.error.js';
+import {
+  GoogleIdentityClient,
+  type GoogleProfile,
+} from './google/google-identity.client.js';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -15,6 +19,7 @@ describe('AuthService', () => {
   let rateLimit: DeepMockProxy<RateLimitService>;
   let jwt: DeepMockProxy<JwtService>;
   let refreshTokens: DeepMockProxy<RefreshTokenRepository>;
+  let google: DeepMockProxy<GoogleIdentityClient>;
   let storedUser: any;
 
   beforeEach(async () => {
@@ -25,6 +30,7 @@ describe('AuthService', () => {
         { provide: UserService, useValue: mockDeep<UserService>() },
         { provide: RateLimitService, useValue: mockDeep<RateLimitService>() },
         { provide: RefreshTokenRepository, useValue: mockDeep<RefreshTokenRepository>() },
+        { provide: GoogleIdentityClient, useValue: mockDeep<GoogleIdentityClient>() },
       ],
     }).compile();
 
@@ -33,6 +39,7 @@ describe('AuthService', () => {
     rateLimit = module.get(RateLimitService);
     jwt = module.get(JwtService);
     refreshTokens = module.get(RefreshTokenRepository);
+    google = module.get(GoogleIdentityClient);
 
     storedUser = {
       id: 1,
@@ -67,6 +74,14 @@ describe('AuthService', () => {
     userService.findByEmail.mockResolvedValueOnce(null);
 
     const user = await service.validateUser('wrongemail@email.com', '123456');
+
+    expect(user).toBeNull();
+  });
+
+  it('should not validate a password for an account created with Google', async () => {
+    userService.findByEmail.mockResolvedValueOnce({ ...storedUser, password: null });
+
+    const user = await service.validateUser('emailteste@email.com', '123456');
 
     expect(user).toBeNull();
   });
@@ -270,6 +285,176 @@ describe('AuthService', () => {
       });
 
       await expect(service.validateSession({ id: 1, iat })).resolves.toBeNull();
+    });
+
+    it('should reject a token without a user id, like the Google signup one', async () => {
+      await expect(
+        service.validateSession({ googleId: 'g-1', iat } as never),
+      ).resolves.toBeNull();
+      expect(userService.findSession).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('loginWithGoogle', () => {
+    const profile: GoogleProfile = {
+      googleId: 'google-sub-1',
+      email: 'emailteste@email.com',
+      emailVerified: true,
+      name: 'Teste usuário',
+    };
+
+    beforeEach(() => {
+      jwt.sign.mockReturnValue('signed');
+    });
+
+    it('should start a session for an account already linked to Google', async () => {
+      google.exchangeCode.mockResolvedValueOnce(profile);
+      userService.findByGoogleId.mockResolvedValueOnce(storedUser);
+
+      const result = await service.loginWithGoogle('code', 'verifier', true);
+
+      expect(google.exchangeCode).toHaveBeenCalledWith('code', 'verifier');
+      expect(result).toEqual({
+        session: expect.objectContaining({ keepConnected: true }),
+      });
+      expect(userService.linkGoogleAccount).not.toHaveBeenCalled();
+    });
+
+    it('should link Google to an account with the same email', async () => {
+      google.exchangeCode.mockResolvedValueOnce(profile);
+      userService.findByGoogleId.mockResolvedValueOnce(null);
+      userService.findByEmail.mockResolvedValueOnce({ ...storedUser, google_id: null });
+
+      const result = await service.loginWithGoogle('code', 'verifier');
+
+      expect(result).toHaveProperty('session');
+      expect(userService.linkGoogleAccount).toHaveBeenCalledWith(1, 'google-sub-1');
+    });
+
+    it('should not link an email already tied to another Google account', async () => {
+      google.exchangeCode.mockResolvedValueOnce(profile);
+      userService.findByGoogleId.mockResolvedValueOnce(null);
+      userService.findByEmail.mockResolvedValueOnce({
+        ...storedUser,
+        google_id: 'outro',
+      });
+
+      await expect(service.loginWithGoogle('code', 'verifier')).rejects.toBeInstanceOf(
+        UnauthorizedError,
+      );
+      expect(userService.linkGoogleAccount).not.toHaveBeenCalled();
+    });
+
+    it('should refuse an email Google has not verified', async () => {
+      google.exchangeCode.mockResolvedValueOnce({ ...profile, emailVerified: false });
+
+      await expect(service.loginWithGoogle('code', 'verifier')).rejects.toBeInstanceOf(
+        UnauthorizedError,
+      );
+      expect(userService.findByEmail).not.toHaveBeenCalled();
+    });
+
+    it('should refuse a deactivated account, without linking it', async () => {
+      google.exchangeCode.mockResolvedValueOnce(profile);
+      userService.findByGoogleId.mockResolvedValueOnce(null);
+      userService.findByEmail.mockResolvedValueOnce({
+        ...storedUser,
+        google_id: null,
+        active: false,
+      });
+
+      await expect(service.loginWithGoogle('code', 'verifier')).rejects.toBeInstanceOf(
+        UnauthorizedError,
+      );
+      expect(userService.linkGoogleAccount).not.toHaveBeenCalled();
+      expect(refreshTokens.create).not.toHaveBeenCalled();
+    });
+
+    it('should ask for the signup to be completed when there is no account', async () => {
+      google.exchangeCode.mockResolvedValueOnce(profile);
+      userService.findByGoogleId.mockResolvedValueOnce(null);
+      userService.findByEmail.mockResolvedValueOnce(null);
+
+      const result = await service.loginWithGoogle('code', 'verifier', true);
+
+      expect(result).toEqual({
+        signupToken: 'signed',
+        name: 'Teste usuário',
+        email: 'emailteste@email.com',
+      });
+      expect(jwt.sign).toHaveBeenCalledWith(
+        {
+          googleId: 'google-sub-1',
+          email: 'emailteste@email.com',
+          name: 'Teste usuário',
+          keepConnected: true,
+        },
+        { audience: 'google-signup', expiresIn: 10 * 60 },
+      );
+      expect(refreshTokens.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('completeGoogleSignup', () => {
+    let realService: AuthService;
+    let realJwt: JwtService;
+
+    beforeEach(() => {
+      realJwt = new JwtService({ secret: 'segredo-de-teste' });
+      realService = new AuthService(
+        realJwt,
+        userService,
+        rateLimit,
+        refreshTokens,
+        google,
+      );
+    });
+
+    it('should create the account with the Google data and start a session', async () => {
+      const signupToken = realJwt.sign(
+        { googleId: 'g-1', email: 'novo@email.com', name: 'Novo', keepConnected: true },
+        { audience: 'google-signup', expiresIn: 600 },
+      );
+      userService.createFromGoogle.mockResolvedValueOnce({ ...storedUser, id: 7 });
+
+      const session = await realService.completeGoogleSignup(
+        signupToken,
+        '12345678901',
+        true,
+      );
+
+      expect(userService.createFromGoogle).toHaveBeenCalledWith({
+        name: 'Novo',
+        email: 'novo@email.com',
+        googleId: 'g-1',
+        document: '12345678901',
+        isOrganizer: true,
+      });
+      expect(session.keepConnected).toBe(true);
+    });
+
+    it('should refuse an expired signup token', async () => {
+      const signupToken = realJwt.sign(
+        { googleId: 'g-1', email: 'novo@email.com', name: 'Novo', keepConnected: false },
+        { audience: 'google-signup', expiresIn: -1 },
+      );
+
+      await expect(
+        realService.completeGoogleSignup(signupToken, '12345678901'),
+      ).rejects.toBeInstanceOf(UnauthorizedError);
+      expect(userService.createFromGoogle).not.toHaveBeenCalled();
+    });
+
+    it('should refuse an access token used as signup token', async () => {
+      const accessToken = realJwt.sign({
+        id: 1,
+        name: 'Teste',
+        email: 'teste@email.com',
+      });
+
+      await expect(
+        realService.completeGoogleSignup(accessToken, '12345678901'),
+      ).rejects.toBeInstanceOf(UnauthorizedError);
     });
   });
 
