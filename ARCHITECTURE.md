@@ -130,6 +130,16 @@ The order keeps the reserved quantity and price, and the page shows the time lef
    - Without it, both are browser-session cookies, cleared when the browser closes.
 
    `RegisterForm` uses the `signUp` Server Action the same way.
+
+   **Google** (Authorization Code with PKCE). The client secret lives only in the API, and Next.js is the redirect URI:
+   - `GoogleButton` is a link to `/auth/google`, not a form, because the CSP only allows `form-action 'self'`.
+   - The route handler `app/auth/google/route.api.ts` creates the `state` and the PKCE `code_verifier` and keeps them in the `golden_oauth` cookie (10 minutes). It also keeps the `redirect` and the "keep connected" choice. Then it redirects to Google.
+   - `app/auth/google/callback/route.api.ts` checks the `state` against that cookie and sends the `code` and `code_verifier` to `POST /login/google`.
+     - For an existing account it sets the session cookies the same way `signIn` does.
+     - For a new account it gets a `signupToken` instead. It saves the token in the `golden_google_signup` cookie (10 minutes) and sends the user to `/cadastro/google`.
+     - On any failure, including a cancel on Google's screen, it goes to `/login?erro=google`.
+   - `/cadastro/google` asks for the CPF and whether the user is an organizer. The `completeGoogleSignUp` Server Action posts them to `/signup/google` with the cookie's token and starts the session.
+   - `GOOGLE_CLIENT_ID` and `GOOGLE_REDIRECT_URI` are server-only variables.
 2. `src/proxy.page.ts` is the Next.js 16 proxy (formerly middleware). It runs on every page and Server Action, and keeps the session alive. Server Components cannot set cookies, so this is the only place that can renew it before a page renders.
    - When the access token is missing or expires within 60 seconds and there is a refresh cookie, it calls `POST /refresh` (`services/session-refresh.ts`). It writes the new cookies to the response, and also to the forwarded request, so the current render already sees the new token.
    - A refused refresh token clears both cookies.
@@ -253,6 +263,13 @@ Prisma errors are converted first (`handleDatabaseErrors`, for example P2002 bec
   - `POST /logout` deletes the family. Ending a session always deletes the tokens instead of marking them, because a marked token would still pass the grace window.
   - A password change deletes all of the user's refresh tokens in the same update. A deactivated user's refresh is refused.
   - Each login deletes that user's expired tokens.
+- `POST /login/google` takes `{ code, codeVerifier, keepConnected }`.
+  - `GoogleIdentityClient` (`auth/google/`) exchanges the code with `google-auth-library` and verifies the ID token. It uses `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` and `GOOGLE_REDIRECT_URI`. The redirect URI always comes from the env and never from the request.
+  - The Google account is found by `User.google_id`, which holds Google's `sub`. When no account has that id, the email is matched instead, and an account found that way is linked by saving the `google_id`. Only emails that Google marks as verified are accepted.
+  - An email already linked to a different Google account is refused.
+  - With no account at all, the response is `{ signupRequired, signupToken, name, email }` and no user is created yet. The `signupToken` is a 10-minute JWT with the `google-signup` audience. `validateSession` rejects it as an access token because it has no `id`.
+  - `POST /signup/google` takes the `signupToken`, the CPF and `isOrganizer`, then creates the user and starts the session.
+  - Accounts created with Google have `password = null`, so `POST /login` always refuses them.
 - Deactivated users cannot log in. When the email does not exist, bcrypt still runs against a dummy hash, so the response time does not reveal which emails have an account.
 - Protected routes use `JwtAuthGuard` (passport-jwt, `Bearer` header). On every request, `AuthService.validateSession` rejects the token if the user was deactivated or changed the password after the token was issued (`User.password_changed_at`, compared with `iat` in seconds).
 - Passwords have 8 to 72 characters (`PASSWORD_MIN_LENGTH` / `PASSWORD_MAX_LENGTH`; bcrypt ignores anything past 72 bytes). Changing it requires `currentPassword`, and only the user can change their own password.
@@ -268,10 +285,10 @@ Prisma errors are converted first (`handleDatabaseErrors`, for example P2002 bec
 
 | Rule | Where | Subject | Limit | Counts |
 |---|---|---|---|---|
-| `login-ip` | `@RateLimit` on `POST /login` | IP | 20 / minute | Every attempt, before bcrypt runs |
+| `login-ip` | `@RateLimit` on `POST /login` and `POST /login/google` | IP | 20 / minute | Every attempt, before bcrypt runs |
 | `login-failures` | `AuthService.authenticate` | Email | 5 / 15 minutes | Wrong passwords only. A successful login clears it |
 | `refresh-ip` | `@RateLimit` on `POST /refresh` | IP | 60 / minute | Every attempt. The proxy forwards the browser's IP |
-| `signup` | `@RateLimit` on `POST /users` | IP | 10 / hour | Every attempt |
+| `signup` | `@RateLimit` on `POST /users` and `POST /signup/google` | IP | 10 / hour | Every attempt |
 | `orders-create` | `@RateLimit` on `POST /orders` | User | 10 / minute | Every attempt, refused ones included |
 | `orders-pay` | `@RateLimit` on `POST /orders/:id/pay` | User | 10 / minute | Every attempt |
 | `declined-cards` | `BillingService.createCharge` | Customer | 5 / hour | Declined cards only. Pix is still accepted |
@@ -306,6 +323,8 @@ Per host:
 | Method | Path | Auth |
 |---|---|---|
 | POST | `/login` | Email and password |
+| POST | `/login/google` | Google authorization code |
+| POST | `/signup/google` | `signupToken` from `/login/google` |
 | POST | `/refresh`, `/logout` | Refresh token in the body |
 | POST | `/users` | Public (signup) |
 | GET | `/users/types` | Public |
@@ -455,6 +474,8 @@ E2E tests run in band, and tests inside a file depend on the order they run in.
 Payment confirmation is asynchronous, so those tests poll the database with `waitFor`.
 
 `user.e2e-spec.ts` covers the admin-only routes, the token lifetimes, refresh token rotation, reuse and logout, sessions ended by a deactivation or a password change, and the helmet headers.
+
+`google-auth.e2e-spec.ts` replaces `GoogleIdentityClient` with a mock and covers the Google signup with CPF, the direct login of a linked account, linking an existing account by email, the `signupToken` refused as an access token, a duplicated CPF and an unverified email.
 
 ### Browser E2E
 
