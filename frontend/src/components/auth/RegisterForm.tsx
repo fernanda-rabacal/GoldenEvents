@@ -10,9 +10,10 @@ import { TextField } from '@/components/form/TextField';
 import { CREATE_EVENT_PATH } from '@/components/layout/nav-links';
 import { toastNotify } from '@/lib/toastify';
 import { signUp } from '@/services/auth-actions';
-import { buildLoginHref } from '@/utils/auth_redirect';
+import { buildGoogleLoginHref, buildLoginHref } from '@/utils/auth_redirect';
 import { maskDocument } from '@/utils/masks';
 import { registerFormSchema } from '@/utils/schemaValidations';
+import { GoogleButton } from './GoogleButton';
 import { OrganizerChoice } from './OrganizerChoice';
 import { SubmitButton } from './SubmitButton';
 
@@ -63,62 +64,70 @@ export function RegisterForm({
   }
 
   return (
-    <form
-      onSubmit={handleSubmit(handleRegister)}
-      noValidate
-      className='flex flex-col gap-5'
-    >
-      <TextField
-        label='Nome completo'
-        icon={UserRound}
-        autoComplete='name'
-        placeholder='Como podemos chamar você?'
-        error={errors.name?.message}
-        {...register('name')}
+    <>
+      <GoogleButton
+        href={buildGoogleLoginHref(
+          defaultIsOrganizer ? CREATE_EVENT_PATH : '/',
+          false,
+        )}
       />
-      <TextField
-        label='CPF'
-        inputMode='numeric'
-        maxLength={14}
-        placeholder='000.000.000-00'
-        hint='Usado para identificar sua conta com segurança.'
-        error={errors.cpf?.message}
-        {...register('cpf', {
-          onChange: (event) =>
-            setValue('cpf', maskDocument(event.target.value)),
-        })}
-      />
-      <TextField
-        label='E-mail'
-        type='email'
-        icon={Mail}
-        autoComplete='email'
-        placeholder='voce@email.com'
-        error={errors.email?.message}
-        {...register('email')}
-      />
-      <PasswordField
-        label='Senha'
-        autoComplete='new-password'
-        placeholder='Digite sua senha'
-        error={errors.password?.message}
-        {...register('password')}
-      />
-      <PasswordField
-        label='Confirmar senha'
-        autoComplete='new-password'
-        placeholder='Digite sua senha novamente'
-        error={errors.confirm_password?.message}
-        {...register('confirm_password')}
-      />
-      <OrganizerChoice registration={register('isOrganizer')} />
-
-      <SubmitButton
-        isSubmitting={isSubmitting}
-        submittingLabel='Criando sua conta...'
+      <form
+        onSubmit={handleSubmit(handleRegister)}
+        noValidate
+        className='flex flex-col gap-5'
       >
-        Criar minha conta <ArrowRight className='size-4' />
-      </SubmitButton>
-    </form>
+        <TextField
+          label='Nome completo'
+          icon={UserRound}
+          autoComplete='name'
+          placeholder='Como podemos chamar você?'
+          error={errors.name?.message}
+          {...register('name')}
+        />
+        <TextField
+          label='CPF'
+          inputMode='numeric'
+          maxLength={14}
+          placeholder='000.000.000-00'
+          hint='Usado para identificar sua conta com segurança.'
+          error={errors.cpf?.message}
+          {...register('cpf', {
+            onChange: (event) =>
+              setValue('cpf', maskDocument(event.target.value)),
+          })}
+        />
+        <TextField
+          label='E-mail'
+          type='email'
+          icon={Mail}
+          autoComplete='email'
+          placeholder='voce@email.com'
+          error={errors.email?.message}
+          {...register('email')}
+        />
+        <PasswordField
+          label='Senha'
+          autoComplete='new-password'
+          placeholder='Digite sua senha'
+          error={errors.password?.message}
+          {...register('password')}
+        />
+        <PasswordField
+          label='Confirmar senha'
+          autoComplete='new-password'
+          placeholder='Digite sua senha novamente'
+          error={errors.confirm_password?.message}
+          {...register('confirm_password')}
+        />
+        <OrganizerChoice registration={register('isOrganizer')} />
+
+        <SubmitButton
+          isSubmitting={isSubmitting}
+          submittingLabel='Criando sua conta...'
+        >
+          Criar minha conta <ArrowRight className='size-4' />
+        </SubmitButton>
+      </form>
+    </>
   );
 }
