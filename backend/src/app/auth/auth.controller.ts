@@ -12,6 +12,8 @@ import { AuthLoginDto } from './dto/auth-login.dto.js';
 import { AuthService } from './auth.service.js';
 import { TokenPayload } from './token-payload.js';
 import { RefreshTokenDto } from './dto/refresh-token.dto.js';
+import { GoogleLoginDto } from './dto/google-login.dto.js';
+import { GoogleSignupDto } from './dto/google-signup.dto.js';
 import { TokenResponse } from '../common/http/token.response.js';
 import { ApiTags } from '@nestjs/swagger';
 import { LocalAuthGuard } from './guard/local.guard.js';
@@ -37,6 +39,50 @@ export class AuthController {
     const session = await this.authService.startSession(
       req.user as TokenPayload,
       keepConnected,
+    );
+
+    return new TokenResponse(session, 'bearer');
+  }
+
+  // Conta nova recebe só o signupToken: o usuário é criado quando o CPF chega em /signup/google
+  @Post('/login/google')
+  @RateLimit({
+    name: 'login-ip',
+    by: 'ip',
+    limit: 20,
+    windowMs: 60_000,
+    message: 'Muitas tentativas de login a partir desta rede.',
+  })
+  @HttpCode(HttpStatus.OK)
+  async loginWithGoogle(@Body() { code, codeVerifier, keepConnected }: GoogleLoginDto) {
+    const result = await this.authService.loginWithGoogle(
+      code,
+      codeVerifier,
+      keepConnected,
+    );
+
+    if ('session' in result) {
+      return new TokenResponse(result.session, 'bearer');
+    }
+
+    return { signupRequired: true, ...result };
+  }
+
+  @Post('/signup/google')
+  @RateLimit({
+    name: 'signup',
+    by: 'ip',
+    limit: 10,
+    windowMs: 60 * 60_000,
+    message: 'Muitos cadastros feitos a partir desta rede.',
+  })
+  async signupWithGoogle(
+    @Body() { signupToken, document, isOrganizer }: GoogleSignupDto,
+  ) {
+    const session = await this.authService.completeGoogleSignup(
+      signupToken,
+      document,
+      isOrganizer,
     );
 
     return new TokenResponse(session, 'bearer');

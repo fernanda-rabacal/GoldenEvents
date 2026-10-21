@@ -7,6 +7,10 @@ export type CreateUserInput = {
   isOrganizer?: boolean;
 };
 
+export type CreateGoogleUserInput = Omit<CreateUserInput, 'password'> & {
+  googleId: string;
+};
+
 export type UserChanges = { name?: string; userTypeId?: number; password?: string };
 
 export type UpdateUserInput = UserChanges & { currentPassword?: string };

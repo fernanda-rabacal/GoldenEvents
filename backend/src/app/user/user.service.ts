@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import type { CreateUserInput, UpdateUserInput } from './user-inputs.js';
+import type {
+  CreateGoogleUserInput,
+  CreateUserInput,
+  UpdateUserInput,
+} from './user-inputs.js';
 import { UserRepository } from './repositories/user.repository.js';
 import { BusinessRuleError } from '../common/errors/types/business-rule.error.js';
 import { ForbiddenError } from '../common/errors/types/forbidden.error.js';
@@ -30,6 +34,18 @@ export class UserService {
 
   async create(input: CreateUserInput) {
     return this.repository.create(input);
+  }
+
+  async createFromGoogle(input: CreateGoogleUserInput) {
+    return this.repository.createFromGoogle(input);
+  }
+
+  async findByGoogleId(googleId: string) {
+    return this.repository.findByGoogleId(googleId);
+  }
+
+  async linkGoogleAccount(id: number, googleId: string) {
+    return this.repository.linkGoogleAccount(id, googleId);
   }
 
   // Devolve e-mail e CPF de todo mundo: só para administradores

@@ -1,6 +1,5 @@
 import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from '@golden-events/shared';
 import { ApiProperty } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
 import {
   IsNotEmpty,
   IsEmail,
@@ -8,10 +7,10 @@ import {
   IsBoolean,
   IsOptional,
   Length,
-  Matches,
 } from 'class-validator';
 
 import type { CreateUserInput } from '../user-inputs.js';
+import { IsCpf } from '../../common/http/is-cpf.decorator.js';
 
 export const PASSWORD_LENGTH_MESSAGE = `A senha deve ter entre ${PASSWORD_MIN_LENGTH} e ${PASSWORD_MAX_LENGTH} caracteres.`;
 
@@ -32,13 +31,7 @@ export class CreateUserDto implements CreateUserInput {
   @ApiProperty({ minLength: PASSWORD_MIN_LENGTH, maxLength: PASSWORD_MAX_LENGTH })
   password: string;
 
-  // Aceita o CPF com ou sem máscara e guarda só os dígitos
-  @Transform(({ value }) =>
-    typeof value === 'string' ? value.replace(/\D/g, '') : value,
-  )
-  @IsString()
-  @Matches(/^\d{11}$/, { message: 'O CPF deve ter 11 números.' })
-  @ApiProperty({ example: '12345678901' })
+  @IsCpf()
   document: string;
 
   @IsOptional()

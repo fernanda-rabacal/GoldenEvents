@@ -2,18 +2,30 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../db/prisma.service.js';
 import { encryptData } from '../../common/utils/crypt.util.js';
 import { UserTypeEnum } from '@golden-events/shared';
-import type { CreateUserInput, UserChanges } from '../user-inputs.js';
+import type {
+  CreateGoogleUserInput,
+  CreateUserInput,
+  UserChanges,
+} from '../user-inputs.js';
 import { Prisma } from '@prisma/client';
 
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
 }
 
-function removePassword<T extends { password: string; password_changed_at: Date | null }>(
-  user: T,
-): Omit<T, 'password' | 'password_changed_at'> {
+function userTypeOf(isOrganizer?: boolean) {
+  return { connect: { id: isOrganizer ? UserTypeEnum.ORGANIZER : UserTypeEnum.USER } };
+}
+
+function removeCredentials<
+  T extends {
+    password: string | null;
+    password_changed_at: Date | null;
+    google_id: string | null;
+  },
+>(user: T): Omit<T, 'password' | 'password_changed_at' | 'google_id'> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { password, password_changed_at, ...rest } = user;
+  const { password, password_changed_at, google_id, ...rest } = user;
 
   return rest;
 }
@@ -29,15 +41,25 @@ export class UserRepository {
         email: normalizeEmail(input.email),
         password: await encryptData(input.password),
         document: input.document,
-        user_type: {
-          connect: {
-            id: input.isOrganizer ? UserTypeEnum.ORGANIZER : UserTypeEnum.USER,
-          },
-        },
+        user_type: userTypeOf(input.isOrganizer),
       },
     });
 
-    return removePassword(user);
+    return removeCredentials(user);
+  }
+
+  async createFromGoogle(input: CreateGoogleUserInput) {
+    const user = await this.prisma.user.create({
+      data: {
+        name: input.name,
+        email: normalizeEmail(input.email),
+        google_id: input.googleId,
+        document: input.document,
+        user_type: userTypeOf(input.isOrganizer),
+      },
+    });
+
+    return removeCredentials(user);
   }
 
   async findAll() {
@@ -48,7 +70,7 @@ export class UserRepository {
       orderBy: { id: 'asc' },
     });
 
-    return users.map(removePassword);
+    return users.map(removeCredentials);
   }
 
   async findById(id: number) {
@@ -63,7 +85,7 @@ export class UserRepository {
 
     if (!user) return null;
 
-    return removePassword(user);
+    return removeCredentials(user);
   }
 
   // Único método que devolve a senha: usado só pela autenticação para comparar o hash
@@ -78,6 +100,22 @@ export class UserRepository {
     });
 
     return user;
+  }
+
+  async findByGoogleId(googleId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { google_id: googleId },
+      include: { user_type: true },
+    });
+
+    return user && removeCredentials(user);
+  }
+
+  async linkGoogleAccount(id: number, googleId: string) {
+    await this.prisma.user.update({
+      where: { id },
+      data: { google_id: googleId },
+    });
   }
 
   async findPasswordHash(id: number) {
@@ -156,7 +194,7 @@ export class UserRepository {
       },
     });
 
-    return removePassword(user);
+    return removeCredentials(user);
   }
 
   async toggleActiveUser(id: number, active: boolean) {
@@ -169,6 +207,6 @@ export class UserRepository {
       },
     });
 
-    return removePassword(user);
+    return removeCredentials(user);
   }
 }

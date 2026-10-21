@@ -335,7 +335,10 @@ model User {
   name                String
   user_type_id        Int
   email               String    @unique
-  password            String
+  // Nulo em contas criadas pelo Google
+  password            String?
+  // sub do Google: o e-mail da conta Google pode mudar, o sub não
+  google_id           String?   @unique
   document            String    @unique
   active              Boolean   @default(true)
   // Tokens emitidos antes disto deixam de valer
