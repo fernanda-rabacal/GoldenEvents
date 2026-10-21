@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { AuthDivider } from './AuthDivider';
 
 type AuthSwitchLinkProps = {
   question: string;
@@ -9,10 +10,7 @@ type AuthSwitchLinkProps = {
 export function AuthSwitchLink({ question, label, href }: AuthSwitchLinkProps) {
   return (
     <>
-      <div className='my-7 flex items-center gap-4 text-caption text-muted-foreground/70'>
-        <span className='h-px flex-1 bg-border' /> ou{' '}
-        <span className='h-px flex-1 bg-border' />
-      </div>
+      <AuthDivider label='ou' />
       <p className='text-center text-body-sm text-muted-foreground'>
         {question}{' '}
         <Link

@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import {
   AUTH_COOKIE,
+  GOOGLE_SIGNUP_COOKIE,
   REFRESH_COOKIE,
   sessionCookies,
   type SessionTokens,
@@ -83,6 +84,61 @@ export async function signUp(payload: SignUpPayload): Promise<ActionResult> {
     success: true,
     message: 'Cadastro feito com sucesso! Agora é só entrar.',
   };
+}
+
+type GoogleSignUpPayload = {
+  document: string;
+  isOrganizer: boolean;
+};
+
+// O signupToken veio do callback do Google num cookie httpOnly; aqui ele vira conta e sessão
+export async function completeGoogleSignUp(
+  { document, isOrganizer }: GoogleSignUpPayload,
+  redirectTo: string,
+): Promise<ActionResult> {
+  const cookieStore = await cookies();
+  const signupToken = cookieStore.get(GOOGLE_SIGNUP_COOKIE)?.value;
+
+  if (!signupToken) {
+    return {
+      success: false,
+      message:
+        'O tempo para concluir o cadastro acabou. Entre com o Google de novo.',
+    };
+  }
+
+  const response = await sendToApi<Partial<SessionTokens>>(
+    '/signup/google',
+    'POST',
+    { signupToken, document, isOrganizer },
+  );
+
+  if (!response) {
+    return { success: false, message: SERVER_UNREACHABLE_MESSAGE };
+  }
+
+  const { token, refreshToken, keepConnected } = response.data;
+
+  if (!response.ok || !token || !refreshToken) {
+    return {
+      success: false,
+      message:
+        response.message ??
+        'Não foi possível concluir o cadastro. Tente novamente.',
+    };
+  }
+
+  cookieStore.delete(GOOGLE_SIGNUP_COOKIE);
+
+  for (const cookie of sessionCookies({
+    token,
+    refreshToken,
+    keepConnected: Boolean(keepConnected),
+  })) {
+    cookieStore.set(cookie);
+  }
+
+  redirect(getSafeRedirect(redirectTo));
 }
 
 // Encerra a sessão na API para o refresh token não valer mais, mesmo se o cookie vazou

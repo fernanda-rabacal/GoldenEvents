@@ -137,6 +137,12 @@ export const loginFormSchema = z.object({
   keep_connected: z.boolean(),
 });
 
+const cpfSchema = z
+  .string()
+  .refine((value) => value.replace(/\D/g, '').length === 11, {
+    message: 'Informe um CPF com 11 números.',
+  });
+
 export const registerFormSchema = z
   .object({
     name: z
@@ -147,9 +153,7 @@ export const registerFormSchema = z
       .string()
       .min(1, { message: 'Este campo é obrigatório' })
       .email('Informe um email válido.'),
-    cpf: z.string().refine((value) => value.replace(/\D/g, '').length === 11, {
-      message: 'Informe um CPF com 11 números.',
-    }),
+    cpf: cpfSchema,
     password: z
       .string()
       .min(PASSWORD_MIN_LENGTH, {
@@ -167,6 +171,11 @@ export const registerFormSchema = z
     message: 'Senhas não conferem.',
     path: ['confirm_password'],
   });
+
+export const googleSignupFormSchema = z.object({
+  cpf: cpfSchema,
+  isOrganizer: z.enum(['true', 'false']),
+});
 
 export const updateUserValidationSchema = z.object({
   photo: z.string().optional().nullable(),

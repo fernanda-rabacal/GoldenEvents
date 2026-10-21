@@ -13,11 +13,14 @@ export const metadata: Metadata = {
 };
 
 type LoginPageProps = {
-  searchParams: Promise<{ redirect?: SearchParamValue }>;
+  searchParams: Promise<{
+    redirect?: SearchParamValue;
+    erro?: SearchParamValue;
+  }>;
 };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const { redirect } = await searchParams;
+  const { redirect, erro } = await searchParams;
 
   return (
     <>
@@ -26,6 +29,14 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         title='Entre na Golden'
         description='Acesse seus ingressos e continue descobrindo bons momentos.'
       />
+      {firstValue(erro) === 'google' && (
+        <p
+          role='alert'
+          className='mb-6 rounded-lg bg-destructive/10 px-4 py-3 text-body-sm text-destructive'
+        >
+          Não foi possível entrar com o Google. Tente novamente.
+        </p>
+      )}
       <LoginForm redirectTo={getSafeRedirect(firstValue(redirect))} />
       <AuthSwitchLink
         question='Ainda não tem uma conta?'

@@ -14,6 +14,7 @@ import {
 } from '../../shared/rate-limit/rate-limit.service.js';
 import { RefreshTokenRepository } from './repositories/refresh-token.repository.js';
 import { UnauthorizedError } from '../common/errors/types/unauthorized.error.js';
+import { GoogleIdentityClient } from './google/google-identity.client.js';
 
 // Conta só as senhas erradas, por e-mail: protege a conta mesmo quando o atacante troca de IP
 export const LOGIN_FAILURES: RateLimitRule = {
@@ -28,7 +29,21 @@ export const REFRESH_REUSE_GRACE_MS = 30_000;
 
 const SESSION_EXPIRED = 'Sua sessão expirou. Entre novamente.';
 
+// Assinado com o mesmo segredo do access token: a audience impede que um vire o outro
+const GOOGLE_SIGNUP_AUDIENCE = 'google-signup';
+const GOOGLE_SIGNUP_TTL_SECONDS = 10 * 60;
+
 export type Session = { token: string; refreshToken: string; keepConnected: boolean };
+
+type GoogleSignupClaims = {
+  googleId: string;
+  email: string;
+  name: string;
+  keepConnected: boolean;
+};
+
+export type GoogleLoginResult =
+  { session: Session } | { signupToken: string; name: string; email: string };
 
 function hashToken(token: string) {
   return createHash('sha256').update(token).digest('hex');
@@ -52,6 +67,7 @@ export class AuthService {
     private readonly userService: UserService,
     private readonly rateLimit: RateLimitService,
     private readonly refreshTokens: RefreshTokenRepository,
+    private readonly google: GoogleIdentityClient,
   ) {}
 
   async authenticate(email: string, password: string) {
@@ -86,6 +102,11 @@ export class AuthService {
 
   // Roda a cada requisição autenticada: desativar a conta ou trocar a senha derruba os tokens antigos
   async validateSession({ id, iat }: { id: number; iat: number }) {
+    // Outros tokens assinados com o mesmo segredo, como o de cadastro pelo Google, não têm id
+    if (typeof id !== 'number') {
+      return null;
+    }
+
     const user = await this.userService.findSession(id);
 
     if (!user?.active) {
@@ -113,6 +134,80 @@ export class AuthService {
     await this.refreshTokens.deleteExpired(user.id, now);
 
     return this.issueSession(user, randomUUID(), keepConnected, now);
+  }
+
+  // Só confia em e-mail verificado pelo Google: é ele que liga a conta Google a uma conta com senha
+  async loginWithGoogle(
+    code: string,
+    codeVerifier: string,
+    keepConnected = false,
+  ): Promise<GoogleLoginResult> {
+    const profile = await this.google.exchangeCode(code, codeVerifier);
+
+    if (!profile.emailVerified) {
+      throw new UnauthorizedError('O e-mail desta conta Google não foi verificado.');
+    }
+
+    const linked = await this.userService.findByGoogleId(profile.googleId);
+
+    if (linked) {
+      return { session: await this.startGoogleSession(linked, keepConnected) };
+    }
+
+    const existing = await this.userService.findByEmail(profile.email);
+
+    if (!existing) {
+      const claims: GoogleSignupClaims = {
+        googleId: profile.googleId,
+        email: profile.email,
+        name: profile.name,
+        keepConnected,
+      };
+      const signupToken = this.jwtService.sign(claims, {
+        audience: GOOGLE_SIGNUP_AUDIENCE,
+        expiresIn: GOOGLE_SIGNUP_TTL_SECONDS,
+      });
+
+      return { signupToken, name: profile.name, email: profile.email };
+    }
+
+    if (existing.google_id) {
+      throw new UnauthorizedError('Este e-mail já está ligado a outra conta Google.');
+    }
+
+    const session = await this.startGoogleSession(existing, keepConnected);
+
+    await this.userService.linkGoogleAccount(existing.id, profile.googleId);
+
+    return { session };
+  }
+
+  async completeGoogleSignup(
+    signupToken: string,
+    document: string,
+    isOrganizer = false,
+  ): Promise<Session> {
+    let claims: GoogleSignupClaims;
+
+    try {
+      claims = this.jwtService.verify<GoogleSignupClaims>(signupToken, {
+        audience: GOOGLE_SIGNUP_AUDIENCE,
+      });
+    } catch {
+      throw new UnauthorizedError(
+        'O tempo para concluir o cadastro acabou. Entre com o Google de novo.',
+      );
+    }
+
+    const user = await this.userService.createFromGoogle({
+      name: claims.name,
+      email: claims.email,
+      googleId: claims.googleId,
+      document,
+      isOrganizer,
+    });
+
+    return this.startSession(user, claims.keepConnected);
   }
 
   async refresh(refreshToken: string, now = new Date()): Promise<Session> {
@@ -149,6 +244,17 @@ export class AuthService {
     if (stored) {
       await this.refreshTokens.deleteFamily(stored.family_id);
     }
+  }
+
+  private async startGoogleSession(
+    user: TokenPayload & { active: boolean },
+    keepConnected: boolean,
+  ) {
+    if (!user.active) {
+      throw new UnauthorizedError('Esta conta está desativada.');
+    }
+
+    return this.startSession(user, keepConnected);
   }
 
   private async issueSession(

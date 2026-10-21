@@ -20,7 +20,7 @@ export function CategoriesSection({ categories }: CategoriesSectionProps) {
           align='center'
         />
       </div>
-      <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-5'>
+      <div className='flex flex-wrap justify-center gap-4'>
         {categories.map((category, index) => (
           <CategoryCard key={category.id} category={category} index={index} />
         ))}

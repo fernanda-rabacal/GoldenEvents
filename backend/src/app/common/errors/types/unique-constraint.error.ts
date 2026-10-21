@@ -4,6 +4,7 @@ import { PrismaClientError } from './prisma-client.error.js';
 const UNIQUE_FIELD_MESSAGES: Record<string, string> = {
   email: 'Já existe uma conta cadastrada com este e-mail.',
   document: 'Já existe uma conta cadastrada com este CPF.',
+  google_id: 'Esta conta Google já está ligada a outro usuário.',
 };
 
 export class UniqueConstraintError extends ConflictError {

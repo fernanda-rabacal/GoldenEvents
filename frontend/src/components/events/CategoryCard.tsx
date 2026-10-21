@@ -15,7 +15,7 @@ export function CategoryCard({ category, index }: CategoryCardProps) {
   return (
     <Link
       href={buildEventsHref({ categoryId: category.id })}
-      className='group rounded-xl border border-border bg-card p-6 text-left transition hover:-translate-y-1 hover:border-ring/60 hover:shadow-lg'
+      className='group w-[16.6%] rounded-xl border border-border bg-card p-6 text-left transition hover:-translate-y-1 hover:border-ring/60 hover:shadow-lg'
     >
       <div
         className={`mb-8 flex size-12 items-center justify-center rounded-2xl ${iconColors}`}

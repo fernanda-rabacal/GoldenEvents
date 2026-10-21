@@ -3,6 +3,7 @@ import { ACCESS_TOKEN_TTL_SECONDS } from '@golden-events/shared';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
 import { RefreshTokenRepository } from './repositories/refresh-token.repository.js';
+import { GoogleIdentityClient } from './google/google-identity.client.js';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { LocalStrategy } from './strategy/local.strategy.js';
@@ -28,7 +29,13 @@ import { RateLimitModule } from '../../shared/rate-limit/rate-limit.module.js';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, RefreshTokenRepository, LocalStrategy, JwtStrategy],
+  providers: [
+    AuthService,
+    RefreshTokenRepository,
+    GoogleIdentityClient,
+    LocalStrategy,
+    JwtStrategy,
+  ],
   exports: [JwtModule],
 })
 export class AuthModule {}
